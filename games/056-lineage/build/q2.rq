@@ -1,0 +1,7 @@
+SELECT ?h ?hLabel ?n WHERE {
+ { SELECT ?h (COUNT(DISTINCT ?p) AS ?n) WHERE {
+  ?p wdt:P53 ?h . ?p wdt:P22 ?f . ?f wdt:P53 ?h .
+  ?p wdt:P569 ?b .
+ } GROUP BY ?h HAVING(COUNT(DISTINCT ?p) >= 10) }
+ SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+} ORDER BY DESC(?n) LIMIT 300
