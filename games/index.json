@@ -1,0 +1,28 @@
+[
+ {
+  "dir": "001-daylight",
+  "num": 1,
+  "slug": "daylight",
+  "title": "Daylight",
+  "tagline": "一座城市一整年的日出日落曲线。读出它的纬度、经度和夏令时，然后在地图上标出来。",
+  "category": "geo",
+  "data": "computed",
+  "sources": [
+   "GeoNames cities15000",
+   "Sunrise equation"
+  ]
+ },
+ {
+  "dir": "070-holiday",
+  "num": 70,
+  "slug": "holiday",
+  "title": "Holiday",
+  "tagline": "一整年的法定假日日历，名字全部藏起来。看日期猜国家。",
+  "category": "society",
+  "data": "snapshot",
+  "sources": [
+   "Nager.Date Public Holiday API",
+   "GeoNames（首都坐标）"
+  ]
+ }
+]
