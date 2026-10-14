@@ -45,7 +45,9 @@ export default {
   // PURE + DETERMINISTIC. Runs in Node tests and the browser. No DOM, no fetch,
   // no Date.now/Math.random. Same inputs → same output. Return JSON-serializable.
   puzzle({ data, day, date, slug, rng, pick }) {
-    const item = pick(data.items);   // pick(): walks a seeded permutation — no repeats until the pool is used up
+    const item = pick(data.items);   // pick(): today's item — a seeded permutation over DAYS (no repeats across days until
+                                     // the pool is used up). Calling it twice in one puzzle() returns the same item;
+                                     // use rng.sample()/rng.shuffle() to draw several distinct items.
     return { item, decoys: rng.sample(data.items.filter((x) => x !== item), 3) };
   },
 
@@ -66,7 +68,8 @@ export default {
 ```
 
 **Result object** (what `play` returns): `{ score, max, emoji?, summary?, detail?, win? }`.
-Presets return this shape already. Compose stages with `ctx.combine([r1, r2])`.
+Presets return this shape already. Compose stages with `ctx.combine([r1, r2])` — it **sums raw** `score`/`max`
+(rounds have max = #questions, most others 100), so rescale stages first if you want equal weights.
 `emoji` is the shareable grid (may contain `\n`), `summary` a short line like `1,234 km`,
 `detail` a node/string explaining the answer (the "Learnable" part — always include it).
 
@@ -113,7 +116,7 @@ await ctx.guess({
 ```js
 await ctx.estimate({
   answer: 3.21, min: 0.1, max: 100, log: true,   // log: true for values spanning orders of magnitude
-  step: 0.01, initial, unit: '$', format: (v) => ctx.core.fmtMoney(v),
+  step: 0.01, initial, unit: '$', format: (v) => ctx.core.fmtMoney(v),   // unit is appended unless format() already ends with it
   attempts: 1,                    // > 1 adds ↑/↓ hints after each try (−10% per extra try)
   scoring: 'pct' | 'log' | 'abs' | ((guess, answer) => 0..1),
   scale,                          // pct: 0.35 → 35% off ≈ 37 pts; log: 0.3 → 2× off ≈ 37 pts; abs: units
@@ -175,8 +178,8 @@ With `ctx.autoplay`, resolve within a second (e.g. simulate a bot run or return 
 ## ctx.ui components
 
 `h(tag, props, ...children)` (hyperscript: `class`, `style` object incl. `--vars`, `onClick`…) ·
-`panel({ kicker, title, aside, plain, flush }, ...children)` · `row` · `stack` · `grid(minPx, ...)` ·
-`stat({ label, value, sub, big })` · `kv([[k, v], …])` · `table({ columns: [{ key, label, num, fmt }], rows })` ·
+`panel({ kicker, title, aside, plain, flush }, ...children)` · `row(...children)` · `stack(...children)` (no props arg — use `h('div', {class: 'ds-row'})`) · `grid(minPx, ...)` ·
+`stat({ label, value, sub, big })` · `kv([[k, v], …])` · `table({ columns: [{ key, label, num, fmt: (v, row) => … }], rows })` ·
 `chips(items, { onClick, active })` · `badge(text, tone)` · `button(label, { variant: 'accent'|'ghost', small, onClick })` ·
 `tile(text, { state, num, lead })` · `pips(total, used)` · `quote(text)` · `code(text)` · `callout(text, 'good'|'warn'|'bad')` ·
 `redact(text)` (black bar) · `toast(msg)` · `modal({ title, body })` · `shake(el)` · `colors()` (theme colors for charts/canvas:

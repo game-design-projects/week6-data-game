@@ -199,6 +199,10 @@ export async function estimate(ctx, {
   const tol = tolerance ?? (scoring === 'log' ? 0.05 : scoring === 'abs' ? (max - min) / 100 : 0.05);
   const within = (g) => (typeof scoring === 'function' ? scoring(g, answer) >= 0.95 : errOf(g) <= tol);
 
+  // append the unit unless a custom format() already printed it
+  const hasUnit = (txt) => !unit || String(txt).trim().endsWith(unit.trim());
+  const fu = (v) => { const t = format(v); return hasUnit(t) ? String(t) : `${t} ${unit}`; };
+
   const RES = 1000;
   const toPos = (v) => (logScale ? (Math.log(v) - Math.log(min)) / (Math.log(max) - Math.log(min)) : (v - min) / (max - min)) * RES;
   const fromPos = (p) => {
@@ -220,7 +224,7 @@ export async function estimate(ctx, {
     if (from !== 'range') range.value = String(toPos(value));
     range.style.setProperty('--fill', `${(toPos(value) / RES) * 100}%`);
     if (from !== 'typed') typed.value = String(value);
-    readout.replaceChildren(format(value), unit ? h('span', { class: 'unit' }, unit) : '');
+    readout.replaceChildren(format(value), hasUnit(format(value)) ? '' : h('span', { class: 'unit' }, unit));
   };
   range.addEventListener('input', () => { value = fromPos(Number(range.value)); sync('range'); });
   typed.addEventListener('input', () => {
@@ -229,7 +233,7 @@ export async function estimate(ctx, {
   });
   sync();
 
-  const scaleRow = h('div', { class: 'ds-row between small muted mono' }, h('span', format(min) + (unit ? ` ${unit}` : '')), logScale ? h('span', '对数刻度') : null, h('span', format(max) + (unit ? ` ${unit}` : '')));
+  const scaleRow = h('div', { class: 'ds-row between small muted mono' }, h('span', fu(min)), logScale ? h('span', '对数刻度') : null, h('span', fu(max)));
   const controls = h('div', { class: 'ds-stack' }, readout, range, scaleRow, h('div', { class: 'ds-row', style: { justifyContent: 'center' } }, typed, submit));
   const box = mount(ctx, { container }, panel({ title, aside: attempts > 1 ? pipEl : null }, prompt ? h('p', { class: 'ink2' }, toNode(prompt)) : null, controls, history));
   if (attempts > 1) pipEl.replaceChildren(pips(attempts, 0));
@@ -245,7 +249,7 @@ export async function estimate(ctx, {
         const err = errOf(g);
         const errTxt = scoring === 'log' && err != null ? `差 ${(10 ** err).toFixed(1)}×` : scoring === 'pct' ? `差 ${fmtPct(err)}` : '';
         history.append(h('div', { class: 'ds-guess', style: { '--cols': '2fr 1fr 1fr' } },
-          tile(`${format(g)}${unit ? ' ' + unit : ''}`, { lead: true, num: true, state: ok ? 'hit' : 'miss' }),
+          tile(fu(g), { lead: true, num: true, state: ok ? 'hit' : 'miss' }),
           tile(ok ? '✓' : dir, { state: ok ? 'hit' : 'near', i: 1 }),
           tile(ok ? '命中' : errTxt, { num: true, i: 2 })));
         pipEl.replaceChildren(pips(attempts, guesses.length, { won: ok }));
@@ -269,10 +273,10 @@ export async function estimate(ctx, {
   box.append(
     h('div', { class: 'ds-numline', 'aria-hidden': 'true' },
       h('div', { class: 'track' }),
-      h('div', { class: 'mark answer', style: { left: pos(answer) } }, h('span', `答案 ${format(answer)}${unit ? ' ' + unit : ''}`), h('i')),
+      h('div', { class: 'mark answer', style: { left: pos(answer) } }, h('span', `答案 ${fu(answer)}`), h('i')),
       h('div', { class: 'mark guess below', style: { left: pos(last) } }, h('span', `你 ${format(last)}`), h('i'))),
     h('div', { class: 'ds-row between', style: { marginTop: '10px' } },
-      h('span', { class: 'ink2' }, '正确答案 ', h('b', { class: 'mono' }, `${format(answer)}${unit ? ' ' + unit : ''}`)),
+      h('span', { class: 'ink2' }, '正确答案 ', h('b', { class: 'mono' }, fu(answer))),
       h('span', { class: 'mono' }, `${score}/${maxScore}`)));
 
   const err = errOf(last);

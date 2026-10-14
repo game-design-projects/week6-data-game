@@ -167,6 +167,7 @@ export async function boot() {
   const practice = params.has('practice') || autoplay;
   const day = core.dayNumber(date);
   document.body.dataset.state = 'loading';
+  if (smoke) document.documentElement.classList.add('ds-static'); // no animations → stable headless screenshots
 
   const root = document.getElementById('app');
   const stage = h('main', { class: 'ds-stage' });

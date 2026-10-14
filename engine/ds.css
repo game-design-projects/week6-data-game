@@ -487,11 +487,23 @@ select.ds-input { background-image: linear-gradient(45deg, transparent 50%, var(
 .dd-card .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--rule); }
 .dd-card .cat { font: 600 0.68rem/1 var(--font-mono); letter-spacing: 0.08em; color: var(--muted); }
 
-/* warm the gray basemap toward the paper palette */
-.ds-map .leaflet-tile-pane { filter: sepia(0.22) saturate(0.85) contrast(0.96); }
-:root[data-theme='dark'] .ds-map .leaflet-tile-pane { filter: none; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .ds-map .leaflet-tile-pane { filter: none; } }
+/* basemaps: tint Esri relief / gray canvas toward the paper palette */
+.ds-map .ds-relief { filter: grayscale(1) sepia(0.22) brightness(1.07) contrast(0.88); }
+.ds-map .ds-relief.hillshade { filter: grayscale(0.7) sepia(0.3) contrast(0.95); }
+.ds-map .ds-streets { filter: sepia(0.22) saturate(0.85) contrast(0.96); }
+:root[data-theme='dark'] .ds-map .ds-relief { filter: grayscale(1) brightness(0.36) contrast(1.15); }
+:root[data-theme='dark'] .ds-map .ds-relief.hillshade { filter: grayscale(1) brightness(0.45) contrast(1.25); }
+:root[data-theme='dark'] .ds-map .ds-streets { filter: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .ds-map .ds-relief { filter: grayscale(1) brightness(0.36) contrast(1.15); }
+  :root:not([data-theme='light']) .ds-map .ds-relief.hillshade { filter: grayscale(1) brightness(0.45) contrast(1.25); }
+  :root:not([data-theme='light']) .ds-map .ds-streets { filter: none; }
+}
 .ds-map .leaflet-control-attribution { font-size: 10px; background: color-mix(in srgb, var(--card) 80%, transparent); color: var(--muted); }
 .ds-map .leaflet-control-attribution a { color: var(--ink-2); }
 .ds-map .leaflet-bar a { background: var(--card); color: var(--ink); border-color: var(--rule); }
 .ds-map .leaflet-tooltip { font: 600 0.8rem/1.2 var(--font-ui); border-radius: 8px; border: 1px solid var(--rule-strong); background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+
+
+/* smoke/autoplay runs: freeze motion so headless screenshots show final states */
+.ds-static *, .ds-static *::before, .ds-static *::after { animation: none !important; transition: none !important; }

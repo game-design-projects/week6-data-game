@@ -92,9 +92,11 @@ const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services';
 export function tileUrl({ basemap = 'gray', dark = isDarkTheme() } = {}) {
   if (basemap === 'imagery') return { base: `${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`, labels: `${ESRI}/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}` };
   if (basemap === 'topo') return { base: `${ESRI}/World_Topo_Map/MapServer/tile/{z}/{y}/{x}`, labels: null };
-  if (basemap === 'hillshade') return { base: `${ESRI}/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}`, labels: `${ESRI}/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}` };
   const tone = dark ? 'Dark' : 'Light';
-  return { base: `${ESRI}/Canvas/World_${tone}_Gray_Base/MapServer/tile/{z}/{y}/{x}`, labels: `${ESRI}/Canvas/World_${tone}_Gray_Reference/MapServer/tile/{z}/{y}/{x}` };
+  // Esri's gray canvas bakes country/sea names into its base tiles at z3–8, so small
+  // zooms use the label-free shaded-relief layer instead (see createMap).
+  if (basemap === 'gray' || basemap === 'hillshade') return { relief: `${ESRI}/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}`, base: `${ESRI}/Canvas/World_${tone}_Gray_Base/MapServer/tile/{z}/{y}/{x}`, labels: `${ESRI}/Canvas/World_${tone}_Gray_Reference/MapServer/tile/{z}/{y}/{x}` };
+  throw new Error(`tileUrl: unknown basemap "${basemap}"`);
 }
 
 const ATTR = 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Esri, HERE, Garmin, &copy; OpenStreetMap contributors';
@@ -108,10 +110,17 @@ const ATTR = 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Esri, HE
  */
 export async function createMap({ center = [20, 0], zoom = 2, bounds, labels = false, basemap = 'gray', minZoom = 1, maxZoom = 18, height, className, worldCopyJump = true } = {}) {
   const L = await lib('leaflet');
-  const el = h('div', { class: ['ds-map', className], style: height ? { height: typeof height === 'number' ? `${height}px` : height } : null });
+  const el = h('div', { class: ['ds-map', `bm-${basemap}`, className], style: height ? { height: typeof height === 'number' ? `${height}px` : height } : null });
   const map = L.map(el, { center, zoom, minZoom, maxZoom, worldCopyJump, zoomControl: true, attributionControl: true });
   const urls = tileUrl({ basemap });
-  L.tileLayer(urls.base, { attribution: ATTR, maxNativeZoom: basemap === 'gray' ? 16 : 18, maxZoom }).addTo(map);
+  if (urls.relief) {
+    // label-free relief up to `split`, then the gray street canvas (no place names at city zooms)
+    const split = basemap === 'hillshade' ? 12 : 8;
+    L.tileLayer(urls.relief, { attribution: ATTR, maxNativeZoom: 13, maxZoom: split, className: `ds-relief ${basemap}` }).addTo(map);
+    L.tileLayer(urls.base, { maxNativeZoom: 16, minZoom: split + 1, maxZoom, className: 'ds-streets' }).addTo(map);
+  } else {
+    L.tileLayer(urls.base, { attribution: ATTR, maxNativeZoom: 18, maxZoom }).addTo(map);
+  }
   let labelLayer = null;
   const setLabels = (on) => {
     if (on && !labelLayer && urls.labels) labelLayer = L.tileLayer(urls.labels, { maxNativeZoom: 16, maxZoom, pane: 'overlayPane' }).addTo(map);
