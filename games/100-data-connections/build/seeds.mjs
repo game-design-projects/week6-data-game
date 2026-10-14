@@ -1,0 +1,23 @@
+// [property, QID, expected English label (sanity check), zh group-label template, fallback zh]
+export const SEEDS = [
+  ['P57','Q25191','Christopher Nolan','{}执导的电影'],['P57','Q2001','Stanley Kubrick','{}执导的电影'],
+  ['P57','Q7374','Alfred Hitchcock','{}执导的电影'],['P57','Q8877','Steven Spielberg','{}执导的电影'],
+  ['P57','Q3772','Quentin Tarantino','{}执导的电影'],['P57','Q55400','Hayao Miyazaki','{}执导的电影'],
+  ['P57','Q41148','Martin Scorsese','{}执导的电影'],['P57','Q42574','James Cameron','{}执导的电影'],
+  ['P57','Q56008','Tim Burton','{}执导的电影'],
+  ['P50','Q5686','Charles Dickens','{}的作品'],['P50','Q35064','Agatha Christie','{}的作品'],
+  ['P50','Q892','J. R. R. Tolkien','{}的作品'],['P50','Q34660','J. K. Rowling','{}的作品'],
+  ['P50','Q39829','Stephen King','{}的作品'],['P50','Q3335','George Orwell','{}的作品'],
+  ['P50','Q23434','Ernest Hemingway','{}的作品'],['P50','Q36322','Jane Austen','{}的作品'],
+  ['P170','Q5582','Vincent van Gogh','{}的画作'],['P170','Q5593','Pablo Picasso','{}的画作'],
+  ['P170','Q296','Claude Monet','{}的画作'],['P170','Q762','Leonardo da Vinci','{}的作品'],
+  ['P170','Q5598','Rembrandt','{}的画作'],['P170','Q5577','Salvador Dalí','{}的画作'],
+  ['P175','Q1299','The Beatles','{}的作品'],['P175','Q26876','Taylor Swift','{}的作品'],
+  ['P175','Q392','Bob Dylan','{}的作品'],['P175','Q2831','Michael Jackson','{}的作品'],
+  ['P175','Q2306','Pink Floyd','{}的作品'],
+  ['P47','Q142','France','与{}接壤的地区'],['P47','Q183','Germany','与{}接壤的地区'],
+  ['P47','Q148',"People's Republic of China","与{}接壤的地区"],['P47','Q155','Brazil','与{}接壤的地区'],['P47','Q159','Russia','与{}接壤的地区'],
+  ['P161','Q2263','Tom Hanks','{}主演的电影'],['P161','Q38111','Leonardo DiCaprio','{}主演的电影'],
+  ['P161','Q873','Meryl Streep','{}主演的电影'],['P161','Q35332','Brad Pitt','{}主演的电影'],
+  ['P178','Q8093','Nintendo','{}开发的游戏'],
+];
