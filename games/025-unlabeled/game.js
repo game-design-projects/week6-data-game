@@ -29,7 +29,7 @@ export const recAt = (rec, y, m) => {
   return rec.vals[(y - ry) * 12 + (m - rm)] === '1';
 };
 export const fmtV = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString('en-US') : String(Math.round(v * 10) / 10));
-const ym = (k) => `${k.y} 年 ${k.m} 月`;
+const ym = (k) => `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][k.m - 1]} ${k.y}`;
 
 /** Everything the view and the result card need about one puzzle window. Pure. */
 export function windowInfo(data, p) {
@@ -55,21 +55,21 @@ export default {
     num: 25,
     slug: 'unlabeled',
     title: 'Unlabeled',
-    tagline: '去掉坐标轴的美国宏观曲线，只留下衰退期阴影。先说出是什么指标，再判断是哪个年代。',
+    tagline: 'A US macro curve with the axes removed and only the recessions shaded. Name the indicator, then date the decade.',
     category: 'money',
     data: 'snapshot',
     howTo: [
-      '图里是一条 15 年的美国宏观经济月度曲线，没有刻度和单位，灰色竖条是 NBER 认定的衰退期。',
-      '第一步：在输入框里打字，从 15 个候选指标里选出它（支持中文名和 FRED 代码）。最多猜 3 次，每猜错一次解锁一条线索：类型、数值范围、数据起点。',
-      '第二步：猜这段曲线从哪一年开始。用大事件定位：1970s 通胀、1981 年利率顶点、2008 年危机、2020 年疫情。',
-      '计分：指标 50 分（第 1 次猜中 50、第 2 次 33、第 3 次 17），年份 50 分（每差约 6 年降到约三分之一）。',
+      'The chart is a 15-year monthly curve of a US macroeconomic indicator with no scale or units. Gray bars mark NBER-dated recessions.',
+      'Step 1: type to pick the indicator from 15 candidates (names and FRED codes both work). 3 guesses; each miss unlocks a clue: type, value range, data start.',
+      'Step 2: guess the year the curve starts. Anchor on big events: 1970s inflation, the 1981 rate peak, the 2008 crisis, the 2020 pandemic.',
+      'Scoring: 50 points for the indicator (50 on guess 1, 33 on guess 2, 17 on guess 3) and 50 for the year (about a third left at 6 years off).',
     ],
-    scoring: '指标 50 × (4 − 猜测次数) / 3，加上年份 50 × e^(−年份误差/6)。',
+    scoring: 'Indicator 50 × (4 − guesses) / 3, plus year 50 × e^(−years off / 6).',
     sources: [
-      { name: 'FRED（圣路易斯联储）', url: 'https://fred.stlouisfed.org/', note: 'UNRATE、CPIAUCSL、FEDFUNDS、GS10、INDPRO、PAYEMS、HOUST、UMCSENT、M2SL、DEXJPUS、GDPC1、TOTALSA、MORTGAGE30US、CIVPART、PSAVERT' },
-      { name: 'NBER 衰退日期（FRED: USREC）', url: 'https://fred.stlouisfed.org/series/USREC' },
+      { name: 'FRED (St. Louis Fed)', url: 'https://fred.stlouisfed.org/', note: 'UNRATE, CPIAUCSL, FEDFUNDS, GS10, INDPRO, PAYEMS, HOUST, UMCSENT, M2SL, DEXJPUS, GDPC1, TOTALSA, MORTGAGE30US, CIVPART, PSAVERT' },
+      { name: 'NBER recession dates (FRED: USREC)', url: 'https://fred.stlouisfed.org/series/USREC' },
     ],
-    dataNote: '数据为快照：FRED 的 CSV 接口没有 CORS 头，浏览器无法直接取数，所以由 build/ 脚本离线下载。日度/周度数据取月均值，季度 GDP 按月补齐（曲线呈阶梯），价格与产出类指标换算为同比变化。2025 年 10 月联邦停摆造成数据缺口，UNRATE、CPI 等序列截止到缺口之前；消费者信心指数始于 1978 年。题目窗口起点不早于 1948 年。',
+    dataNote: 'A snapshot: the FRED CSV endpoint has no CORS headers, so browsers cannot fetch it directly and the build/ scripts download it offline. Daily and weekly series are averaged to months, quarterly GDP is filled across months (hence the staircase), and price and output series are converted to year-over-year change. The October 2025 federal shutdown left gaps, so UNRATE, CPI and others end before the gap; consumer sentiment starts in 1978. Puzzle windows start no earlier than 1948.',
   },
 
   puzzle({ data, pick }) {
@@ -95,21 +95,21 @@ export default {
         Plot.lineY(pts, { x: 'i', y: 'v', stroke: c.accent, strokeWidth: 2 }),
       ],
     }), { axis: false });
-    ctx.stage.append(ui.panel({ kicker: '线索', title: '没有标签的曲线' }, chart,
-      ui.h('div', { class: 'small muted' }, `15 年 · 每个点是一个月 · 灰色竖条 = 衰退期（${spans.length} 次）`)));
+    ctx.stage.append(ui.panel({ kicker: 'Clue', title: 'The unlabeled curve' }, chart,
+      ui.h('div', { class: 'small muted' }, `15 years · one point per month · gray bars = recessions (${spans.length})`)));
 
-    const options = data.series.map((x) => ({ id: x.id, label: x.zh, aliases: [x.id, x.id.toLowerCase()] }));
-    ctx.stage.append(ui.h('div', { class: 'small muted', style: { margin: '-4px 4px 4px' } }, `候选指标（共 ${options.length} 个）：${data.series.map((x) => x.zh).join('、')}`));
+    const options = data.series.map((x) => ({ id: x.id, label: x.name, aliases: [x.id, x.id.toLowerCase()] }));
+    ctx.stage.append(ui.h('div', { class: 'small muted', style: { margin: '-4px 4px 4px' } }, `${options.length} candidate indicators: ${data.series.map((x) => x.name).join(', ')}`));
     const unit = s.unit === '%' ? '%' : ` ${s.unit}`;
     const r1 = await ctx.guess({
-      title: '这条曲线是什么指标？',
+      title: 'Which indicator is this?',
       options, answer: p.id, maxGuesses: 3,
-      placeholder: '输入指标名或代码…',
-      cluesTitle: '指标线索',
+      placeholder: 'Indicator name or code\u2026',
+      cluesTitle: 'Indicator clues',
       clues: [
-        s.yoy ? '类型：同比变化率（与 12 个月前相比的百分比）。' : '类型：水平值，不是变化率。',
-        `数值范围：最低 ${fmtV(info.lo.v)}${unit}，最高 ${fmtV(info.hi.v)}${unit}。`,
-        `这个指标最早的数据始于 ${s.start.slice(0, 4)} 年。`,
+        s.yoy ? 'Type: year-over-year change (percent vs 12 months earlier).' : 'Type: a level, not a rate of change.',
+        `Value range: low ${fmtV(info.lo.v)}${unit}, high ${fmtV(info.hi.v)}${unit}.`,
+        `This indicator\u2019s data starts in ${s.start.slice(0, 4)}.`,
       ],
       scoring: (n, won) => nameScore(n, won),
       max: 50,
@@ -117,10 +117,10 @@ export default {
 
     const [lo, hi] = yearRange(data);
     const r2 = await ctx.estimate({
-      title: '这段曲线从哪一年开始？',
-      prompt: `指标是「${s.zh}」。15 年的窗口，估一下起点年份。`,
+      title: 'What year does the curve start?',
+      prompt: `The indicator is \u201c${s.name}\u201d. It is a 15-year window: estimate the start year.`,
       answer: p.year, min: lo, max: hi, step: 1, initial: Math.round((lo + hi) / 2),
-      format: (v) => `${Math.round(v)} 年`,
+      format: (v) => String(Math.round(v)),
       scoring: yearScore,
     });
 
@@ -128,14 +128,14 @@ export default {
       { ...r1, score: r1.score, max: 50 },
       { ...r2, score: r2.score / 2, max: 50 },
     ]);
-    const recs = spans.map((sp) => (sp.start.y === sp.end.y ? `${sp.start.y}` : `${sp.start.y}–${sp.end.y}`)).join('、') || '无';
-    const behave = info.nMoves ? `；${info.nMoves} 次衰退里，曲线 ${info.up} 次上升、${info.down} 次下降` : '';
+    const recs = spans.map((sp) => (sp.start.y === sp.end.y ? `${sp.start.y}` : `${sp.start.y}–${sp.end.y}`)).join(', ') || 'none';
+    const behave = info.nMoves ? `; across ${info.nMoves} ${info.nMoves === 1 ? 'recession' : 'recessions'} the curve rose ${info.up} and fell ${info.down}` : '';
     res.detail = ui.kv([
-      ['指标', `${s.zh}（FRED: ${s.id}）${s.yoy ? '，同比变化' : ''}`],
-      ['时间段', `${ym(pts[0].k)} 至 ${ym(pts.at(-1).k)}（你猜 ${Math.round(r2.guess)} 年，答案 ${p.year} 年）`],
-      ['这段曲线的特征', `最高 ${fmtV(info.hi.v)}${unit}（${ym(info.hi.k)}），最低 ${fmtV(info.lo.v)}${unit}（${ym(info.lo.k)}）${behave}`],
-      ['窗口内的衰退', `${spans.length} 次（${recs}）`],
-      ['怎么认出来', s.tip],
+      ['Indicator', `${s.name} (FRED: ${s.id})${s.yoy ? ', year over year' : ''}`],
+      ['Period', `${ym(pts[0].k)} to ${ym(pts.at(-1).k)} (you guessed ${Math.round(r2.guess)}, the answer is ${p.year})`],
+      ['What this stretch shows', `High ${fmtV(info.hi.v)}${unit} (${ym(info.hi.k)}), low ${fmtV(info.lo.v)}${unit} (${ym(info.lo.k)})${behave}`],
+      ['Recessions in window', `${spans.length} (${recs})`],
+      ['How to tell', s.tip],
     ]);
     return res;
   },

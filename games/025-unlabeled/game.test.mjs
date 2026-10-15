@@ -32,12 +32,12 @@ test('recAt: 2020-04 is a recession, 2015-01 is not', () => { assert.ok(recAt(da
 test('series: fields set, values finite', () => {
   assert.equal(data.series.length, 15);
   for (const s of data.series) {
-    assert.ok(s.unit && s.zh && s.tip && s.id, s.id);
+    assert.ok(s.unit && s.name && s.tip && s.id, s.id);
     assert.ok(s.vals.length > WIN);
     for (const v of s.vals) assert.ok(Number.isFinite(v), s.id);
   }
   assert.equal(new Set(data.series.map((s) => s.id)).size, 15);
-  assert.equal(new Set(data.series.map((s) => s.zh)).size, 15);
+  assert.equal(new Set(data.series.map((s) => s.name)).size, 15);
 });
 test('pool validity over puzzle days 1-120', () => {
   const [lo, hi] = yearRange(data);
@@ -65,5 +65,5 @@ test('every window is non-flat and shows at least one recession', () => {
   }
 });
 test('no leaks in static copy', () => {
-  for (const s of data.series) assert.ok(!game.meta.tagline.includes(s.zh) && !game.meta.tagline.includes(s.id));
+  for (const s of data.series) assert.ok(!game.meta.tagline.includes(s.name) && !game.meta.tagline.includes(s.id));
 });

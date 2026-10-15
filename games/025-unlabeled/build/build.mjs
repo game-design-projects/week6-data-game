@@ -7,21 +7,21 @@ const monthly = (rows) => { // average within month; carry quarterly values forw
 };
 const addM = (k, n) => { const [y, mo] = k.split('-').map(Number); const t = y * 12 + mo - 1 + n; return `${Math.floor(t / 12)}-${String(t % 12 + 1).padStart(2, '0')}`; };
 const S = [
-  { id: 'UNRATE', unit: '%', zh: '美国失业率', yoy: false, tip: '衰退中和衰退后失业率飙升，复苏时缓慢回落——锯齿状的"上升陡、下降缓"。' },
-  { id: 'CPIAUCSL', unit: '%', zh: '美国通胀率（CPI 同比）', yoy: true, tip: '1970s 和 2021-22 年的大尖峰，1980 年代后长期低而稳；2009 年和 2020 年有短暂负值。' },
-  { id: 'FEDFUNDS', unit: '%', zh: '联邦基金利率', yoy: false, tip: '衰退前利率被推高、衰退中急剧下调；1980 年代初的高点和 2009-15 的零利率是标志。' },
-  { id: 'GS10', unit: '%', zh: '10 年期美债收益率', yoy: false, tip: '1981 年见顶后四十年单边下行，比联邦基金利率平滑得多。' },
-  { id: 'INDPRO', unit: '%', zh: '工业产出（同比）', yoy: true, tip: '衰退阴影里几乎总是深度负增长，波动幅度比 GDP 大得多。' },
-  { id: 'PAYEMS', unit: '%', zh: '非农就业人数（同比）', yoy: true, tip: '平时稳定正增长，衰退时转负；2020 年那次是断崖式的。' },
-  { id: 'HOUST', unit: '千套', zh: '新屋开工数', yoy: false, tip: '对利率最敏感，衰退前先塌；2006-09 年住房崩盘是标志。' },
-  { id: 'UMCSENT', unit: '点', from: '1978-01', zh: '密歇根消费者信心指数', yoy: false, tip: '噪声大、没有明显趋势；衰退和油价冲击时急跌。' },
-  { id: 'M2SL', unit: '%', zh: 'M2 货币供应（同比）', yoy: true, tip: '2020-21 年史无前例的飙升是最明显的标志，其余时间在 0-12% 间摆动。' },
-  { id: 'DEXJPUS', unit: '日元/美元', zh: '日元兑美元汇率', yoy: false, tip: '1971-1995 年间长期下行（日元升值），1995 年后在 80-160 间摆动。' },
-  { id: 'GDPC1', unit: '%', zh: '实际 GDP（同比）', yoy: true, tip: '季度数据，所以曲线呈阶梯形；仅少数时期为负。' },
-  { id: 'TOTALSA', unit: '百万辆', zh: '汽车及轻卡销量（年化百万辆）', yoy: false, tip: '2009 年和 2020 年 4 月的两个深坑；季节调整后仍对衰退极敏感。' },
-  { id: 'MORTGAGE30US', unit: '%', zh: '30 年期抵押贷款利率', yoy: false, tip: '与十年期国债走势相似，1981 年超过 18%，2021 年跌到 3% 以下。' },
-  { id: 'CIVPART', unit: '%', zh: '劳动参与率', yoy: false, tip: '1960-2000 年大幅上升（女性入职），2000 年后趋势性下降；衰退影响缓慢。' },
-  { id: 'PSAVERT', unit: '%', zh: '个人储蓄率', yoy: false, tip: '1970s 高、1990-2005 持续下滑，2020 年疫情补助期出现史无前例的飙升。' },
+  { id: 'UNRATE', unit: '%', name: 'US unemployment rate', yoy: false, tip: 'Unemployment jumps during and after recessions and drifts back down slowly in recovery: a sawtooth that climbs steeply and falls gently.' },
+  { id: 'CPIAUCSL', unit: '%', name: 'US inflation (CPI, year over year)', yoy: true, tip: 'Big spikes in the 1970s and 2021-22, long low and steady stretches after the 1980s, and brief negative readings in 2009 and 2020.' },
+  { id: 'FEDFUNDS', unit: '%', name: 'Federal funds rate', yoy: false, tip: 'Rates are pushed up before a recession and slashed during it. The early-1980s peak and the 2009-15 zero-rate floor are the signatures.' },
+  { id: 'GS10', unit: '%', name: '10-year Treasury yield', yoy: false, tip: 'After peaking in 1981 it fell almost without pause for forty years, much smoother than the fed funds rate.' },
+  { id: 'INDPRO', unit: '%', name: 'Industrial production (year over year)', yoy: true, tip: 'Almost always deeply negative inside a recession shade, and far more volatile than GDP.' },
+  { id: 'PAYEMS', unit: '%', name: 'Nonfarm payrolls (year over year)', yoy: true, tip: 'Steady positive growth in normal times, negative in recessions; the 2020 drop is a cliff.' },
+  { id: 'HOUST', unit: 'k units', name: 'Housing starts', yoy: false, tip: 'The most rate-sensitive series, it collapses before recessions. The 2006-09 housing bust is the signature.' },
+  { id: 'UMCSENT', unit: 'pts', from: '1978-01', name: 'Michigan consumer sentiment', yoy: false, tip: 'Noisy with no obvious trend; plunges in recessions and oil shocks.' },
+  { id: 'M2SL', unit: '%', name: 'M2 money supply (year over year)', yoy: true, tip: 'The unprecedented surge in 2020-21 is the giveaway; the rest of the time it swings between 0 and 12%.' },
+  { id: 'DEXJPUS', unit: 'yen/USD', name: 'Yen per US dollar', yoy: false, tip: 'A long decline from 1971 to 1995 (a rising yen), then oscillation between 80 and 160.' },
+  { id: 'GDPC1', unit: '%', name: 'Real GDP (year over year)', yoy: true, tip: 'Quarterly data, so the line is a staircase; negative only in a few periods.' },
+  { id: 'TOTALSA', unit: 'M vehicles', name: 'Light vehicle sales (annualized, millions)', yoy: false, tip: 'Two deep pits in 2009 and April 2020; even seasonally adjusted it is very sensitive to recessions.' },
+  { id: 'MORTGAGE30US', unit: '%', name: '30-year mortgage rate', yoy: false, tip: 'Tracks the 10-year Treasury: above 18% in 1981, below 3% in 2021.' },
+  { id: 'CIVPART', unit: '%', name: 'Labor force participation rate', yoy: false, tip: 'Rose sharply from 1960 to 2000 (women entering work), then trended down after 2000; recessions act on it slowly.' },
+  { id: 'PSAVERT', unit: '%', name: 'Personal saving rate', yoy: false, tip: 'High in the 1970s, sliding from 1990 to 2005, and an unprecedented spike in 2020 during pandemic stimulus.' },
 ];
 const rec = monthly(raw('USREC'));
 const last = [...rec.keys()].sort().pop();
@@ -42,7 +42,7 @@ for (const s of S) {
   }
   const mag = Math.max(...vals.map(Math.abs));
   const dp = mag >= 1000 ? 0 : mag >= 100 ? 1 : 2;
-  out.series.push({ id: s.id, zh: s.zh, unit: s.unit, tip: s.tip, yoy: s.yoy, start, vals: vals.map((v) => +v.toFixed(dp)) });
+  out.series.push({ id: s.id, name: s.name, unit: s.unit, tip: s.tip, yoy: s.yoy, start, vals: vals.map((v) => +v.toFixed(dp)) });
 }
 const rk = [...rec.keys()].sort(); out.rec.vals = rk.map((k) => (rec.get(k) > 0.5 ? 1 : 0)).join('');
 out.rec.start = rk[0];
