@@ -1,6 +1,7 @@
 // Fetch Wikidata coordinates for each curated toponym (cached in raw/), write ../data.json
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 import { PLACES } from './places.mjs';
+import { LANG_NOTES } from './langnotes.mjs';
 const dir = path.dirname(fileURLToPath(import.meta.url)); const raw = path.join(dir, 'raw'); fs.mkdirSync(raw, { recursive: true });
 const UA = 'daily-data-games/1.0 (class project; lishuyustevenli@gmail.com)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -30,5 +31,5 @@ for (const [q, kw, name, orig, lang, zh, kind] of PLACES) {
   report.push(`ok ${q} -> ${pick.id} ${pick.desc} ${pick.lat},${pick.lng}`);
 }
 console.log(report.join('\n'));
-fs.writeFileSync(path.join(dir, '..', 'data.json'), JSON.stringify({ fetched: new Date().toISOString().slice(0, 10), places: out }));
+fs.writeFileSync(path.join(dir, '..', 'data.json'), JSON.stringify({ fetched: new Date().toISOString().slice(0, 10), places: out, langNotes: Object.fromEntries([...new Set(out.map((p) => p.lang))].map((l) => [l, LANG_NOTES[l]])) }));
 console.log(out.length, 'places');
