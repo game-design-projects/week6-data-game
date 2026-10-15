@@ -82,6 +82,22 @@ export function speedForDistance(d) {
   return Math.min(VMAX, (lo + hi) / 2);
 }
 
+/** Search a single stroke that sinks the ball (angle offsets around the straight line × speed factors). null if none. */
+export function solveShot(h, ball, hole) {
+  const dx = hole[0] - ball[0]; const dy = hole[1] - ball[1]; const d = Math.hypot(dx, dy) || 1;
+  const base = Math.atan2(dy, dx); const v0 = speedForDistance(d);
+  for (let a = 0; a <= 40; a += 2) {
+    for (const sgn of a ? [1, -1] : [1]) {
+      const ang = base + (sgn * a * Math.PI) / 180;
+      for (const f of [1, 0.92, 1.08, 0.84, 1.16, 1.3, 0.75]) {
+        const v = Math.min(VMAX, v0 * f);
+        if (simulate(h, ball, [Math.cos(ang) * v, Math.sin(ang) * v], hole).holed) return { offsetDeg: sgn * a, power: +(v / VMAX).toFixed(2) };
+      }
+    }
+  }
+  return null;
+}
+
 export const strokeScore = (n) => [100, 75, 55][n - 1] ?? 0;
 export function puttScore(holedAt, bestDist, startDist) {
   if (holedAt) return strokeScore(holedAt);
@@ -89,6 +105,20 @@ export function puttScore(holedAt, bestDist, startDist) {
 }
 
 const hhmm = (v) => Math.round(v).toLocaleString('en-US');
+
+/** A z11 web-mercator tile is 40075.017 / 2^11 km wide at the equator and shrinks with cos(latitude). */
+export const EQ_KM = 40075.017 / 2048;
+export const latFromKm = (km) => +((Math.acos(Math.min(1, km / EQ_KM)) * 180) / Math.PI).toFixed(1);
+
+/** Where does a straight, correctly-weighted shot end up relative to the hole? left/right of travel + distance. */
+export function straightShotBreak(h, ball, hole) {
+  const dx = hole[0] - ball[0]; const dy = hole[1] - ball[1]; const d = Math.hypot(dx, dy) || 1;
+  const v = speedForDistance(d);
+  const r = simulate(h, ball, [(dx / d) * v, (dy / d) * v], hole);
+  const ex = r.end[0] - hole[0]; const ey = r.end[1] - hole[1];
+  const lateral = (dx / d) * ey - (dy / d) * ex; // >0: ended on the right of the line of travel (screen coordinates, y down)
+  return { holed: r.holed, miss: Math.hypot(ex, ey), lateral };
+}
 
 export default {
   meta: {
@@ -99,34 +129,46 @@ export default {
     category: 'levels',
     data: 'snapshot',
     howTo: [
-      '画面是一块真实地形的等高线晕渲图：浅色是高处，深色是低处，球会顺着坡往低处滚。',
-      '在果岭上拖动再松手：往反方向拉出弓弦，拉得越长力度越大，球朝拖动的反方向滚出。最多 3 杆。',
+      '画面是一块真实地形的等高线晕渲图：浅色是高处，深色是低处，小箭头指向下坡，球会顺着坡往低处滚。',
+      '在果岭上拖动再松手：往反方向拉出弓弦，拉得越长力度越大，球朝拖动的反方向滚出。最多 3 杆，坡会让直推的球拐弯。',
       '进洞越早得分越高（100 / 75 / 55）；没进洞则按最近距离给最多 40 分。',
-      '推完揭晓地形的海拔范围与宽度，在世界地图上标出这块地形的位置，再得最多 100 分。',
+      '推完揭晓这块地形的海拔范围和宽度。宽度随纬度变窄，地图上会画出对应的纬度线；你再在线上挑一个经度标出位置，最多 100 分。',
     ],
-    scoring: '推杆 0–100（进洞杆数 / 最近距离）+ 定位 100 × e^(−距离/2500 km)。',
+    scoring: '推杆 0–100（第 1/2/3 杆进洞 100/75/55；未进洞按最近距离最多 40）+ 定位 100 × e^(−距离/2500 km)，总分 200。',
     sources: [
-      { name: 'AWS Terrain Tiles (Terrarium)', url: 'https://registry.opendata.aws/terrain-tiles/', note: '由 SRTM、ETOPO1、GMTED 等 DEM 合成；每块取 zoom 11 的一个瓦片，降采样为 32×32 网格' },
-      { name: 'Mapzen terrain tile docs', url: 'https://github.com/tilezen/joerd/blob/master/docs/formats.md' },
+      { name: 'AWS Terrain Tiles (Terrarium)', url: 'https://registry.opendata.aws/terrain-tiles/', note: '由 SRTM、ETOPO1、GMTED 等 DEM 合成；每块取 zoom 11 的一个瓦片（约 19.6 km × cos 纬度宽），降采样为 32×32 网格' },
+      { name: 'Mapzen terrain tile docs (Terrarium 编码)', url: 'https://github.com/tilezen/joerd/blob/master/docs/formats.md' },
+      { name: 'Esri World Shaded Relief / Gray Canvas 底图', url: 'https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba9e5db8acf2a6bc3' },
     ],
-    dataNote: '88 个著名山地/峡谷/火山的真实高程。为了能打球，高差被统一压缩到约 4.5 个格子高并做了平滑，所以坡度是「缩放后」的，但山脊、谷地和坡向都是真实地形的形状。答案坐标取瓦片中心，距著名地标约 10 km 以内。',
+    dataNote: '88 个著名山地/峡谷/火山的真实高程，数据为快照（AWS 地形瓦片是静态文件，不随日期变化，所以没有「今日数据」可取）。为了能打球，每块地形的高差都被压缩到同一个约 4.5 格的高度并做了 3 次平滑，所以坡度是「缩放后」的（陡缓无法跨地点比较，真实高差看揭晓的海拔数字），但山脊、谷地和坡向是真实地形的形状。球洞与起点由当天的种子随机放置，并保证至少存在一种一杆进洞的打法。答案坐标取瓦片中心，距著名地标约 10 km 以内，远小于 2500 km 的计分尺度。',
   },
 
   puzzle({ data, rng, pick }) {
     const site = pick(data.sites);
     const h = buildTerrain(site.grid);
+    // Prefer a layout where the slope bends a straight shot (so reading the terrain matters)
+    // and that is provably holeable in one stroke (solveShot).
     let best = null;
-    for (let k = 0; k < 80; k++) {
+    for (let k = 0; k < 40 && !(best && best.tier === 2); k++) {
       const hole = [rng.float(8, N - 8), rng.float(8, N - 8)];
       const a = rng.float(0, Math.PI * 2); const d = rng.float(9, 13);
       const ball = [hole[0] + Math.cos(a) * d, hole[1] + Math.sin(a) * d];
       if (ball[0] < 2 || ball[0] > N - 2 || ball[1] < 2 || ball[1] > N - 2) continue;
-      const slope = Math.hypot(...gradAt(h, hole[0], hole[1]));
-      if (!best || slope < best.slope) best = { slope, hole, ball };
-      if (slope < 0.12) break;
+      if (best && best.tier >= 1 && k > 12) break;
+      const v = speedForDistance(d);
+      const st = simulate(h, ball, [((hole[0] - ball[0]) / d) * v, ((hole[1] - ball[1]) / d) * v], hole);
+      const miss = Math.hypot(st.end[0] - hole[0], st.end[1] - hole[1]);
+      const tier = st.holed ? 0 : miss >= 1.2 && miss <= 6 ? 2 : 1;
+      if (best && tier <= best.tier) continue;
+      const solve = solveShot(h, ball, hole);
+      if (!solve) continue;
+      best = { tier, hole, ball, solve, straightMiss: st.holed ? 0 : miss };
+    }
+    if (!best) { // extremely unlikely: fall back to the flattest spot
+      const hole = [N / 2, N / 2]; best = { hole, ball: [N / 2 - 10, N / 2], solve: null, straightMiss: 0 };
     }
     const r = (v) => +v.toFixed(2);
-    return { siteId: site.id, hole: best.hole.map(r), ball: best.ball.map(r) };
+    return { siteId: site.id, hole: best.hole.map(r), ball: best.ball.map(r), solve: best.solve, straightMiss: r(best.straightMiss) };
   },
 
   async play(ctx, p) {
@@ -137,7 +179,7 @@ export default {
     ctx.log('topo-golf start', { site: site.name, ball: p.ball, hole: p.hole });
 
     // pre-render hillshaded terrain
-    const R = 192;
+    const R = 320;
     const off = document.createElement('canvas'); off.width = R; off.height = R;
     const og = off.getContext('2d'); const img = og.createImageData(R, R);
     const lowC = [38, 92, 58]; const highC = [214, 226, 160];
@@ -153,6 +195,16 @@ export default {
       img.data[o + 3] = 255;
     }
     og.putImageData(img, 0, 0);
+    // downhill arrows on a coarse grid
+    og.strokeStyle = 'rgba(255,255,255,.55)'; og.fillStyle = 'rgba(255,255,255,.55)'; og.lineWidth = 1.4;
+    for (let ay = 3; ay < N; ay += 4) for (let ax = 3; ax < N; ax += 4) {
+      const [gx, gy] = gradAt(h, ax, ay); const m = Math.hypot(gx, gy);
+      if (m < 0.04) continue;
+      const len = Math.min(1.6, 0.5 + m * 2.4) * (R / N) * 0.5; const ux = -gx / m; const uy = -gy / m;
+      const cx = (ax / N) * R; const cy = (ay / N) * R; const tx = cx + ux * len; const ty = cy + uy * len; const bx = cx - ux * len; const by = cy - uy * len;
+      og.beginPath(); og.moveTo(bx, by); og.lineTo(tx, ty); og.stroke();
+      og.beginPath(); og.moveTo(tx, ty); og.lineTo(tx - ux * 5 - uy * 3, ty - uy * 5 + ux * 3); og.lineTo(tx - ux * 5 + uy * 3, ty - uy * 5 - ux * 3); og.fill();
+    }
 
     const st = { pos: p.ball.slice(), strokes: 0, holedAt: 0, best: Infinity, anim: null, drag: null, trail: [] };
     const d0 = Math.hypot(p.ball[0] - p.hole[0], p.ball[1] - p.hole[1]);
@@ -160,7 +212,7 @@ export default {
     st.best = d0;
 
     ctx.stage.append(ui.panel({ kicker: '第一步 · 推杆', title: '读坡，推进洞' },
-      ui.h('p', { class: 'small muted', style: { margin: 0 } }, '浅色高、深色低，细线是等高线。球会往低处滚。向后拉再松手发球，最多 3 杆。')));
+      ui.h('p', { class: 'small muted', style: { margin: 0 } }, '浅色高、深色低，细线是等高线，小箭头指向下坡，球会顺着坡拐弯。白球在哪就从哪出发，向后拉再松手发球，最多 3 杆。')));
 
     const putt = await new Promise((resolve) => {
       const finish = () => { s.stop(); resolve({ score: puttScore(st.holedAt, st.best, d0), max: 100, holed: st.holedAt, strokes: st.strokes, best: st.best }); };
@@ -213,7 +265,7 @@ export default {
           g.fillStyle = '#fff'; g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 1.5;
           g.beginPath(); g.arc(st.pos[0] * k, st.pos[1] * k, Math.max(4, k * 0.45), 0, 7); g.fill(); g.stroke();
           const power = st.drag ? Math.round(Math.min(1, Math.hypot(st.drag.x - st.pos[0] * k, st.drag.y - st.pos[1] * k) / maxPx()) * 100) : 0;
-          s.hud.textContent = st.holedAt ? '进洞！' : `第 ${Math.min(3, st.strokes + (st.anim ? 0 : 1))}/3 杆 · 距洞 ${dist(st.pos).toFixed(1)}${st.drag ? ` · 力度 ${power}%` : ''}`;
+          s.hud.textContent = st.holedAt ? '进洞！' : `第 ${Math.min(3, st.strokes + (st.anim ? 0 : 1))}/3 杆 · 距洞 ${dist(st.pos).toFixed(1)} 格${st.drag ? ` · 力度 ${power}%` : ''}`;
         },
         onPointer(type, pt) {
           if (st.anim || st.holedAt || st.strokes >= 3) return;
@@ -245,18 +297,28 @@ export default {
 
     // clue before the pin
     const widthKm = site.km;
-    ctx.stage.append(ui.panel({ kicker: '第二步 · 揭晓线索', title: `这块地形宽 ${widthKm} km` },
-      ui.h('div', { class: 'ds-grid', style: { '--min': '130px' } },
-        ui.stat({ label: '最低海拔', value: `${hhmm(site.min)} m` }),
-        ui.stat({ label: '最高海拔', value: `${hhmm(site.max)} m` }),
-        ui.stat({ label: '高差', value: `${hhmm(site.max - site.min)} m` })),
-      ui.h('p', { class: 'small muted' }, '你刚才推的果岭就是这块地形缩放而来。最高海拔越高越可能在大山脉，高差大说明有深谷或陡峰。')));
+    const lat = latFromKm(widthKm);
+    ctx.log('topo-golf reveal', { site: site.name, widthKm, latEstimate: lat });
+    ctx.stage.append(ui.panel({ kicker: '第二步 · 揭晓线索', title: `这块地形宽 ${widthKm.toFixed(2)} km` },
+      ui.kv([
+        ['最低 / 最高海拔', `${hhmm(site.min)} m / ${hhmm(site.max)} m`],
+        ['高差', `${hhmm(site.max - site.min)} m`],
+        ['宽度 → 纬度', `${EQ_KM.toFixed(2)} km × cos(纬度) = ${widthKm.toFixed(2)} km，所以纬度约 ±${lat}°`]]),
+      ui.h('p', { class: 'small muted', style: { marginBottom: 0 } }, '果岭就是这块地形缩放而来（最亮处 = 最高点）。海拔高、高差大多是大山脉；海拔低但高差大多是峡谷或沿海山地。地图上的虚线是由宽度算出的南北纬线，答案在其中一条上。')));
 
     const pin = await ctx.pin({
       title: '它在世界的哪里？',
-      answer: { lat: site.lat, lng: site.lng, label: `${site.name}（${site.region}）` },
-      view: { center: [25, 10], zoom: 2 },
+      prompt: `点在 ±${lat}° 两条纬线中的一条上，再用海拔线索判断经度。`,
+      answer: { lat: site.lat, lng: site.lng, label: `${site.zh} ${site.name}（${site.region}）` },
+      view: { bounds: [[-80, -175], [80, 175]] },
       scale: 2500,
+      setup: async ({ map, L }) => {
+        const c = ui.colors();
+        for (const la of lat < 0.5 ? [0] : [lat, -lat]) {
+          L.polyline([[la, -180], [la, 180]], { color: c.accent, weight: 2, dashArray: '6 6', opacity: 0.9, interactive: false })
+            .bindTooltip(`${la > 0 ? '+' : ''}${la}°`, { permanent: true, direction: 'top', className: 'ds-tip' }).addTo(map);
+        }
+      },
     });
 
     const puttDesc = putt.holed ? `第 ${putt.holed} 杆进洞` : `3 杆未进，最近距洞 ${putt.best.toFixed(1)} 格（起点 ${d0.toFixed(1)}）`;
@@ -264,12 +326,19 @@ export default {
       { score: putt.score, max: 100, emoji: putt.holed ? `⛳${putt.holed}` : '🏌️', summary: puttDesc },
       pin,
     ]);
+    const brk = straightShotBreak(h, p.ball, p.hole);
+    const dz = ((heightAt(h, p.hole[0], p.hole[1]) - heightAt(h, p.ball[0], p.ball[1])) / RELIEF) * (site.max - site.min);
+    const side = brk.lateral > 0 ? '右' : '左';
+    const breakTxt = brk.holed ? '这一洞坡度很平，直推就能进。'
+      : `球洞比起点${dz >= 0 ? '高' : '低'}约 ${hhmm(Math.abs(dz))} m（真实高差折算）；瞄准球洞直推会被坡带得偏向前进方向的${side}侧约 ${brk.miss.toFixed(1)} 格，要提前往${side === '右' ? '左' : '右'}瞄、顺着等高线读弯。`;
+    const solveTxt = p.solve ? `一种一杆进洞的打法：从直指球洞的方向${p.solve.offsetDeg === 0 ? '不偏' : `${p.solve.offsetDeg > 0 ? '顺时针' : '逆时针'}偏 ${Math.abs(p.solve.offsetDeg)}°`}，力度约 ${Math.round(p.solve.power * 100)}%。` : '';
     res.detail = ui.panel({ plain: true }, ui.kv([
-      ['地点', `${site.name}，${site.region}`],
+      ['地点', `${site.zh} ${site.name}（${site.kind}，${site.region}）`],
       ['瓦片中心', `${site.lat.toFixed(2)}°, ${site.lng.toFixed(2)}°`],
-      ['海拔范围', `${hhmm(site.min)}–${hhmm(site.max)} m（宽 ${widthKm} km）`],
+      ['海拔范围', `${hhmm(site.min)}–${hhmm(site.max)} m，高差 ${hhmm(site.max - site.min)} m`],
+      ['宽度给出的纬度', `${widthKm.toFixed(2)} km → ±${lat}°；实际纬度 ${site.lat.toFixed(1)}°，${Math.abs(Math.abs(site.lat) - lat) < 1.5 ? '线索与答案吻合' : '线索只是近似'}。瓦片宽度只由纬度决定，这是定位最硬的线索。`],
       ['推杆', puttDesc],
-      ['怎么推理', '果岭上颜色最浅的地方是这块地形的最高点。真实山地的最高点和高差，配合海拔和宽度，能帮你猜出是哪条山脉。']]));
+      ['这一洞的坡', `${breakTxt}${solveTxt}`]]));
     return res;
   },
 };
