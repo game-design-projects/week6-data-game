@@ -32,13 +32,13 @@ export default {
     num: 47,                         // idea number = folder prefix
     slug: 'spike',                   // = folder name without the number
     title: 'Spike',                  // English title from the idea list
-    tagline: '一句中文简介，说清楚玩什么。',
+    tagline: 'One English sentence that says what you play.',
     category: 'words',               // geo|nyc|money|science|words|culture|society|tech|transit|levels|literacy|model
     data: 'snapshot',                // live|snapshot|computed|synthetic  (badge on the page)
-    howTo: ['第一步…', '第二步…', '计分方式…'],   // ≥ 2 short Chinese steps
-    scoring: '一句话说明计分公式。',   // optional
-    sources: [{ name: 'Wikimedia Pageviews API', url: 'https://…', note: '可选说明' }],
-    dataNote: '可选：数据的局限或替代来源说明',  // shown in the ⓘ dialog
+    howTo: ['Step one…', 'Step two…', 'How it scores…'],   // ≥ 2 short English steps
+    scoring: 'One sentence on the scoring formula.',   // optional
+    sources: [{ name: 'Wikimedia Pageviews API', url: 'https://…', note: 'optional note' }],
+    dataNote: 'Optional: data limits or substitute sources',  // shown in the ⓘ dialog
     wide: false,                     // true → 1080px column for big charts/maps
   },
 
@@ -57,9 +57,9 @@ export default {
 
   // UI. Render into ctx.stage, await presets, return a result.
   async play(ctx, puzzle) {
-    ctx.stage.append(ctx.ui.panel({ kicker: '线索', title: '今天的曲线' }, await ctx.ui.plot(…)));
+    ctx.stage.append(ctx.ui.panel({ kicker: 'Clue', title: "Today's curve" }, await ctx.ui.plot(…)));
     const r = await ctx.guess({ … });
-    r.detail = ctx.ui.kv([['答案', …], ['为什么', …]]);   // shown in the result card: teach something
+    r.detail = ctx.ui.kv([['Answer', …], ['Why', …]]);   // shown in the result card: teach something
     return r;
   },
 
@@ -103,8 +103,8 @@ await ctx.guess({
   answer: id,
   maxGuesses: 6,
   clues: [node|string|fn, …],      // clue 1 shown at start; one more unlocks per wrong guess
-  cluesTitle: '线索',
-  columns: ['距离', '方向'],        // headers for feedback cells
+  cluesTitle: 'Clues',
+  columns: ['Distance', 'Direction'],        // headers for feedback cells
   feedback: (guessOpt, answerOpt) => [{ text, state: 'hit'|'near'|'miss'|'bad'|undefined, num: true }],
   near: (guessOpt, answerOpt) => bool,   // marks the guess tile yellow
   onGuess: (opt, { correct, n }) => {},  // hook, e.g. reveal extra info
@@ -202,7 +202,10 @@ module must import cleanly in Node).
 
 - No stylesheets per game. Use panels, presets and `ds-*` classes; inline `style` only with tokens
   (`var(--accent)`, `var(--muted)`, `var(--font-mono)`…). The category sets the accent color.
-- UI copy in **Simplified Chinese**, short and friendly. Keep proper nouns / data labels in their original form.
+- UI copy in **English** (US spelling), short and friendly. No Chinese anywhere in shipped files —
+  `node --test tests/english.test.mjs` checks every page, engine file and game file outside `build/`.
+  Names that are the puzzle itself in another script (a holiday's local name, a word in its own language)
+  are the only exception; they go in the test's `ALLOW` list with a reason.
 - Numbers: `ctx.core.fmtNum`, `fmtCompact`, `fmtMoney`, `fmtPct`, `fmtKm` (monospaced by `.mono`/`.num`).
 - Always teach in `detail`: what the answer was and which pattern in the data gave it away.
 - Mobile first: everything must work at 390 px wide, by touch.

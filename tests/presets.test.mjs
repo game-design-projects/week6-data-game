@@ -29,11 +29,13 @@ test('presets behave in a real browser', { skip: !existsSync(CHROME) && 'Chrome 
     const m = html.match(/<pre id="out">([^<]*)<\/pre>/);
     assert.ok(m && m[1], 'presets.html produced no output');
     const out = JSON.parse(m[1].replaceAll('&quot;', '"').replaceAll('&amp;', '&'));
-    assert.equal(out.groupsLeftAfterRepeat, '剩余失误 ●●●○', 'a repeated wrong guess must not cost a second mistake');
+    assert.equal(out.groupsLeftAfterRepeat, 'Mistakes left ●●●○', 'a repeated wrong guess must not cost a second mistake');
     assert.equal(out.groupsScore, 4 * 25 - 5);
     assert.equal(out.estimateReadout.split('$').length - 1, 1, `unit printed twice: ${out.estimateReadout}`);
     assert.equal(out.canvasEvents, 'down,move,up');
     assert.equal(out.canvasRedrawnAfterResize, true);
+    assert.equal(out.dateShort, 'Thu, Oct 15, 2026');
+    assert.equal(out.dateLong, 'Thursday, October 15, 2026');
   } finally {
     server.close();
   }

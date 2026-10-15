@@ -9,12 +9,11 @@ import * as store from './store.js';
 const { h } = dom;
 
 export const CATEGORIES = {
-  geo: '地图与地球', nyc: '纽约开放数据', money: '钱与价格', science: '地球、生物与太空', words: '词语与文本',
-  culture: '文化与媒体', society: '人与社会', tech: '互联网与技术', transit: '交通', levels: '数据即关卡',
-  literacy: '数据素养', model: '模型驱动',
+  geo: 'Maps & Earth', nyc: 'NYC Open Data', money: 'Money & Prices', science: 'Earth, Life & Space', words: 'Words & Text',
+  culture: 'Culture & Media', society: 'People & Society', tech: 'Internet & Tech', transit: 'Transit', levels: 'Data as Levels',
+  literacy: 'Data Literacy', model: 'Model-driven',
 };
-export const DATA_KINDS = { live: ['实时', 'live'], snapshot: ['快照', ''], computed: ['计算', ''], synthetic: ['合成数据', 'synthetic'] };
-const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+export const DATA_KINDS = { live: ['Live', 'live'], snapshot: ['Snapshot', ''], computed: ['Computed', ''], synthetic: ['Synthetic', 'synthetic'] };
 
 // ───────── logging ─────────
 const LOG = (window.__dlog ??= []);
@@ -69,21 +68,21 @@ async function fetchJSON(url, { timeout, cache = true, log } = {}) {
 }
 
 // ───────── page chrome ─────────
-function fmtLongDate(iso) {
-  const [y, m, d] = iso.split('-').map(Number);
-  return `${y}年${m}月${d}日 周${WEEK[core.weekday(iso)]}`;
+/** '2026-10-15' → 'Thu, Oct 15, 2026' (style: 'short') or 'Thursday, October 15, 2026' ('long'). */
+export function fmtLongDate(iso, style = 'short') {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { weekday: style, month: style, day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
 function howToBody(meta) {
   return h('div',
     h('ol', (meta.howTo ?? []).map((t) => h('li', t))),
-    meta.scoring && h('p', { class: 'ink2' }, h('b', '计分 '), meta.scoring),
-    h('p', { class: 'small muted' }, '每天本地时间 0 点换一题。所有玩家同一天拿到同一道题。'));
+    meta.scoring && h('p', { class: 'ink2' }, h('b', 'Scoring '), meta.scoring),
+    h('p', { class: 'small muted' }, 'A new puzzle every day at local midnight. Everyone gets the same puzzle on the same day.'));
 }
 
 function sourcesBody(meta, dataKind) {
   return h('div', { class: 'ds-stack' },
-    h('p', { class: 'ink2' }, `数据类型：${DATA_KINDS[dataKind]?.[0] ?? dataKind}`),
+    h('p', { class: 'ink2' }, `Data type: ${DATA_KINDS[dataKind]?.[0] ?? dataKind}`),
     h('ul', (meta.sources ?? []).map((s) => h('li', s.url ? h('a', { href: s.url, target: '_blank', rel: 'noopener' }, s.name) : s.name, s.note ? h('span', { class: 'muted' }, ` — ${s.note}`) : null))),
     meta.dataNote && h('div', { class: 'ds-callout' }, meta.dataNote));
 }
@@ -92,14 +91,14 @@ function statsBody(slug) {
   const s = store.stats(slug);
   return h('div', { class: 'ds-stack' },
     h('div', { class: 'ds-grid', style: { '--min': '110px' } },
-      dom.stat({ label: '已玩', value: s.played }),
-      dom.stat({ label: '平均', value: core.fmtPct(s.avg) }),
-      dom.stat({ label: '最佳', value: core.fmtPct(s.best) }),
-      dom.stat({ label: '连续天数', value: s.streak })),
+      dom.stat({ label: 'Played', value: s.played }),
+      dom.stat({ label: 'Average', value: core.fmtPct(s.avg) }),
+      dom.stat({ label: 'Best', value: core.fmtPct(s.best) }),
+      dom.stat({ label: 'Streak', value: s.streak })),
     s.hist.length ? dom.table({
-      columns: [{ key: 'date', label: '日期' }, { key: 'summary', label: '结果' }, { key: 'score', label: '分数', num: true, fmt: (v, r) => `${v}/${r.max}` }],
+      columns: [{ key: 'date', label: 'Date' }, { key: 'summary', label: 'Result' }, { key: 'score', label: 'Score', num: true, fmt: (v, r) => `${v}/${r.max}` }],
       rows: s.hist.slice(0, 14),
-    }) : h('p', { class: 'muted' }, '还没有记录。'));
+    }) : h('p', { class: 'muted' }, 'No results yet.'));
 }
 
 function countdown(el) {
@@ -107,18 +106,18 @@ function countdown(el) {
     const now = new Date();
     const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     const s = Math.max(0, Math.floor((next - now) / 1000));
-    el.textContent = `下一题还有 ${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    el.textContent = `Next puzzle in ${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   };
   tick();
   setInterval(tick, 1000);
 }
 
 function verdict(frac) {
-  if (frac >= 0.95) return '完美。';
-  if (frac >= 0.75) return '漂亮！';
-  if (frac >= 0.5) return '不错。';
-  if (frac >= 0.25) return '差一点。';
-  return '明天再来。';
+  if (frac >= 0.95) return 'Perfect.';
+  if (frac >= 0.75) return 'Great!';
+  if (frac >= 0.5) return 'Nice.';
+  if (frac >= 0.25) return 'Close.';
+  return 'Try again tomorrow.';
 }
 
 function shareText(meta, day, r) {
@@ -130,25 +129,25 @@ function resultCard({ meta, slug, day, r, ctx, revisit = false }) {
   const frac = r.max ? r.score / r.max : 0;
   const s = store.stats(slug);
   const next = h('div', { class: 'next' });
-  const copy = dom.button('复制成绩', {
+  const copy = dom.button('Copy result', {
     variant: 'accent',
     onClick: async () => {
       const text = shareText(meta, day, r);
-      try { await navigator.clipboard.writeText(text); dom.toast('已复制，可以贴到群里了'); } catch { dom.modal({ title: '分享', body: dom.code(text) }); }
+      try { await navigator.clipboard.writeText(text); dom.toast('Copied. Paste it anywhere.'); } catch { dom.modal({ title: 'Share', body: dom.code(text) }); }
     },
   });
-  const again = dom.button(ctx.practice ? '再练一次' : '练习模式再玩', {
+  const again = dom.button(ctx.practice ? 'Practice again' : 'Replay in practice mode', {
     variant: 'ghost',
     onClick: () => { const u = new URL(location.href); u.searchParams.set('practice', '1'); location.href = u.href; },
   });
   const card = h('section', { class: 'ds-result', 'aria-live': 'polite' },
     h('div', { class: 'head' },
-      h('div', h('div', { class: 'ds-kicker' }, revisit ? '今天已经玩过' : ctx.practice ? '练习成绩（不计入统计）' : '今日成绩'), h('p', { class: 'verdict' }, verdict(frac)), r.summary && h('div', { class: 'ink2' }, r.summary)),
-      dom.stat({ label: '得分', value: `${core.fmtNum(r.score, Number.isInteger(r.score) ? 0 : 1)}/${r.max}`, big: true })),
+      h('div', h('div', { class: 'ds-kicker' }, revisit ? 'Already played today' : ctx.practice ? 'Practice result (not counted)' : "Today's result"), h('p', { class: 'verdict' }, verdict(frac)), r.summary && h('div', { class: 'ink2' }, r.summary)),
+      dom.stat({ label: 'Score', value: `${core.fmtNum(r.score, Number.isInteger(r.score) ? 0 : 1)}/${r.max}`, big: true })),
     h('div', { class: 'emoji', style: { whiteSpace: 'pre-line' } }, r.emoji),
     r.detail && h('div', { style: { marginTop: '12px' } }, dom.toNode(r.detail)),
-    h('div', { class: 'actions' }, copy, again, h('a', { class: 'ds-btn ghost', href: './' }, '全部游戏')),
-    h('div', { class: 'small muted', style: { marginTop: '14px' } }, `已玩 ${s.played} 次 · 平均 ${core.fmtPct(s.avg)} · 连续 ${s.streak} 天`),
+    h('div', { class: 'actions' }, copy, again, h('a', { class: 'ds-btn ghost', href: './' }, 'All games')),
+    h('div', { class: 'small muted', style: { marginTop: '14px' } }, `Played ${s.played} · average ${core.fmtPct(s.avg)} · streak ${s.streak}`),
     next);
   countdown(next);
   return card;
@@ -179,14 +178,14 @@ export async function boot() {
     log.error('fatal', err);
     document.body.dataset.state = 'error';
     document.body.dataset.error = String(err?.message ?? err);
-    stage.append(dom.panel({ kicker: '出错了', title: '这道题没能加载' }, dom.callout(String(err?.message ?? err), 'bad'), h('p', { class: 'small muted', style: { marginTop: '10px' } }, '加上 ?debug=1 可以看到日志。')));
+    stage.append(dom.panel({ kicker: 'Something broke', title: "Today's puzzle didn't load" }, dom.callout(String(err?.message ?? err), 'bad'), h('p', { class: 'small muted', style: { marginTop: '10px' } }, 'Add ?debug=1 to the URL to see the log.')));
   };
   window.addEventListener('error', (e) => log.error('window.error', e.message, e.filename ?? '', e.lineno ?? ''));
   window.addEventListener('unhandledrejection', (e) => log.error('unhandledrejection', e.reason));
 
   if (!dir || !/^[\w-]+$/.test(dir)) {
     root.append(h('div', { class: 'ds-wrap' }, stage));
-    fail(new Error('缺少或无效的游戏参数 ?g='));
+    fail(new Error('Missing or invalid game parameter ?g='));
     return;
   }
 
@@ -194,7 +193,7 @@ export async function boot() {
   let game;
   try {
     game = (await import(new URL('game.js', base).href)).default;
-    if (!game?.meta || typeof game.play !== 'function') throw new Error('game.js 必须 export default { meta, play }');
+    if (!game?.meta || typeof game.play !== 'function') throw new Error('game.js must export default { meta, play }');
   } catch (e) {
     root.append(h('div', { class: 'ds-wrap' }, stage));
     fail(e);
@@ -207,20 +206,20 @@ export async function boot() {
   log('boot', { dir, date, day, practice, autoplay });
 
   // ── chrome
-  const themeBtn = h('button', { class: 'ds-iconbtn', title: '切换主题', 'aria-label': '切换主题' }, '◐');
+  const themeBtn = h('button', { class: 'ds-iconbtn', title: 'Switch theme', 'aria-label': 'Switch theme' }, '◐');
   themeBtn.addEventListener('click', () => {
     const order = ['auto', 'light', 'dark'];
     const t = order[(order.indexOf(store.getTheme()) + 1) % 3];
     store.setTheme(t);
-    dom.toast({ auto: '跟随系统', light: '浅色', dark: '深色' }[t]);
+    dom.toast({ auto: 'Theme: match system', light: 'Theme: light', dark: 'Theme: dark' }[t]);
   });
-  const helpBtn = h('button', { class: 'ds-iconbtn', title: '玩法', 'aria-label': '玩法' }, '?');
-  const statsBtn = h('button', { class: 'ds-iconbtn', title: '统计', 'aria-label': '统计' }, '▤');
-  const srcBtn = h('button', { class: 'ds-iconbtn', title: '数据来源', 'aria-label': '数据来源' }, 'ⓘ');
+  const helpBtn = h('button', { class: 'ds-iconbtn', title: 'How to play', 'aria-label': 'How to play' }, '?');
+  const statsBtn = h('button', { class: 'ds-iconbtn', title: 'Stats', 'aria-label': 'Stats' }, '▤');
+  const srcBtn = h('button', { class: 'ds-iconbtn', title: 'Data sources', 'aria-label': 'Data sources' }, 'ⓘ');
   const dataBadge = h('span');
   const go = (iso) => { const u = new URL(location.href); u.searchParams.set('date', iso); u.searchParams.delete('practice'); location.href = u.href; };
-  const prev = h('button', { class: 'pill', title: '前一天', disabled: day <= 1, onClick: () => go(core.addDays(date, -1)) }, '‹');
-  const next = h('button', { class: 'pill', title: '后一天', disabled: date >= today, onClick: () => go(core.addDays(date, 1)) }, '›');
+  const prev = h('button', { class: 'pill', title: 'Previous day', disabled: day <= 1, onClick: () => go(core.addDays(date, -1)) }, '‹');
+  const next = h('button', { class: 'pill', title: 'Next day', disabled: date >= today, onClick: () => go(core.addDays(date, 1)) }, '›');
   const titleParts = String(meta.title).split(' ');
   root.append(
     h('div', { class: 'ds-topbar' }),
@@ -230,13 +229,13 @@ export async function boot() {
         h('div', { class: 'ds-kicker' }, h('span', `№ ${String(meta.num).padStart(3, '0')}`), h('span', { class: 'dot' }), h('span', CATEGORIES[meta.category] ?? meta.category ?? '')),
         h('h1', { class: 'ds-title' }, titleParts.length > 1 ? [titleParts.slice(0, -1).join(' ') + ' ', h('em', titleParts.at(-1))] : h('span', meta.title)),
         h('p', { class: 'ds-tagline' }, meta.tagline),
-        h('div', { class: 'ds-dateline' }, prev, h('span', { class: 'pill' }, `${fmtLongDate(date)} · 第 ${day} 期`), next, dataBadge, practice ? dom.badge('练习', 'practice') : null)),
+        h('div', { class: 'ds-dateline' }, prev, h('span', { class: 'pill' }, `${fmtLongDate(date)} · №${day}`), next, dataBadge, practice ? dom.badge('Practice', 'practice') : null)),
       stage,
-      h('footer', { class: 'ds-footer' }, '数据：', (meta.sources ?? []).map((s, i) => [i ? ' · ' : '', s.url ? h('a', { href: s.url, target: '_blank', rel: 'noopener' }, s.name) : s.name]), h('br'), `Daily Data · ${meta.title} · NYU Lecture 6`)));
-  helpBtn.addEventListener('click', () => dom.modal({ title: '怎么玩', body: howToBody(meta) }));
-  statsBtn.addEventListener('click', () => dom.modal({ title: '统计', body: statsBody(slug) }));
+      h('footer', { class: 'ds-footer' }, 'Data: ', (meta.sources ?? []).map((s, i) => [i ? ' · ' : '', s.url ? h('a', { href: s.url, target: '_blank', rel: 'noopener' }, s.name) : s.name]), h('br'), `Daily Data · ${meta.title} · NYU Lecture 6`)));
+  helpBtn.addEventListener('click', () => dom.modal({ title: 'How to play', body: howToBody(meta) }));
+  statsBtn.addEventListener('click', () => dom.modal({ title: 'Stats', body: statsBody(slug) }));
 
-  const loading = stage.appendChild(h('div', { class: 'ds-loading' }, h('div', { class: 'ds-spinner' }), '正在取今天的数据…'));
+  const loading = stage.appendChild(h('div', { class: 'ds-loading' }, h('div', { class: 'ds-spinner' }), "Fetching today's data…"));
 
   try {
     // ── data: snapshot data.json (optional) then optional live loader
@@ -273,13 +272,13 @@ export async function boot() {
         if (live != null) { data = live; log('live data ok'); }
       } catch (e) {
         log.warn('live load failed, using snapshot', e);
-        if (meta.data === 'live') { dataKind = 'snapshot'; dom.toast('实时数据暂时取不到，改用快照'); }
+        if (meta.data === 'live') { dataKind = 'snapshot'; dom.toast('Live data is unavailable right now, so this uses the snapshot.'); }
       }
     }
     ctx.data = data;
     const [kindLabel, kindTone] = DATA_KINDS[dataKind] ?? [dataKind, ''];
     dataBadge.replaceWith(dom.badge(kindLabel, kindTone));
-    srcBtn.addEventListener('click', () => dom.modal({ title: '数据来源', body: sourcesBody(meta, dataKind) }));
+    srcBtn.addEventListener('click', () => dom.modal({ title: 'Data sources', body: sourcesBody(meta, dataKind) }));
 
     const puzzle = typeof game.puzzle === 'function'
       ? game.puzzle({ data, day, date, slug, rng: core.makeRng(`${slug}:${date}`), pick: ctx.pick })
@@ -293,7 +292,7 @@ export async function boot() {
       stage.append(resultCard({ meta, slug, day, r: prior, ctx, revisit: true }));
       return;
     }
-    if (!smoke && !store.seenHelp(slug)) { store.markHelp(slug); dom.modal({ title: '怎么玩', body: howToBody(meta) }); }
+    if (!smoke && !store.seenHelp(slug)) { store.markHelp(slug); dom.modal({ title: 'How to play', body: howToBody(meta) }); }
 
     document.body.dataset.state = 'playing';
     const raw = await game.play(ctx, puzzle);

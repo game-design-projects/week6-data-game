@@ -6,6 +6,7 @@
 <script type="module">
 import * as presets from '../engine/presets.js';
 import { makeRng } from '../engine/core.js';
+import { fmtLongDate } from '../engine/shell.js';
 
 const stage = document.querySelector('.ds-stage');
 const log = Object.assign(() => {}, { warn() {}, error() {} });
@@ -25,7 +26,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const done = presets.groups({ ...ctx }, { groups, container: box, mistakes: 4 });
   await tick();
   const cell = (label) => [...box.querySelectorAll('.cell')].find((c) => c.textContent === label);
-  const submit = () => [...box.querySelectorAll('button')].find((b) => b.textContent === '提交').click();
+  const submit = () => [...box.querySelectorAll('button')].find((b) => b.textContent === 'Submit').click();
   const pick = (labels) => { for (const l of labels) cell(l).click(); };
   const wrong = ['a1', 'a2', 'a3', 'b1'];
   pick(wrong); submit(); await tick();
@@ -63,6 +64,10 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   await new Promise((r) => setTimeout(r, 50));
   out.canvasRedrawnAfterResize = frames > before;
 }
+
+// dates: English long form used by the page dateline and the gallery
+out.dateShort = fmtLongDate('2026-10-15');
+out.dateLong = fmtLongDate('2026-10-15', 'long');
 
 document.getElementById('out').textContent = JSON.stringify(out);
 document.body.dataset.state = 'done';

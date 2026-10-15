@@ -19,10 +19,10 @@ export async function guess(ctx, {
   options,
   answer,
   maxGuesses = 6,
-  title = '你的猜测',
-  placeholder = '输入并从列表中选择…',
+  title = 'Your guess',
+  placeholder = 'Type and pick from the list…',
   clues = [],
-  cluesTitle = '线索',
+  cluesTitle = 'Clues',
   feedback,
   columns = [],
   near,
@@ -38,23 +38,23 @@ export async function guess(ctx, {
   log('start', { options: options.length, maxGuesses, clues: clues.length });
 
   // clues
-  const clueEls = clues.map((c, i) => h('div', { class: ['ds-clue', i > 0 && 'locked'] }, h('div', { class: 'body' }, i === 0 ? toNode(c) : h('span', { class: 'muted small' }, '猜错一次解锁'))));
+  const clueEls = clues.map((c, i) => h('div', { class: ['ds-clue', i > 0 && 'locked'] }, h('div', { class: 'body' }, i === 0 ? toNode(c) : h('span', { class: 'muted small' }, 'Unlocks after a wrong guess'))));
   const revealClue = (i) => {
     if (i >= clues.length) return;
     const el = clueEls[i];
     el.classList.remove('locked');
     clear(el.querySelector('.body')).append(toNode(clues[i]));
   };
-  if (clues.length) mount(ctx, { container }, panel({ kicker: `${clues.length} 条`, title: cluesTitle }, h('div', { class: 'ds-clues' }, clueEls)));
+  if (clues.length) mount(ctx, { container }, panel({ kicker: `${clues.length} ${clues.length === 1 ? 'clue' : 'clues'}`, title: cluesTitle }, h('div', { class: 'ds-clues' }, clueEls)));
 
   // guess rows
   const cols = `minmax(0, 2.2fr) ${columns.map(() => 'minmax(0, 1fr)').join(' ')}`.trim();
   const rows = h('div', { class: 'ds-guesses', style: { '--cols': cols } },
-    columns.length ? h('div', { class: 'ds-guess-head' }, h('span', '猜测'), columns.map((c) => h('span', c))) : null);
+    columns.length ? h('div', { class: 'ds-guess-head' }, h('span', 'Guess'), columns.map((c) => h('span', c))) : null);
   const pipEl = h('span');
   const input = h('input', { class: 'ds-input', placeholder, autocomplete: 'off', spellcheck: false, 'aria-label': title, role: 'combobox', 'aria-expanded': 'false' });
   const list = h('div', { class: 'list hidden', role: 'listbox' });
-  const submit = button('猜', { variant: 'accent' });
+  const submit = button('Guess', { variant: 'accent' });
   const combo = h('div', { class: 'ds-combo', style: { flex: '1 1 220px' } }, input, list);
   const form = h('form', { class: 'ds-row', style: { alignItems: 'stretch', flexWrap: 'nowrap' } }, combo, submit);
   const box = mount(ctx, { container }, panel({ title, aside: pipEl }, form, h('div', { style: { height: '12px' } }), rows));
@@ -71,7 +71,7 @@ export async function guess(ctx, {
   let chosen = null;
   const render = () => {
     clear(list);
-    if (!matches.length) list.append(h('div', { class: 'empty' }, '没有匹配的选项'));
+    if (!matches.length) list.append(h('div', { class: 'empty' }, 'No matches'));
     matches.slice(0, 60).forEach((o, i) => {
       list.append(h('div', {
         class: ['opt', used.has(String(o.id)) && 'used'], role: 'option', 'aria-selected': String(i === active),
@@ -97,7 +97,7 @@ export async function guess(ctx, {
     render();
   };
   const pick = (o) => {
-    if (used.has(String(o.id))) { toast('这个已经猜过了'); return; }
+    if (used.has(String(o.id))) { toast('Already guessed'); return; }
     chosen = o;
     input.value = o.label;
     list.classList.add('hidden');
@@ -136,8 +136,8 @@ export async function guess(ctx, {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const o = chosen ?? (matches[active] && normalize(matches[active].label) === normalize(input.value) ? matches[active] : null);
-      if (!o) { shake(combo); toast('请从列表中选一个'); return; }
-      if (used.has(String(o.id))) { toast('这个已经猜过了'); return; }
+      if (!o) { shake(combo); toast('Pick one from the list'); return; }
+      if (used.has(String(o.id))) { toast('Already guessed'); return; }
       input.value = '';
       chosen = null;
       matches = [];
@@ -155,13 +155,13 @@ export async function guess(ctx, {
   });
 
   if (!won) {
-    box.append(h('div', { style: { marginTop: '14px' } }, h('div', { class: 'ds-callout bad' }, '答案是 ', h('b', ans.label))));
+    box.append(h('div', { style: { marginTop: '14px' } }, h('div', { class: 'ds-callout bad' }, 'The answer was ', h('b', ans.label))));
   }
   // reveal any remaining clues at the end so the player sees the full picture
   for (let i = 0; i < clues.length; i++) revealClue(i);
 
   const score = scoring ? scoring(n, won) : won ? Math.round((max * (maxGuesses - n + 1)) / maxGuesses) : 0;
-  return { score, max, win: won, emoji: emoji.join(''), summary: won ? `${n}/${maxGuesses} 次猜中` : `没猜中 · ${ans.label}`, answer: ans };
+  return { score, max, win: won, emoji: emoji.join(''), summary: won ? `Got it in ${n}/${maxGuesses}` : `Missed · ${ans.label}`, answer: ans };
 }
 
 // ═════════════════════════════ estimate ═════════════════════════════
@@ -178,7 +178,7 @@ export async function estimate(ctx, {
   initial,
   unit = '',
   format = (v) => fmtNum(v, step && step < 1 ? Math.min(4, String(step).split('.')[1]?.length ?? 0) : 0),
-  title = '你的估计',
+  title = 'Your estimate',
   prompt,
   attempts = 1,
   scoring = logScale ? 'log' : 'pct',
@@ -216,8 +216,8 @@ export async function estimate(ctx, {
 
   const readout = h('div', { class: 'ds-readout' });
   const range = h('input', { type: 'range', class: 'ds-range', min: 0, max: RES, step: 1, 'aria-label': title });
-  const typed = h('input', { class: 'ds-input num', inputmode: 'decimal', style: { maxWidth: '170px' }, 'aria-label': '精确输入' });
-  const submit = button(attempts > 1 ? '提交' : '就这个', { variant: 'accent' });
+  const typed = h('input', { class: 'ds-input num', inputmode: 'decimal', style: { maxWidth: '170px' }, 'aria-label': 'Exact value' });
+  const submit = button(attempts > 1 ? 'Submit' : 'Lock it in', { variant: 'accent' });
   const history = h('div', { class: 'ds-stack' });
   const pipEl = h('span');
   const sync = (from) => {
@@ -233,7 +233,7 @@ export async function estimate(ctx, {
   });
   sync();
 
-  const scaleRow = h('div', { class: 'ds-row between small muted mono' }, h('span', fu(min)), logScale ? h('span', '对数刻度') : null, h('span', fu(max)));
+  const scaleRow = h('div', { class: 'ds-row between small muted mono' }, h('span', fu(min)), logScale ? h('span', 'log scale') : null, h('span', fu(max)));
   const controls = h('div', { class: 'ds-stack' }, readout, range, scaleRow, h('div', { class: 'ds-row', style: { justifyContent: 'center' } }, typed, submit));
   const box = mount(ctx, { container }, panel({ title, aside: attempts > 1 ? pipEl : null }, prompt ? h('p', { class: 'ink2' }, toNode(prompt)) : null, controls, history));
   if (attempts > 1) pipEl.replaceChildren(pips(attempts, 0));
@@ -245,13 +245,13 @@ export async function estimate(ctx, {
       const ok = within(g);
       log('attempt', { n: guesses.length, g, ok });
       if (attempts > 1) {
-        const dir = g < answer ? '↑ 更高' : g > answer ? '↓ 更低' : '✓';
+        const dir = g < answer ? '↑ higher' : g > answer ? '↓ lower' : '✓';
         const err = errOf(g);
-        const errTxt = scoring === 'log' && err != null ? `差 ${(10 ** err).toFixed(1)}×` : scoring === 'pct' ? `差 ${fmtPct(err)}` : '';
+        const errTxt = scoring === 'log' && err != null ? `off ${(10 ** err).toFixed(1)}×` : scoring === 'pct' ? `off ${fmtPct(err)}` : '';
         history.append(h('div', { class: 'ds-guess', style: { '--cols': '2fr 1fr 1fr' } },
           tile(fu(g), { lead: true, num: true, state: ok ? 'hit' : 'miss' }),
           tile(ok ? '✓' : dir, { state: ok ? 'hit' : 'near', i: 1 }),
-          tile(ok ? '命中' : errTxt, { num: true, i: 2 })));
+          tile(ok ? 'Hit' : errTxt, { num: true, i: 2 })));
         pipEl.replaceChildren(pips(attempts, guesses.length, { won: ok }));
       }
       if (ok || guesses.length >= attempts) { controls.remove(); resolve(); }
@@ -273,15 +273,15 @@ export async function estimate(ctx, {
   box.append(
     h('div', { class: 'ds-numline', 'aria-hidden': 'true' },
       h('div', { class: 'track' }),
-      h('div', { class: 'mark answer', style: { left: pos(answer) } }, h('span', `答案 ${fu(answer)}`), h('i')),
-      h('div', { class: 'mark guess below', style: { left: pos(last) } }, h('span', `你 ${format(last)}`), h('i'))),
+      h('div', { class: 'mark answer', style: { left: pos(answer) } }, h('span', `answer ${fu(answer)}`), h('i')),
+      h('div', { class: 'mark guess below', style: { left: pos(last) } }, h('span', `you ${format(last)}`), h('i'))),
     h('div', { class: 'ds-row between', style: { marginTop: '10px' } },
-      h('span', { class: 'ink2' }, '正确答案 ', h('b', { class: 'mono' }, fu(answer))),
+      h('span', { class: 'ink2' }, 'Answer ', h('b', { class: 'mono' }, fu(answer))),
       h('span', { class: 'mono' }, `${score}/${maxScore}`)));
 
   const err = errOf(last);
   const summary = typeof scoring === 'function' ? `${format(last)} vs ${format(answer)}`
-    : scoring === 'log' ? `差 ${(10 ** err).toFixed(2)}×` : scoring === 'pct' ? `误差 ${fmtPct(err)}` : `差 ${format(Math.abs(last - answer))}`;
+    : scoring === 'log' ? `off by ${(10 ** err).toFixed(2)}×` : scoring === 'pct' ? `off by ${fmtPct(err)}` : `off by ${format(Math.abs(last - answer))}`;
   return { score, max: maxScore, win: score >= maxScore * 0.5, emoji: emojiBar(score / maxScore), summary, guess: last, guesses };
 }
 
@@ -294,10 +294,10 @@ export async function pin(ctx, {
   basemap = 'gray',
   scale = 1500,
   maxScore = 100,
-  title = '在地图上标出位置',
+  title = 'Drop a pin on the map',
   prompt,
   attempts = 1,
-  hint = (km, deg) => `还差 ${fmtKm(km)}，往 ${arrow(deg)} 方向`,
+  hint = (km, deg) => `${fmtKm(km)} off — head ${arrow(deg)}`,
   setup,
   reveal,
   height,
@@ -305,8 +305,8 @@ export async function pin(ctx, {
 } = {}) {
   const log = ctx.log.scope('pin');
   if (!answer || !Number.isFinite(answer.lat) || !Number.isFinite(answer.lng)) throw new Error('pin: answer {lat, lng} required');
-  const status = h('div', { class: 'ink2 small' }, '点击地图放置图钉，可以拖动或重新点击调整');
-  const submit = button('确定位置', { variant: 'accent', disabled: true });
+  const status = h('div', { class: 'ink2 small' }, 'Click the map to drop a pin. Drag it or click again to move it.');
+  const submit = button('Lock in pin', { variant: 'accent', disabled: true });
   const pipEl = h('span');
   const box = mount(ctx, { container }, panel({ title, aside: attempts > 1 ? pipEl : null }, prompt ? h('p', { class: 'ink2' }, toNode(prompt)) : null));
   const m = await createMap({ ...view, labels, basemap, height });
@@ -371,7 +371,7 @@ export async function pin(ctx, {
   m.map.fitBounds(m.L.latLngBounds([[last.lat, last.lng], [answer.lat, answer.lng]]).pad(0.35), { maxZoom: 12 });
   await reveal?.(m, last);
   m.el.classList.remove('crosshair');
-  status.replaceChildren('你离答案 ', h('b', { class: 'mono' }, fmtKm(last.km)), answer.label ? ` · ${answer.label}` : '', h('span', { class: 'mono', style: { marginLeft: '10px' } }, `${score}/${maxScore}`));
+  status.replaceChildren('You were ', h('b', { class: 'mono' }, fmtKm(last.km)), ' away', answer.label ? ` · ${answer.label}` : '', h('span', { class: 'mono', style: { marginLeft: '10px' } }, `${score}/${maxScore}`));
   return { score, max: maxScore, win: score >= maxScore * 0.5, emoji: emojiBar(score / maxScore), summary: fmtKm(last.km), km: last.km, guess: last, map: m };
 }
 
@@ -390,9 +390,9 @@ export async function rounds(ctx, { rounds: list, multi = false, title, minWidth
     const correct = new Set([].concat(q.correct));
     const picked = new Set();
     const btns = q.options.map((o, i) => h('button', { class: 'ds-choice', type: 'button' }, h('span', toNode(o.label)), o.sub && h('span', { class: 'sub' }, toNode(o.sub)), o.body && toNode(o.body)));
-    const submit = multi ? button('提交', { variant: 'accent', disabled: true }) : null;
+    const submit = multi ? button('Submit', { variant: 'accent', disabled: true }) : null;
     const after = h('div');
-    const card = mount(ctx, { container }, panel({ kicker: `第 ${r + 1} / ${list.length} 题`, title: q.prompt ? toNode(q.prompt) : title },
+    const card = mount(ctx, { container }, panel({ kicker: `Question ${r + 1} of ${list.length}`, title: q.prompt ? toNode(q.prompt) : title },
       q.body ? h('div', { style: { marginBottom: '12px' } }, toNode(q.body)) : null,
       h('div', { class: 'ds-choices', style: { '--min': `${minWidth}px` } }, btns),
       submit && h('div', { class: 'ds-row', style: { marginTop: '12px', justifyContent: 'flex-end' } }, submit),
@@ -425,15 +425,15 @@ export async function rounds(ctx, { rounds: list, multi = false, title, minWidth
     total += pts;
     emoji.push(pts >= 0.999 ? TILE.hit : pts > 0 ? TILE.near : TILE.bad);
     after.append(h('div', { style: { marginTop: '12px' }, class: ['ds-callout', pts >= 0.999 ? 'good' : 'bad'] },
-      pts >= 0.999 ? '✓ 正确' : pts > 0 ? `部分正确（${Math.round(pts * 100)}%）` : '✗ 错了', q.explain ? h('span', ' · ', toNode(q.explain)) : null));
+      pts >= 0.999 ? '✓ Correct' : pts > 0 ? `Partly right (${Math.round(pts * 100)}%)` : '✗ Wrong', q.explain ? h('span', ' · ', toNode(q.explain)) : null));
     if (r < list.length - 1 && !ctx.autoplay) {
-      const next = button(r === list.length - 2 ? '最后一题 →' : '下一题 →', { small: true });
+      const next = button(r === list.length - 2 ? 'Last question →' : 'Next →', { small: true });
       after.append(h('div', { class: 'ds-row', style: { marginTop: '10px', justifyContent: 'flex-end' } }, next));
       await new Promise((res) => next.addEventListener('click', () => { next.parentElement.remove(); res(); }));
     }
   }
   const score = Math.round(total * 10) / 10;
-  return { score, max: list.length, win: score >= list.length / 2, emoji: emoji.join(''), summary: `${fmtNum(score, Number.isInteger(score) ? 0 : 1)}/${list.length} 题` };
+  return { score, max: list.length, win: score >= list.length / 2, emoji: emoji.join(''), summary: `${fmtNum(score, Number.isInteger(score) ? 0 : 1)}/${list.length} right` };
 }
 
 // ═════════════════════════════ order ═════════════════════════════
@@ -442,10 +442,10 @@ export async function order(ctx, {
   items,
   direction = 'desc',
   attempts = 3,
-  title = '排序',
+  title = 'Put them in order',
   prompt,
-  topLabel = direction === 'desc' ? '最高' : '最低',
-  bottomLabel = direction === 'desc' ? '最低' : '最高',
+  topLabel = direction === 'desc' ? 'Highest' : 'Lowest',
+  bottomLabel = direction === 'desc' ? 'Lowest' : 'Highest',
   format = (v) => fmtNum(v),
   maxScore = 100,
   container,
@@ -456,7 +456,7 @@ export async function order(ctx, {
   if (cur.map((x) => String(x.id)).join() === truth.join()) cur = cur.slice().reverse();
   const ul = h('ul', { class: 'ds-order' });
   const pipEl = h('span');
-  const submit = button('提交顺序', { variant: 'accent' });
+  const submit = button('Submit order', { variant: 'accent' });
   const hist = h('div', { class: 'small mono muted', style: { marginTop: '8px' } });
   mount(ctx, { container }, panel({ title, aside: pipEl },
     prompt ? h('p', { class: 'ink2' }, toNode(prompt)) : null,
@@ -477,8 +477,8 @@ export async function order(ctx, {
         h('div', { class: 'handle' }, h('div', toNode(it.label)), it.sub && h('div', { class: 'small muted' }, toNode(it.sub))),
         showValues ? h('span', { class: 'val' }, format(it.value)) :
           h('div', { class: 'moves' },
-            h('button', { class: 'ds-iconbtn', type: 'button', 'aria-label': '上移', disabled: i === 0, onClick: () => move(i, i - 1) }, '↑'),
-            h('button', { class: 'ds-iconbtn', type: 'button', 'aria-label': '下移', disabled: i === cur.length - 1, onClick: () => move(i, i + 1) }, '↓')));
+            h('button', { class: 'ds-iconbtn', type: 'button', 'aria-label': 'Move up', disabled: i === 0, onClick: () => move(i, i - 1) }, '↑'),
+            h('button', { class: 'ds-iconbtn', type: 'button', 'aria-label': 'Move down', disabled: i === cur.length - 1, onClick: () => move(i, i + 1) }, '↓')));
       if (!showValues) dragify(li, i);
       ul.append(li);
     });
@@ -533,7 +533,7 @@ export async function order(ctx, {
       lastCorrect = ok.filter(Boolean).length;
       solved = lastCorrect === ids.length;
       lines.push(ok.map((v) => (v ? TILE.hit : TILE.miss)).join(''));
-      hist.textContent = `第 ${used} 次：${lastCorrect}/${ids.length} 个位置正确`;
+      hist.textContent = `Try ${used}: ${lastCorrect}/${ids.length} in the right place`;
       log('attempt', { used, correct: lastCorrect });
       pipEl.replaceChildren(pips(attempts, used, { won: solved }));
       if (solved || used >= attempts) {
@@ -549,7 +549,7 @@ export async function order(ctx, {
     if (ctx.autoplay) (async () => { await sleep(20); go(); if (!solved) { cur = truth.map((id) => items.find((x) => String(x.id) === id)); go(); } })();
   });
   const score = solved ? Math.round((maxScore * (attempts - used + 1)) / attempts) : Math.round(maxScore * 0.3 * (lastCorrect / items.length));
-  return { score, max: maxScore, win: solved, emoji: lines.join('\n'), summary: solved ? `${used}/${attempts} 次排对` : `${lastCorrect}/${items.length} 个位置正确` };
+  return { score, max: maxScore, win: solved, emoji: lines.join('\n'), summary: solved ? `Sorted in ${used}/${attempts}` : `${lastCorrect}/${items.length} in the right place` };
 }
 
 // ═════════════════════════════ match ═════════════════════════════
@@ -558,13 +558,13 @@ export async function order(ctx, {
  * wrong ones can be retried until attempts run out.
  * left: [{id, body?, label?}], right: [{id, label}], answer: {leftId: rightId}
  */
-export async function match(ctx, { left, right, answer, attempts = 3, title = '配对', prompt, maxScore = 100, minWidth = 240, container } = {}) {
+export async function match(ctx, { left, right, answer, attempts = 3, title = 'Match them up', prompt, maxScore = 100, minWidth = 240, container } = {}) {
   const log = ctx.log.scope('match');
   const pipEl = h('span');
   const sel = new Map();
   const solvedAt = new Map();
   const cards = left.map((l) => {
-    const select = h('select', { class: 'ds-input' }, h('option', { value: '' }, '选择…'), right.map((r) => h('option', { value: String(r.id) }, r.label)));
+    const select = h('select', { class: 'ds-input' }, h('option', { value: '' }, 'Choose…'), right.map((r) => h('option', { value: String(r.id) }, r.label)));
     select.addEventListener('change', () => {
       // keep choices unique: if another select holds this value, swap
       for (const [lid, s] of sel) if (lid !== String(l.id) && s.value === select.value && select.value) s.value = '';
@@ -572,7 +572,7 @@ export async function match(ctx, { left, right, answer, attempts = 3, title = '�
     sel.set(String(l.id), select);
     return h('div', { class: 'ds-panel', style: { padding: '12px' }, dataset: { id: l.id } }, l.label && h('div', { class: 'kicker', style: { marginBottom: '8px' } }, toNode(l.label)), l.body && toNode(l.body), h('div', { style: { marginTop: '10px' } }, select));
   });
-  const submit = button('提交配对', { variant: 'accent' });
+  const submit = button('Submit matches', { variant: 'accent' });
   const note = h('span', { class: 'small muted' });
   mount(ctx, { container }, panel({ title, aside: pipEl }, prompt ? h('p', { class: 'ink2' }, toNode(prompt)) : null,
     h('div', { class: 'ds-grid', style: { '--min': `${minWidth}px` } }, cards),
@@ -582,7 +582,7 @@ export async function match(ctx, { left, right, answer, attempts = 3, title = '�
   await new Promise((resolve) => {
     const go = () => {
       const open = [...sel].filter(([lid]) => !solvedAt.has(lid));
-      if (open.some(([, s]) => !s.value)) { toast('每一项都要选'); return; }
+      if (open.some(([, s]) => !s.value)) { toast('Match every item first'); return; }
       used++;
       for (const [lid, s] of open) {
         const ok = s.value === String(answer[lid]);
@@ -591,7 +591,7 @@ export async function match(ctx, { left, right, answer, attempts = 3, title = '�
         if (ok) { solvedAt.set(lid, used); s.disabled = true; }
       }
       log('attempt', { used, solved: solvedAt.size });
-      note.textContent = `${solvedAt.size}/${left.length} 对正确`;
+      note.textContent = `${solvedAt.size}/${left.length} pairs right`;
       pipEl.replaceChildren(pips(attempts, used, { won: solvedAt.size === left.length }));
       if (solvedAt.size === left.length || used >= attempts) {
         for (const [lid, s] of sel) if (!solvedAt.has(lid)) { s.value = String(answer[lid]); s.disabled = true; }
@@ -605,20 +605,20 @@ export async function match(ctx, { left, right, answer, attempts = 3, title = '�
   const per = maxScore / left.length;
   const score = Math.round([...solvedAt.values()].reduce((s, k) => s + per * (attempts - k + 1) / attempts, 0));
   const emoji = left.map((l) => { const k = solvedAt.get(String(l.id)); return k === 1 ? TILE.hit : k ? TILE.near : TILE.bad; }).join('');
-  return { score, max: maxScore, win: solvedAt.size === left.length, emoji, summary: `${solvedAt.size}/${left.length} 对` };
+  return { score, max: maxScore, win: solvedAt.size === left.length, emoji, summary: `${solvedAt.size}/${left.length} pairs` };
 }
 
 // ═════════════════════════════ groups ═════════════════════════════
 const GROUP_COLORS = ['#f2c94c', '#9cc87a', '#93bde6', '#c39be0'];
 /** Connections-style: find groups of 4 that share a property. */
-export async function groups(ctx, { groups: gs, mistakes = 4, title = '分组', prompt, container } = {}) {
+export async function groups(ctx, { groups: gs, mistakes = 4, title = 'Find the groups', prompt, container } = {}) {
   const log = ctx.log.scope('groups');
   const size = gs[0].items.length;
   const all = ctx.rng.shuffle(gs.flatMap((g, gi) => g.items.map((label) => ({ label: String(label), gi }))));
   const gridEl = h('div', { class: 'ds-groups' });
   const left = h('span', { class: 'small mono' });
-  const submit = button('提交', { variant: 'accent', disabled: true });
-  const shuffleBtn = button('打乱', { variant: 'ghost', small: true });
+  const submit = button('Submit', { variant: 'accent', disabled: true });
+  const shuffleBtn = button('Shuffle', { variant: 'ghost', small: true });
   mount(ctx, { container }, panel({ title, aside: left }, prompt ? h('p', { class: 'ink2' }, toNode(prompt)) : null, gridEl,
     h('div', { class: 'ds-row', style: { marginTop: '12px', justifyContent: 'flex-end' } }, shuffleBtn, submit)));
   let pool = all;
@@ -635,7 +635,7 @@ export async function groups(ctx, { groups: gs, mistakes = 4, title = '分组', 
       if (picked.has(it.label)) picked.delete(it.label); else if (picked.size < size) picked.add(it.label);
       submit.disabled = picked.size !== size; draw();
     } }, it.label)));
-    left.textContent = `剩余失误 ${'●'.repeat(mistakes - wrong)}${'○'.repeat(wrong)}`;
+    left.textContent = `Mistakes left ${'●'.repeat(mistakes - wrong)}${'○'.repeat(wrong)}`;
   };
   shuffleBtn.addEventListener('click', () => { pool = ctx.rng.shuffle(pool); draw(); });
   draw();
@@ -643,7 +643,7 @@ export async function groups(ctx, { groups: gs, mistakes = 4, title = '分组', 
     const go = () => {
       const sel = pool.filter((x) => picked.has(x.label));
       const key = sel.map((x) => x.label).sort().join('\u0001');
-      if (tried.has(key)) { toast('这一组已经试过了'); return; }
+      if (tried.has(key)) { toast('Already tried that group'); return; }
       tried.add(key);
       const counts = new Map();
       sel.forEach((x) => counts.set(x.gi, (counts.get(x.gi) ?? 0) + 1));
@@ -657,7 +657,7 @@ export async function groups(ctx, { groups: gs, mistakes = 4, title = '分组', 
       } else {
         wrong++;
         shake(gridEl);
-        toast(best === size - 1 ? '差一个！' : '不对');
+        toast(best === size - 1 ? 'One away!' : 'Not a group');
       }
       picked.clear();
       submit.disabled = true;
@@ -675,7 +675,7 @@ export async function groups(ctx, { groups: gs, mistakes = 4, title = '分组', 
     if (ctx.autoplay) (async () => { for (let gi = 0; gi < gs.length; gi++) { await sleep(10); gs[gi].items.forEach((l) => picked.add(String(l))); go(); } })();
   });
   const score = Math.max(0, found * 25 - wrong * 5);
-  return { score, max: gs.length * 25, win: found === gs.length, emoji: lines.join('\n'), summary: `${found}/${gs.length} 组 · ${wrong} 次失误` };
+  return { score, max: gs.length * 25, win: found === gs.length, emoji: lines.join('\n'), summary: `${found}/${gs.length} groups · ${wrong} ${wrong === 1 ? 'mistake' : 'mistakes'}` };
 }
 
 // ═════════════════════════════ canvas ═════════════════════════════

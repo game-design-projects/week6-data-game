@@ -142,7 +142,7 @@ export function modal({ title, body, onClose } = {}) {
   const onKey = (e) => e.key === 'Escape' && close();
   const root = h('div', { class: 'ds-modal', role: 'dialog', 'aria-modal': 'true', onClick: (e) => e.target === root && close() },
     h('div', { class: 'sheet' },
-      h('header', h('h3', title), h('button', { class: 'ds-iconbtn', 'aria-label': '关闭', onClick: close }, '✕')),
+      h('header', h('h3', title), h('button', { class: 'ds-iconbtn', 'aria-label': 'Close', onClick: close }, '✕')),
       toNode(body)));
   document.addEventListener('keydown', onKey);
   document.body.append(root);
