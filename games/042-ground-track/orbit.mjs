@@ -93,11 +93,11 @@ export function classify(s) {
 
 /** Bucket index for the highest latitude reached (0..4). Edges are 15/45/60/75, all drawn as gridlines on the map. */
 export const LAT_EDGES = [15, 45, 60, 75];
-export const LAT_BUCKETS = ['< 15°（近赤道）', '15°–45°', '45°–60°', '60°–75°', '> 75°（近极地）'];
+export const LAT_BUCKETS = ['< 15\u00b0 (near-equatorial)', '15\u00b0\u201345\u00b0', '45\u00b0\u201360\u00b0', '60\u00b0\u201375\u00b0', '> 75\u00b0 (near-polar)'];
 export function latBucket(maxLat) {
   return LAT_EDGES.filter((e) => maxLat >= e).length;
 }
-export const PERIOD_LADDER = [{ h: 1.5, label: '约 1.5 小时' }, { h: 3, label: '约 3 小时' }, { h: 6, label: '约 6 小时' }, { h: 12, label: '约 12 小时' }, { h: 24, label: '约 24 小时' }];
+export const PERIOD_LADDER = [{ h: 1.5, label: 'About 1.5 hours' }, { h: 3, label: 'About 3 hours' }, { h: 6, label: 'About 6 hours' }, { h: 12, label: 'About 12 hours' }, { h: 24, label: 'About 24 hours' }];
 export function periodBucket(min) {
   const h = min / 60;
   let best = 0;

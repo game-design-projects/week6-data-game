@@ -3,22 +3,22 @@ import { latBucket, LAT_BUCKETS, LAT_EDGES, periodBucket, PERIOD_LADDER, toPuzzl
 
 export { toPuzzle };
 export const CLASSES = [
-  { id: 'leo', label: '近地倾斜圆轨道', sub: 'ISS / 天宫 / Starlink', why: '倾角 40°–75°、周期约 90 分钟的圆轨道：12 小时绕地 8 圈左右，轨迹是一束斜向的波浪，最高纬度等于倾角。' },
-  { id: 'sso', label: '太阳同步极轨', sub: '对地观测 / 气象卫星', why: '倾角约 98°（逆行近极地），轨迹几乎擦过两极，波浪最高点接近 ±82°。' },
-  { id: 'meo', label: '中轨导航星', sub: 'GPS / GLONASS / 伽利略 / 北斗', why: '周期约 12–14 小时：12 小时内只绕约一圈，轨迹是一条大波浪，倾角 55°–65°。' },
-  { id: 'mol', label: 'Molniya 大椭圆', sub: '12 小时周期 · 高偏心率', why: '偏心率约 0.7、倾角 63.4°：在北半球远地点附近走得极慢，轨迹在高纬度“悬停”，南半球则飞掠。' },
-  { id: 'geo', label: '地球同步轨道', sub: 'GEO / 倾斜 GSO', why: '周期等于 1 个恒星日，几乎不动；倾角为 0 时是一个点，倾斜时画出“8”字。' },
+  { id: 'leo', label: 'Low inclined circular', sub: 'ISS / Tiangong / Starlink', why: 'A circular orbit inclined 40\u00b0\u201375\u00b0 with a period near 90 minutes: about 8 laps in 12 hours, a bundle of slanted waves whose peak latitude equals the inclination.' },
+  { id: 'sso', label: 'Sun-synchronous polar', sub: 'Earth observation / weather satellites', why: 'Inclined about 98\u00b0 (retrograde, near-polar): the track nearly grazes the poles, with wave peaks close to \u00b182\u00b0.' },
+  { id: 'meo', label: 'Medium Earth navigation', sub: 'GPS / GLONASS / Galileo / BeiDou', why: 'A period of about 12\u201314 hours: only about one lap in 12 hours, one big wave, inclination 55\u00b0\u201365\u00b0.' },
+  { id: 'mol', label: 'Molniya highly elliptical', sub: '12-hour period \u00b7 high eccentricity', why: 'Eccentricity about 0.7 and inclination 63.4\u00b0: it crawls near apogee over the Northern Hemisphere, so the track \u201chovers\u201d at high latitude, then sweeps quickly past the south.' },
+  { id: 'geo', label: 'Geosynchronous', sub: 'GEO / inclined GSO', why: 'The period equals one sidereal day, so it barely moves: a single point at zero inclination, a figure 8 when inclined.' },
 ];
 
 /** Puzzle-specific explanation of which feature of the track gave the class away. */
 export function clue(s) {
   const laps = +(720 / s.periodMin).toFixed(1);
   switch (s.cls) {
-    case 'leo': return `12 小时绕了约 ${laps} 圈（周期 ${s.periodMin} 分钟），轨迹是密集的斜向波浪；波峰在 ${s.maxLat}° 就是倾角（${s.inc}°）。倾角不到 75° 且圆形，是 ISS / 天宫 / Starlink 一类。`;
-    case 'sso': return `波峰几乎碰到极区（${s.maxLat}°），因为倾角 ${s.inc}° 超过 90°，是逆行近极轨道；周期 ${s.periodMin} 分钟，12 小时约 ${laps} 圈。`;
-    case 'meo': return `12 小时只绕了约 ${laps} 圈（周期 ${s.periodMin} 分钟），轨道高度约 ${Math.round((s.perigeeKm + s.apogeeKm) / 2 / 1000)} 千 km，倾角 ${s.inc}° 在 55°–65° 之间：典型的导航卫星。`;
-    case 'mol': return `偏心率 ${s.ecc}：近地点 ${s.perigeeKm} km、远地点 ${s.apogeeKm} km。远地点在北半球，卫星在那里走得很慢，所以轨迹在高纬度“挤”在一起；倾角 ${s.inc}° 接近 63.4° 临界倾角。`;
-    default: return s.inc < 1 ? `周期 ${s.periodMin} 分钟 ≈ 恒星日，倾角仅 ${s.inc}°：星下点几乎不动，12 小时里只是一个点。` : `周期 ${s.periodMin} 分钟 ≈ 恒星日，但倾角 ${s.inc}° 让星下点在南北 ±${s.maxLat}° 之间画出“8”字（倾斜同步轨道）。`;
+    case 'leo': return `${laps} laps in 12 hours (period ${s.periodMin} min): a dense bundle of slanted waves. The peaks at ${s.maxLat}\u00b0 equal the inclination (${s.inc}\u00b0). A circular orbit inclined under 75\u00b0 means ISS / Tiangong / Starlink.`;
+    case 'sso': return `The peaks almost touch the polar regions (${s.maxLat}\u00b0) because the inclination, ${s.inc}\u00b0, is over 90\u00b0: a retrograde near-polar orbit. Period ${s.periodMin} min, about ${laps} laps in 12 hours.`;
+    case 'meo': return `Only about ${laps} laps in 12 hours (period ${s.periodMin} min), altitude near ${Math.round((s.perigeeKm + s.apogeeKm) / 2 / 1000)} thousand km, and an inclination of ${s.inc}\u00b0, between 55\u00b0 and 65\u00b0: a typical navigation satellite.`;
+    case 'mol': return `Eccentricity ${s.ecc}: perigee ${s.perigeeKm} km, apogee ${s.apogeeKm} km. Apogee is over the Northern Hemisphere, where the satellite moves slowly, so the track bunches up at high latitude; the ${s.inc}\u00b0 inclination is close to the 63.4\u00b0 critical inclination.`;
+    default: return s.inc < 1 ? `Period ${s.periodMin} min \u2248 one sidereal day and inclination only ${s.inc}\u00b0: the sub-satellite point barely moves, just a dot over 12 hours.` : `Period ${s.periodMin} min \u2248 one sidereal day, but the ${s.inc}\u00b0 inclination makes the sub-satellite point trace a figure 8 between \u00b1${s.maxLat}\u00b0 (an inclined geosynchronous orbit).`;
   }
 }
 
@@ -27,20 +27,20 @@ export default {
     num: 42,
     slug: 'ground-track',
     title: 'Ground Track',
-    tagline: '一颗卫星 12 小时的星下点轨迹。认出它是 ISS / Starlink、极轨、GPS、Molniya 还是同步卫星。',
+    tagline: 'A satellite\'s ground track over 12 hours. Tell whether it is ISS / Starlink, polar, GPS, Molniya or geosynchronous.',
     category: 'science',
     data: 'live',
     howTo: [
-      '地图上的橙线是某颗真实卫星 12 小时内在地面的投影，绿点是起点，白点标出 +3 / +6 / +9 / +12 小时的位置。',
-      '先判断轨道类别，再判断它绕地球一圈要多久、最高到达哪个纬度带。共 3 题。',
-      '线索：最高纬度 = 轨道倾角（地图上有每 15° 一条的纬线）；白点间隔越远 = 速度越快 = 周期越短；几乎不动 = 同步轨道；在高纬度挤成一堆 = Molniya。',
-      '每题答对得 1 分，满分 3 分。',
+      'The orange line on the map is the ground projection of a real satellite over 12 hours. The green dot is the start, and white dots mark the positions at +3 / +6 / +9 / +12 hours.',
+      'First decide the orbit class, then how long one lap takes and the highest latitude band it reaches. Three questions in all.',
+      'Clues: the peak latitude = the orbital inclination (the map has a parallel every 15\u00b0); wider spacing between white dots = faster = shorter period; barely moving = geosynchronous; bunched up at high latitude = Molniya.',
+      'One point per correct answer, 3 in total.',
     ],
-    scoring: '3 题，每题 1 分，满分 3。选项里的纬度档位边界都落在地图的纬线上。',
+    scoring: '3 questions, 1 point each, 3 in total. The latitude bands in the options all have edges on the map\'s parallels.',
     sources: [
-      { name: 'CelesTrak GP 轨道要素（JSON）', url: 'https://celestrak.org/NORAD/elements/gp.php', note: 'stations / starlink / gps-ops / glo-ops / galileo / beidou / geo / weather / resource / science 组及 MOLNIYA 名称查询；当天卫星由 CATNR 查询最新根数' },
+      { name: 'CelesTrak GP orbital elements (JSON)', url: 'https://celestrak.org/NORAD/elements/gp.php', note: 'Groups stations / starlink / gps-ops / glo-ops / galileo / beidou / geo / weather / resource / science plus a MOLNIYA name query; today\'s satellite is refreshed by CATNR' },
     ],
-    dataNote: '每天的卫星是固定的（按日期从 79 颗真实卫星池中抽取）。打开游戏时会向 CelesTrak 取这颗卫星的最新轨道根数，并以当天 UTC 00:00 为起点重算 12 小时轨迹；取不到时退回随游戏打包的快照（2026-10-14 的根数，从根数历元起算）。轨迹用二体开普勒方程加地球自转算出（未含 SGP4 摄动与 J2），形状与类别判断足够准确，但不宜用于精确定位。原想法中的 ISS 与 Starlink 轨迹几乎一样（51.6° vs 53°），无法单凭星下点区分，所以合并为一类，另加极轨与同步轨道。',
+    dataNote: 'Each day\'s satellite is fixed (drawn by date from a pool of 79 real satellites). When the game opens it fetches that satellite\'s latest orbital elements from CelesTrak and recomputes the 12-hour track from 00:00 UTC of that day; if that fails it falls back to the bundled snapshot (Oct 14, 2026 elements, counted from the element epoch). Tracks use two-body Kepler equations plus Earth rotation (no SGP4 perturbations or J2), accurate enough for the shape and the class but not for precise positioning. In the original idea, ISS and Starlink tracks are nearly identical (51.6\u00b0 vs 53\u00b0) and cannot be told apart from the ground track alone, so they form one class, joined by polar and geosynchronous orbits.',
     wide: false,
   },
 
@@ -87,8 +87,8 @@ export default {
         .bindTooltip(`+${h} h`, { permanent: true, direction: 'top', offset: [0, -4], opacity: 0.9 }).addTo(map);
     });
     const [la, ln] = s.track[0][0];
-    const startDot = L.circleMarker([la / 10, ln / 10], { radius: 7, color: '#fff', weight: 2, fillColor: '#2a9d4b', fillOpacity: 1 }).bindTooltip('起点', { direction: 'bottom', offset: [0, 6] }).addTo(map);
-    ctx.stage.append(ui.panel({ kicker: `12 小时${s.from ? ` · UTC ${s.from.replace('T', ' ')} 起` : ''}`, title: '这颗卫星的星下点轨迹' }, m.el));
+    const startDot = L.circleMarker([la / 10, ln / 10], { radius: 7, color: '#fff', weight: 2, fillColor: '#2a9d4b', fillOpacity: 1 }).bindTooltip('Start', { direction: 'bottom', offset: [0, 6] }).addTo(map);
+    ctx.stage.append(ui.panel({ kicker: `12 hours${s.from ? ` \u00b7 from UTC ${s.from.replace('T', ' ')}` : ''}`, title: 'This satellite\'s ground track' }, m.el));
     fit(); requestAnimationFrame(fit); setTimeout(fit, 300);
     if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => fit()).observe(m.el);
 
@@ -97,9 +97,9 @@ export default {
     const lb = latBucket(s.maxLat);
     const r = await ctx.rounds({
       rounds: [
-        { prompt: '它属于哪一类轨道？', options: CLASSES.map((x) => ({ label: x.label, sub: x.sub })), correct: cls, explain: clue(s) },
-        { prompt: '它绕地球一圈大约多久？（白点之间的间隔是 3 小时）', options: PERIOD_LADDER.map((x) => ({ label: x.label })), correct: pb, explain: `实际周期 ${s.periodMin} 分钟（${(s.periodMin / 60).toFixed(1)} 小时），12 小时约 ${(720 / s.periodMin).toFixed(1)} 圈。` },
-        { prompt: '轨迹到达的最高纬度（南北均可）是？', options: LAT_BUCKETS.map((x) => ({ label: x })), correct: lb, explain: `轨迹最高 ${s.maxLat}°，等于轨道倾角 ${s.inc}°（倾角超过 90° 的逆行轨道取 180° 减去它）。` },
+        { prompt: 'Which class of orbit is it?', options: CLASSES.map((x) => ({ label: x.label, sub: x.sub })), correct: cls, explain: clue(s) },
+        { prompt: 'About how long does one lap take? (White dots are 3 hours apart.)', options: PERIOD_LADDER.map((x) => ({ label: x.label })), correct: pb, explain: `Actual period: ${s.periodMin} minutes (${(s.periodMin / 60).toFixed(1)} hours), about ${(720 / s.periodMin).toFixed(1)} laps in 12 hours.` },
+        { prompt: 'What is the highest latitude the track reaches (north or south)?', options: LAT_BUCKETS.map((x) => ({ label: x })), correct: lb, explain: `The track peaks at ${s.maxLat}\u00b0, equal to the orbital inclination ${s.inc}\u00b0 (for a retrograde orbit over 90\u00b0, use 180\u00b0 minus it).` },
       ],
       minWidth: 150,
     });
@@ -107,12 +107,12 @@ export default {
     m.setLabels(true);
     startDot.unbindTooltip().bindTooltip(s.name, { permanent: true, direction: 'bottom', offset: [0, 6] }).openTooltip();
     r.detail = ui.panel({ plain: true }, ui.kv([
-      ['卫星', `${s.name}（NORAD ${s.id}）`],
-      ['类别', `${CLASSES[cls].label}（${CLASSES[cls].sub}）`],
-      ['看点', clue(s)],
-      ['轨道', `周期 ${s.periodMin} 分钟 · 倾角 ${s.inc}° · 偏心率 ${s.ecc}`],
-      ['高度', `近地点 ${ctx.core.fmtNum(s.perigeeKm)} km · 远地点 ${ctx.core.fmtNum(s.apogeeKm)} km`],
-      ['根数历元', s.epoch + ' UTC' + (s.from ? ` · 轨迹起点 ${s.from.replace('T', ' ')} UTC` : '')],
+      ['Satellite', `${s.name} (NORAD ${s.id})`],
+      ['Class', `${CLASSES[cls].label} (${CLASSES[cls].sub})`],
+      ['What gives it away', clue(s)],
+      ['Orbit', `period ${s.periodMin} min \u00b7 inclination ${s.inc}\u00b0 \u00b7 eccentricity ${s.ecc}`],
+      ['Altitude', `perigee ${ctx.core.fmtNum(s.perigeeKm)} km \u00b7 apogee ${ctx.core.fmtNum(s.apogeeKm)} km`],
+      ['Element epoch', s.epoch + ' UTC' + (s.from ? ` \u00b7 track starts ${s.from.replace('T', ' ')} UTC` : '')],
     ]));
     return r;
   },
