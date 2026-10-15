@@ -47,7 +47,7 @@ test('pool has unique ids and no amount leaks in descriptions', () => {
 });
 test('lesson is specific and mentions direction', () => {
   const a = { desc: 'TASK ORDER FOR SOFTWARE MAINTENANCE', amt: 5e5, b: 3, ag: 'X' };
-  assert.match(lesson(a, 1e7), /猜高了/);
-  assert.match(lesson(a, 1e4), /任务单/);
-  assert.match(lesson({ ...a, desc: 'ZZZ' }, 5e5), /分毫不差/);
+  assert.match(lesson(a, 1e7), /too high/);
+  assert.match(lesson(a, 1e4), /task order/);
+  assert.match(lesson({ ...a, desc: 'ZZZ' }, 5e5), /Spot on/);
 });
