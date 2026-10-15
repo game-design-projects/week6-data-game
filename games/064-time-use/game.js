@@ -2,28 +2,29 @@
 import { ACT, SLEEP } from './acts.js';
 
 export { ACT };
-const AGE = { '000': '15 岁及以上', 103: '15–24 岁', '031': '25–34 岁', '038': '35–44 岁', '042': '45–54 岁', '049': '55–64 岁', '065': '65 岁及以上' };
-const SEX = ['男女合计', '男性', '女性'];
+const AGE = { '000': 'Ages 15 and over', 103: 'Ages 15–24', '031': 'Ages 25–34', '038': 'Ages 35–44', '042': 'Ages 45–54', '049': 'Ages 55–64', '065': 'Ages 65 and over' };
+const SEX = ['Men and women', 'Men', 'Women'];
 export const MIN_MEAN = 5; // activities averaging < 5 min/day are too small to estimate fairly
 export const SCALE = 0.3; // log10 error scale: 2x off ~ 37 pts
 export const ageLabel = (a) => AGE[a];
 export const sexLabel = (s) => SEX[s];
-export const fmtHM = (m) => (m < 60 ? `${m} 分钟` : m % 60 === 0 ? `${m / 60} 小时` : `${Math.floor(m / 60)} 小时 ${m % 60} 分`);
+export const fmtHM = (m) => (m < 60 ? `${m} min` : m % 60 === 0 ? `${m / 60} h` : `${Math.floor(m / 60)} h ${m % 60} min`);
+const fmtShort = (m) => (m < 60 ? `${m}m` : m % 60 === 0 ? `${m / 60}h` : `${Math.floor(m / 60)}h ${m % 60}m`);
 export const eligible = (g) => Object.keys(g.v).filter((k) => ACT[k] && g.v[k][0] >= MIN_MEAN);
-export const whoLabel = (g) => `美国 · ${g.y} 年 · ${SEX[g.s]} · ${AGE[g.a]}`;
+export const whoLabel = (g) => `US · ${g.y} · ${SEX[g.s]} · ${AGE[g.a]}`;
 export const findGroup = (groups, p) => groups.find((x) => x.y === p.y && x.s === p.s && x.a === p.a);
 
 /** Why the number is what it is: participation × time-per-doer, versus all US adults of the same year. */
 export function explain(cell, base) {
   const [mean, rate, doer] = cell;
   let t;
-  if (rate < 15) t = `只有 ${rate}% 的人当天做了这件事，做的人平均 ${fmtHM(doer)}，摊到所有人头上只剩 ${fmtHM(mean)}。`;
-  else if (rate >= 85) t = `${rate}% 的人当天都做了，所以全体平均（${fmtHM(mean)}）和做的人平均（${fmtHM(doer)}）几乎一样。`;
-  else t = `${rate}% 的人当天做了，做的人平均 ${fmtHM(doer)}；没做的人按 0 算，全体平均 ${fmtHM(mean)}。`;
+  if (rate < 15) t = `Only ${rate}% of people did this on a given day. Those who did averaged ${fmtHM(doer)}, which spread over everyone is just ${fmtHM(mean)}.`;
+  else if (rate >= 85) t = `${rate}% of people did it that day, so the all-people average (${fmtHM(mean)}) and the average among those who did (${fmtHM(doer)}) are almost the same.`;
+  else t = `${rate}% of people did it that day, averaging ${fmtHM(doer)}; counting those who didn't as 0, the all-people average is ${fmtHM(mean)}.`;
   if (base && base !== cell) {
     const r = mean / base[0];
-    if (r >= 1.25) t += ` 比同年全体 15 岁以上美国人（${fmtHM(base[0])}）多约 ${Math.round((r - 1) * 100)}%。`;
-    else if (r <= 0.8) t += ` 比同年全体 15 岁以上美国人（${fmtHM(base[0])}）少约 ${Math.round((1 - r) * 100)}%。`;
+    if (r >= 1.25) t += ` About ${Math.round((r - 1) * 100)}% more than all Americans 15 and over that year (${fmtHM(base[0])}).`;
+    else if (r <= 0.8) t += ` About ${Math.round((1 - r) * 100)}% less than all Americans 15 and over that year (${fmtHM(base[0])}).`;
   }
   return t;
 }
@@ -33,20 +34,20 @@ export default {
     num: 64,
     slug: 'time-use',
     title: 'Time Use',
-    tagline: '美国某个人群平均每天花多少分钟在某件事上？看着睡眠和参与率估三件。',
+    tagline: 'How many minutes a day does a group of Americans spend on an activity? Estimate three, using their sleep and participation rate as clues.',
     category: 'society',
     data: 'snapshot',
     howTo: [
-      '今天给你一个美国人群（年份、性别、年龄段），和三件日常小事。',
-      '估计这个人群平均每天在每件事上花多少分钟。注意是“所有人、所有日子”的平均，当天没做这件事的人也算 0 分钟。',
-      '线索：这个人群的平均睡眠，和“当天做过这件事的人占比”。占比低，平均值就会被大幅拉低。',
+      'Today you get a group of Americans (year, sex, age range) and three everyday activities.',
+      'Estimate how many minutes a day that group spends on each one. This is the average over all people and all days, so people who did not do the activity that day count as 0 minutes.',
+      'Clues: the group\'s average sleep, and the share of people who did the activity that day. A low share drags the average way down.',
     ],
-    scoring: '每题按“差了几倍”计分（对数刻度）：差 1.4 倍约 61 分，差 2 倍约 37 分，差 10 倍约 4 分；三题取平均。',
+    scoring: 'Each answer is scored by how many times off you are (log scale): 1.4x off is about 61 points, 2x off about 37, 10x off about 4. The three are averaged.',
     sources: [
-      { name: 'BLS American Time Use Survey（ATUS）', url: 'https://www.bls.gov/tus/', note: '美国劳工统计局的时间日记调查，2003–2025 年度数据' },
-      { name: 'BLS ATUS 时间序列文件（tu.series / tu.data）', url: 'https://download.bls.gov/pub/time.series/tu/', note: '本游戏直接读取的原始文件' },
+      { name: 'BLS American Time Use Survey (ATUS)', url: 'https://www.bls.gov/tus/', note: 'The Bureau of Labor Statistics time-diary survey, annual data for 2003–2025' },
+      { name: 'BLS ATUS time series files (tu.series / tu.data)', url: 'https://download.bls.gov/pub/time.series/tu/', note: 'The raw files this game reads directly' },
     ],
-    dataNote: '快照数据：BLS 每年 6 月左右才发布上一年的结果，没有每日更新，所以不是实时数据。分钟数由官方“平均每天小时数”×60 四舍五入得到，参与率为官方“当天做过该活动的人口占比”。2020 年因疫情调查曾暂停数月。',
+    dataNote: 'Snapshot data: BLS publishes the previous year\'s results around June and does not update daily, so this is not live data. Minutes are the official average hours per day times 60, rounded; participation rate is the official share of the population who did the activity on the diary day. In 2020 the survey was suspended for several months because of the pandemic.',
   },
 
   puzzle({ data, pick, rng }) {
@@ -60,31 +61,31 @@ export default {
     const base = ctx.data.groups.find((x) => x.y === p.y && x.s === 0 && x.a === '000');
     ctx.log('group', p);
     const who = whoLabel(g);
-    ctx.stage.append(ui.panel({ kicker: '今天的人群', title: who },
+    ctx.stage.append(ui.panel({ kicker: 'Today\'s group', title: who },
       ui.row(
-        ui.stat({ label: '平均每天睡眠', value: fmtHM(g.v[SLEEP][0]), sub: '一天共 1440 分钟' }),
-        ui.stat({ label: '要估的事', value: '3 件', sub: '分钟数，对数滑杆' })),
-      p.y === 2020 ? ui.callout('2020 年疫情期间调查曾暂停数月，数据仍是官方公布值。') : null));
+        ui.stat({ label: 'Average sleep per day', value: fmtHM(g.v[SLEEP][0]), sub: '1,440 minutes in a day' }),
+        ui.stat({ label: 'To estimate', value: '3 activities', sub: 'in minutes, log slider' })),
+      p.y === 2020 ? ui.callout('In 2020 the survey was suspended for several months during the pandemic; the figures are still the official published values.') : null));
     const results = [];
     for (const ac of p.acts) {
       const [name, gloss] = ACT[ac];
       const [mean, rate] = g.v[ac];
       ctx.log('ask', ac, mean, rate);
       results.push(await ctx.estimate({
-        title: `${name}：平均每天多少分钟？`,
-        prompt: `${who}。“${name}”指${gloss}。这个人群里，当天做过的人占 ${rate}%。`,
+        title: `${name}: how many minutes a day on average?`,
+        prompt: `${who}. “${name}” covers ${gloss}. In this group, ${rate}% did it that day.`,
         answer: mean, min: 1, max: 720, log: true, step: 1, initial: 30,
         format: (v) => fmtHM(Math.round(v)), scoring: 'log', scale: SCALE,
       }));
     }
     const out = ctx.combine(results);
     out.detail = ui.stack(
-      ui.callout(`${who}。平均数把没做这件事的人也算作 0 分钟：占比低的事看起来很短，占比高的事才接近“做的人”的时长。`),
+      ui.callout(`${who}. The average counts people who did not do the activity as 0 minutes: low-participation activities look short, and only high-participation ones come close to the time those who do them spend.`),
       ui.table({
-        columns: [{ key: 'n', label: '活动' }, { key: 'm', label: '全体平均', num: true }, { key: 'r', label: '当天做过', num: true }, { key: 'd', label: '做的人平均', num: true }],
-        rows: p.acts.map((ac) => ({ n: ACT[ac][0], m: fmtHM(g.v[ac][0]), r: `${g.v[ac][1]}%`, d: fmtHM(g.v[ac][2]) })),
+        columns: [{ key: 'n', label: 'Activity' }, { key: 'm', label: 'Everyone', num: true }, { key: 'r', label: 'Did it', num: true }, { key: 'd', label: 'Doers', num: true }],
+        rows: p.acts.map((ac) => ({ n: ACT[ac][0], m: fmtShort(g.v[ac][0]), r: `${g.v[ac][1]}%`, d: fmtShort(g.v[ac][2]) })),
       }),
-      ...p.acts.map((ac) => ui.quote(`${ACT[ac][0]}：${explain(g.v[ac], base?.v[ac])}`)));
+      ...p.acts.map((ac) => ui.quote(`${ACT[ac][0]}: ${explain(g.v[ac], base?.v[ac])}`)));
     return out;
   },
 };

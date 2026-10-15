@@ -8,7 +8,7 @@ import { SLEEP } from './acts.js';
 const data = JSON.parse(readFileSync(new URL('./data.json', import.meta.url)));
 const mk = (day) => game.puzzle({ data, day, date: isoFromDay(day), slug: 'time-use', rng: makeRng(`time-use:${isoFromDay(day)}`), pick: (arr) => arr[dailyIndex('time-use', day, arr.length)] });
 
-test('fmtHM', () => { assert.equal(fmtHM(45), '45 分钟'); assert.equal(fmtHM(125), '2 小时 5 分'); assert.equal(fmtHM(720), '12 小时'); });
+test('fmtHM', () => { assert.equal(fmtHM(45), '45 min'); assert.equal(fmtHM(125), '2 h 5 min'); assert.equal(fmtHM(720), '12 h'); });
 
 test('data: every cell is well-formed', () => {
   assert.ok(data.groups.length >= 300);
@@ -47,10 +47,10 @@ test('pool: days 1-120 give valid, well-formed puzzles', () => {
 });
 
 test('explain: low, high and middle participation, comparison to all adults', () => {
-  assert.match(explain([3 * 2, 5, 120], null), /只有 5%/);
-  assert.match(explain([120, 95, 126], null), /几乎一样/);
-  assert.match(explain([40, 50, 80], [20, 50, 40]), /多约 100%/);
-  assert.match(explain([10, 40, 25], [20, 50, 40]), /少约 50%/);
+  assert.match(explain([3 * 2, 5, 120], null), /Only 5%/);
+  assert.match(explain([120, 95, 126], null), /almost the same/);
+  assert.match(explain([40, 50, 80], [20, 50, 40]), /About 100% more/);
+  assert.match(explain([10, 40, 25], [20, 50, 40]), /About 50% less/);
 });
 
 test('scoring: perfect / typical / worst', () => {
