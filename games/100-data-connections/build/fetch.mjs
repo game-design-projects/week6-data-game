@@ -38,3 +38,22 @@ for (const [kind, en] of SEEDS) {
   fs.writeFileSync(f, JSON.stringify({ kind, en, qid, desc: res.desc, cands: res.cands, items }));
   console.log(kind, en, qid, res.desc, items.length);
 }
+
+// English labels (en, falling back to mul) for every fetched item: the SPARQL rows only carry them for some items.
+const LAB = 'raw/labels-en.json';
+if (!fs.existsSync(LAB)) {
+  const ids = new Set();
+  for (const f of fs.readdirSync('raw')) {
+    if (!/^(film|actor|book|music|game|border)_/.test(f)) continue;
+    for (const b of JSON.parse(fs.readFileSync('raw/' + f)).items) ids.add(b.item.value.split('/').pop());
+  }
+  const all = [...ids]; const labels = {};
+  for (let i = 0; i < all.length; i += 50) {
+    const u = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${all.slice(i, i + 50).join('|')}&props=labels&languages=en|mul&format=json`;
+    const j = await (await fetch(u, { headers: { 'User-Agent': UA } })).json();
+    for (const [id, e] of Object.entries(j.entities ?? {})) { const l = e.labels?.en ?? e.labels?.mul; if (l) labels[id] = l.value; }
+    await sleep(500);
+  }
+  fs.writeFileSync(LAB, JSON.stringify(labels));
+  console.log('labels', Object.keys(labels).length, 'of', all.length);
+}
