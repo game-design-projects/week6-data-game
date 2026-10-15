@@ -33,28 +33,28 @@ export const ROUNDS = 3;
 export const SCALE = 0.5;
 export const roundScore = (guess, answer) => 100 * Math.exp(-Math.abs(guess - answer) / SCALE);
 
-export const band = (w) => (w < 1.8 ? '轻度（家庭/聚会）' : w < 2.6 ? '中轻度' : w < 3.4 ? '中度' : w < 4.1 ? '中重度' : '重度（硬核策略）');
+export const band = (w) => (w < 1.8 ? 'light (family / party)' : w < 2.6 ? 'medium-light' : w < 3.4 ? 'medium' : w < 4.1 ? 'medium-heavy' : 'heavy (hardcore strategy)');
 
 export default {
   meta: {
     num: 60,
     slug: 'weight',
     title: 'Weight',
-    tagline: '看桌游的简介、机制和时长，猜它在 BoardGameGeek 上的复杂度评分（1–5）。',
+    tagline: 'Read a board game\'s blurb, mechanics and play time, then guess its BoardGameGeek complexity rating (1–5).',
     category: 'culture',
     data: 'snapshot',
     howTo: [
-      '每天三款桌游，游戏名已被涂黑（简介为 BGG 英文原文）。读一读简介、机制、游玩时长和建议年龄。',
-      '拖动滑块或输入数字，猜玩家们给它的「复杂度」平均分：1 = 轻松上手，5 = 极其烧脑。',
-      '线索：游戏时间越长、机制越多（如工人放置、经济、地区控制）通常越重；纸牌、猜词、反应类通常很轻。',
-      '按误差计分：每差 0.5 分，该款得分降到约三分之一；三款相加，满分 300。',
+      'Three board games a day, with the game\'s name blacked out (the blurb is the original BGG text). Read the blurb, mechanics, play time and recommended age.',
+      'Drag the slider or type a number to guess the average "weight" players give it: 1 = easy to pick up, 5 = brain-burning.',
+      'Clues: longer games with more mechanics (worker placement, economy, area control) tend to be heavier; card, word and reaction games tend to be light.',
+      'Scored by error: every 0.5 off cuts that game\'s score to about a third; the three add up to a maximum of 300.',
     ],
-    scoring: '每款 100 × e^(−误差/0.5)，三款相加，满分 300；差 0.35 约 50 分，差 0.5 约 37 分。',
+    scoring: 'Each game scores 100 × e^(−error/0.5); the three add up to a maximum of 300. Off by 0.35 earns about 50, off by 0.5 about 37.',
     sources: [
-      { name: 'BoardGameGeek（complexity weight）', url: 'https://boardgamegeek.com/', note: '通过 api.geekdo.com/api/dynamicinfo 取得众多玩家投票的平均权重' },
-      { name: 'TidyTuesday 2022-01-25 · BGG 简介/机制/玩家数', url: 'https://github.com/rfordatascience/tidytuesday/tree/master/data/2022/2022-01-25' },
+      { name: 'BoardGameGeek (complexity weight)', url: 'https://boardgamegeek.com/', note: 'Average weight voted by many players, via api.geekdo.com/api/dynamicinfo' },
+      { name: 'TidyTuesday 2022-01-25 · BGG blurbs, mechanics and player counts', url: 'https://github.com/rfordatascience/tidytuesday/tree/master/data/2022/2022-01-25' },
     ],
-    dataNote: '收录 BGG 评分人数最多的约 260 款游戏中、复杂度投票 ≥150 人的 259 款（快照，权重取自 2026 年 10 月，简介/机制来自 2022-01 的 BGG 镜像）。简介为 BGG 英文原文，游戏名及其关键词已涂黑。没有放盒面图片：盒面印有游戏名，会直接泄露答案。BGG 官方 XML API 需要令牌，网页使用的 JSON 接口（api.geekdo.com）未开放跨域（CORS），浏览器无法实时读取，所以不是实时数据。',
+    dataNote: 'Covers 259 of BGG\'s roughly 260 most-rated games that have at least 150 complexity votes (a snapshot: weights from October 2026, blurbs and mechanics from a January 2022 BGG mirror). Blurbs are the original BGG text, with the game\'s name and its key words blacked out. No box art is shown, because the box prints the title and would give the answer away. BGG\'s official XML API needs a token and the JSON endpoint the website uses (api.geekdo.com) does not allow cross-origin requests (CORS), so the browser cannot read it live and the data is not live.',
   },
 
   puzzle({ data, pick, rng }) {
@@ -78,36 +78,36 @@ export default {
     for (let i = 0; i < picked.length; i++) {
       const g = picked[i];
       const players = g.minp === g.maxp ? `${g.minp}` : `${g.minp}–${g.maxp}`;
-      const box = ui.panel({ kicker: `第 ${i + 1} / ${picked.length} 款`, title: '这款桌游有多复杂？' },
+      const box = ui.panel({ kicker: `Game ${i + 1} of ${picked.length}`, title: 'How complex is this game?' },
         ui.h('div', { class: 'ds-stack' },
           ui.quote(redactName(g.desc, g.name)),
           ui.h('div', { class: 'ds-grid', style: { '--min': '90px' } },
-            ui.stat({ label: '发行', value: String(g.year) }),
-            ui.stat({ label: '玩家', value: players }),
-            ui.stat({ label: '时长', value: `${g.time}′` }),
-            ui.stat({ label: '年龄', value: `${g.age}+` })),
-          ui.h('div', { class: 'small muted' }, '类型'), ui.chips(g.cats),
-          ui.h('div', { class: 'small muted' }, '机制'), ui.chips(g.mechs)));
+            ui.stat({ label: 'Published', value: String(g.year) }),
+            ui.stat({ label: 'Players', value: players }),
+            ui.stat({ label: 'Minutes', value: String(g.time) }),
+            ui.stat({ label: 'Age', value: `${g.age}+` })),
+          ui.h('div', { class: 'small muted' }, 'Categories'), ui.chips(g.cats),
+          ui.h('div', { class: 'small muted' }, 'Mechanics'), ui.chips(g.mechs)));
       ctx.stage.append(box);
       ctx.log('round', i + 1, g.name, g.weight);
 
       const r = await ctx.estimate({
         answer: g.weight, min: 1, max: 5, step: 0.05, initial: 2.5,
         format: (v) => v.toFixed(2), scoring: 'abs', scale: SCALE,
-        title: '你猜它的复杂度是？',
+        title: 'What is its complexity?',
       });
       const peers = games.filter((x) => x.id !== g.id && Math.abs(x.time - g.time) <= Math.max(15, g.time * 0.25));
       const sig = g.mechs.map(mechAvg).filter((x) => x.n >= 5).sort((x, y) => Math.abs(y.avg - globalAvg) - Math.abs(x.avg - globalAvg)).slice(0, 3);
-      const sigText = sig.length ? sig.map((x) => `${x.m}（${x.n} 款平均 ${x.avg.toFixed(2)}）`).join('；') : '没有特别偏重或偏轻的机制';
-      const verdict = r.guess == null ? '' : Math.abs(r.guess - g.weight) <= 0.25 ? '猜得很准。' : r.guess > g.weight ? '你高估了。' : '你低估了。';
+      const sigText = sig.length ? sig.map((x) => `${x.m} (${x.n} games, average ${x.avg.toFixed(2)})`).join('; ') : 'No mechanic that skews especially heavy or light';
+      const verdict = r.guess == null ? '' : Math.abs(r.guess - g.weight) <= 0.25 ? 'Spot on.' : r.guess > g.weight ? 'You overestimated.' : 'You underestimated.';
       r.detail = ui.panel({ plain: true }, ui.kv([
-        ['游戏', `${g.name}（${g.year}）`],
-        ['复杂度', `${g.weight.toFixed(2)} / 5 · ${band(g.weight)}（${ctx.core.fmtNum(g.votes)} 人投票）`],
-        ['你猜的', r.guess == null ? '—' : `${Number(r.guess).toFixed(2)} ${verdict}`],
-        ['时长线索', `时长约 ${g.time} 分钟的同类热门游戏（${peers.length} 款）平均 ${mean(peers).toFixed(2)}；它自己是 ${g.weight.toFixed(2)}。全部 ${games.length} 款平均 ${globalAvg.toFixed(2)}。`],
-        ['机制线索', sigText],
-        ['全部机制', g.mechs.join('、') || '—'],
-        ['BGG 评分', `${g.rating}（第 ${g.rank} 名）`],
+        ['Game', `${g.name} (${g.year})`],
+        ['Weight', `${g.weight.toFixed(2)} / 5 · ${band(g.weight)} (${ctx.core.fmtNum(g.votes)} votes)`],
+        ['Your guess', r.guess == null ? '—' : `${Number(r.guess).toFixed(2)} ${verdict}`],
+        ['Time clue', `Popular games of about ${g.time} minutes (${peers.length} of them) average ${mean(peers).toFixed(2)}; this one is ${g.weight.toFixed(2)}. All ${games.length} games average ${globalAvg.toFixed(2)}.`],
+        ['Mechanics clue', sigText],
+        ['All mechanics', g.mechs.join(', ') || '—'],
+        ['BGG rating', `${g.rating} (rank ${g.rank})`],
       ]));
       results.push(r);
       box.style.opacity = '.6';

@@ -18,7 +18,7 @@ test('redactName handles multiword, accents, punctuation', () => {
   assert.ok(!/tzolk/i.test(redactName("Tzolkin presents; Tzolk'in rules.", "Tzolk'in: The Mayan Calendar")));
   assert.ok(!/sid|meier/i.test(redactName("Sid Meier's Civilization is a game.", "Sid Meier's Civilization: The Board Game")));
 });
-test('band', () => { assert.match(band(1.2), /轻/); assert.match(band(4.5), /重/); });
+test('band', () => { assert.match(band(1.2), /light/); assert.match(band(4.5), /heavy/); });
 test('ent decodes mojibake and named entities', () => {
   assert.equal(ent('Orl&eacute;ans &amp; caf&#195;&#169; &mdash; x&#10;y'), 'Orléans & café — x y');
 });

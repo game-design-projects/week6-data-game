@@ -33,7 +33,8 @@ for (const r of top) {
   const weight = Number(w.stats?.avgweight), votes = Number(w.stats?.numweights);
   if (!(weight > 1 && weight <= 5) || votes < 150) continue;
   if (!(Number(d.playingtime) > 0) || !(Number(d.minplayers) > 0)) continue; // e.g. Chess has playingtime 0
-  const desc = ent(d.description || '');
+  // the player-facing text must be English: Hanabi's blurb glosses the Japanese name in kanji, so spell that out
+  const desc = ent(d.description || '').replace(/written as [\u4e00-\u9fff]+; these are the ideograms/, 'written with the ideograms for').replace(/[\u3000-\u303f\u3400-\u9fff\uff00-\uffef]+/g, '').replace(/\s+/g, ' ');
   if (desc.length < 120) continue;
   games.push({
     id: Number(r.id), name: r.name, year: Number(d.yearpublished), weight: +weight.toFixed(2), votes,
