@@ -64,17 +64,17 @@ export function readingNotes(g, today) {
   const pts = g.pts;
   const notes = [];
   const lag = +pts[0][0].slice(0, 4) - g.year;
-  if (lag >= 8) notes.push(`发售于 ${g.year} 年，但第一条纪录要到 ${pts[0][0].slice(0, 4)} 年才出现：这是靠社区后来“考古”起来的老游戏，曲线整体起点很晚。`);
-  else if (lag <= 1) notes.push(`发售 ${g.year} 年，当年就有纪录：曲线从发售期开始，早期台阶陡，说明玩家在快速摸索路线。`);
-  else notes.push(`发售于 ${g.year} 年，纪录从 ${pts[0][0].slice(0, 4)} 年开始，相隔 ${lag} 年。`);
+  if (lag >= 8) notes.push(`Released in ${g.year}, but the first record only appears in ${pts[0][0].slice(0, 4)}: an old game the community dug up later, so the whole curve starts late.`);
+  else if (lag <= 1) notes.push(`Released in ${g.year} with records that same year: the curve starts at launch, and the steep early steps show players quickly working out routes.`);
+  else notes.push(`Released in ${g.year}; records start in ${pts[0][0].slice(0, 4)}, ${lag} years later.`);
   const big = biggestDrop(pts);
-  if (big && big.frac >= 0.12) notes.push(`最大的断崖在 ${big.to[0]}：${fmtT(big.from[1])} → ${fmtT(big.to[1])}（−${Math.round(big.frac * 100)}%），通常是发现了新的跳关/瞬移技巧或换了路线。`);
-  else notes.push(`没有明显断崖，最大一次也只快了 ${Math.round((big?.frac ?? 0) * 100)}%：一点点磨出来的曲线，接近技术极限。`);
+  if (big && big.frac >= 0.12) notes.push(`The biggest cliff is at ${big.to[0]}: ${fmtT(big.from[1])} \u2192 ${fmtT(big.to[1])} (\u2212${Math.round(big.frac * 100)}%), usually a new skip or glitch, or a new route.`);
+  else notes.push(`No obvious cliff; even the biggest drop was only ${Math.round((big?.frac ?? 0) * 100)}% faster: a curve ground down bit by bit, close to the limit of the technique.`);
   const stale = daysBetween(pts.at(-1)[0], today) / 365.25;
-  if (stale >= 3) notes.push(`最近一次刷新在 ${pts.at(-1)[0]}，已有 ${stale.toFixed(1)} 年没人破纪录，圈子趋于“收官”。`);
-  else if (stale < 0.5) notes.push(`最近一次刷新在 ${pts.at(-1)[0]}，半年内还有人在破纪录，游戏仍然活跃。`);
+  if (stale >= 3) notes.push(`The latest record was set on ${pts.at(-1)[0]}, ${stale.toFixed(1)} years ago: the scene has settled into the endgame.`);
+  else if (stale < 0.5) notes.push(`The latest record was set on ${pts.at(-1)[0]}, within the last six months: the game is still active.`);
   const span = daysBetween(pts[0][0], pts.at(-1)[0]) / 365.25;
-  notes.push(`${span.toFixed(1)} 年里共 ${pts.length} 次刷新，平均每年 ${(pts.length / Math.max(span, 0.5)).toFixed(1)} 次。`);
+  notes.push(`${pts.length} records over ${span.toFixed(1)} years, about ${(pts.length / Math.max(span, 0.5)).toFixed(1)} per year.`);
   return notes;
 }
 
@@ -83,20 +83,20 @@ export default {
     num: 58,
     slug: 'world-record',
     title: 'World Record',
-    tagline: '一款游戏速通世界纪录的演进曲线，只剩时间和年份。猜它是哪款游戏。',
+    tagline: 'The progression of one game\u2019s speedrun world record, reduced to times and years. Guess the game.',
     category: 'culture',
     data: 'snapshot',
     howTo: [
-      '阶梯图里每一级台阶是一次新的世界纪录：横轴是日期，纵轴是通关用时（对数刻度），黑点是最新一次。',
-      '从列表里选游戏来猜，最多 6 次。每猜错一次解锁一条线索：速通分类、发售年和降幅、平台、首末纪录、英文名首字母。',
-      '读曲线：老游戏的纪录往往在十几年里一点点磨；突然的断崖说明发现了新的瞬移或跳关技巧；用时长短能排除大量游戏。',
-      '每次猜测会告诉你那款游戏的发售年和当前纪录时长相对答案是偏大还是偏小（↑ 答案更大，↓ 答案更小）。',
+      'Each step on the staircase is a new world record: date along the bottom, completion time up the side (log scale), with a black dot for the latest.',
+      'Pick a game from the list to guess, up to 6 times. Each miss unlocks a clue: the speedrun category, release year and total drop, platforms, first and latest record, and the first letter of the title.',
+      'Read the curve. Old games usually grind down over a decade or more; a sudden cliff means someone found a new glitch or skip; the run length rules out many games.',
+      'Each guess shows that game\u2019s release year and current record against the answer\u2019s (\u2191 the answer is higher, \u2193 the answer is lower).',
     ],
-    scoring: '第 1 次猜中 100 分，第 2 次约 83 分，之后每多一次再少约 17 分；6 次都没猜中 0 分。',
+    scoring: 'Guess 1 earns 100 points, guess 2 about 83, and each further guess costs about 17 more; 0 if you never find it in 6.',
     sources: [
-      { name: 'speedrun.com REST API v1', url: 'https://github.com/speedruncomorg/api/blob/master/version1/README.md', note: '已审核（verified）跑分记录，按提交日期推出每个分类的世界纪录演进' },
+      { name: 'speedrun.com REST API v1', url: 'https://github.com/speedruncomorg/api/blob/master/version1/README.md', note: 'verified runs; each category\u2019s record progression is derived from submission dates' },
     ],
-    dataNote: '数据是快照（2026-10-15 抓取）：speedrun.com API 带 CORS，但本游戏不需要“昨天”的数据，历史曲线才是谜面，所以没有做实时加载。纪录曲线由已审核的历史跑分按提交日期推算：某日之前最快的成绩即当时的世界纪录；有子分类的分类取默认子分类。每个分类最多取最早和最新各 10000 条记录（API 偏移上限），已覆盖绝大多数分类。提示里的分类名已去掉含有游戏名的词，平台列表去掉了后来的移植/复刻平台。',
+    dataNote: 'A snapshot (fetched 2026-10-15). The speedrun.com API allows CORS, but this puzzle does not need \u201cyesterday\u201d: the historical curve is the clue, so nothing is loaded live. The record curve is derived from verified historical runs by submission date: the fastest run submitted before a date was the world record then. Categories with subcategories use the default one. For each category we take at most the earliest and latest 10,000 runs (the API offset limit), which covers nearly all categories. Category names in the clues have words that contain the game\u2019s name removed, and platform lists drop later ports and remakes.',
   },
 
   puzzle({ data, pick }) {
@@ -119,7 +119,7 @@ export default {
       marginLeft: 58,
       marginTop: 28,
       x: { type: 'utc', label: null },
-      y: { type: 'log', label: '通关用时', grid: true, tickFormat: (v) => fmtT(v), domain: [lo, hi], ticks: timeTicks(lo, hi) },
+      y: { type: 'log', label: 'Completion time', grid: true, tickFormat: (v) => fmtT(v), domain: [lo, hi], ticks: timeTicks(lo, hi) },
       marks: [
         Plot.line(rows, { x: 'date', y: 's', stroke: c.accent, strokeWidth: 2, curve: 'step-after' }),
         Plot.dot(rows, { x: 'date', y: 's', fill: c.accent, r: 2.5 }),
@@ -129,32 +129,32 @@ export default {
     }));
 
     const clues = [
-      ui.h('div', chart, ui.h('div', { class: 'small muted' }, `共 ${pts.length} 次世界纪录；黑点是最新一次。`)),
-      `速通的分类是「${ans.cat}」。`,
-      `这款游戏发售于 ${ans.year} 年。从第一个纪录到最新纪录，用时缩短了 ${dropPct(pts)}%。`,
-      ans.platforms.length ? `主要平台：${ans.platforms.join(' / ')}。` : '这款游戏在 speedrun.com 上没有标注平台。',
-      `第一个纪录是 ${fmtT(pts[0][1])}（${pts[0][0].slice(0, 4)} 年），现在是 ${fmtT(ans.wr)}。`,
-      `游戏英文名以 “${ans.name[0]}” 开头，共 ${ans.name.length} 个字符。`,
+      ui.h('div', chart, ui.h('div', { class: 'small muted' }, `${pts.length} world records; the black dot is the latest.`)),
+      `The speedrun category is \u201c${ans.cat}\u201d.`,
+      `The game was released in ${ans.year}. From the first record to the latest, the time has dropped by ${dropPct(pts)}%.`,
+      ans.platforms.length ? `Main platforms: ${ans.platforms.join(' / ')}.` : 'This game lists no platform on speedrun.com.',
+      `The first record was ${fmtT(pts[0][1])} (${pts[0][0].slice(0, 4)}); now it is ${fmtT(ans.wr)}.`,
+      `The title starts with \u201c${ans.name[0]}\u201d and is ${ans.name.length} characters long.`,
     ];
 
     const res = await ctx.guess({
       options: games.map((g) => ({ id: g.id, label: g.name, hint: String(g.year) })),
       answer: ans.id,
       maxGuesses: 6,
-      title: '这是哪款游戏的世界纪录？',
-      placeholder: '输入游戏名…',
+      title: 'Which game\u2019s world record is this?',
+      placeholder: 'Type a game title, e.g. Super Mario 64\u2026',
       clues,
-      cluesTitle: '纪录曲线和线索',
-      columns: ['发售年', '当前纪录'],
+      cluesTitle: 'Record curve and clues',
+      columns: ['Released', 'Record'],
       near: (g, a) => Math.abs(byId.get(g.id).year - byId.get(a.id).year) <= 3,
       feedback: (g, a) => [yearCell(byId.get(g.id), byId.get(a.id)), lengthCell(byId.get(g.id), byId.get(a.id))],
     });
 
     res.detail = ui.kv([
-      ['答案', `${ans.name} · ${ans.cat}`],
-      ['发售 / 平台', `${ans.year}${ans.platforms.length ? ' · ' + ans.platforms.join(' / ') : ''}`],
-      ['纪录演进', `${fmtT(pts[0][1])} → ${fmtT(ans.wr)}（${pts[0][0]} → ${pts.at(-1)[0]}）`],
-      ['这条曲线的特征', ui.h('div', ...readingNotes(ans, ctx.date).map((t) => ui.h('div', { style: { marginBottom: '4px' } }, t)))],
+      ['Answer', `${ans.name} \u00b7 ${ans.cat}`],
+      ['Released / platforms', `${ans.year}${ans.platforms.length ? ' \u00b7 ' + ans.platforms.join(' / ') : ''}`],
+      ['Record progression', `${fmtT(pts[0][1])} \u2192 ${fmtT(ans.wr)} (${pts[0][0]} \u2192 ${pts.at(-1)[0]})`],
+      ['What the curve says', ui.h('div', ...readingNotes(ans, ctx.date).map((t) => ui.h('div', { style: { marginBottom: '4px' } }, t)))],
     ]);
     return res;
   },
