@@ -5,6 +5,8 @@ const NAMED = { raquo: '»', laquo: '«', copy: '©', reg: '®', middot: '·', n
 const dec = (s) => s.replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&([a-z]+);/gi, (m, n) => (n === 'amp' || n === 'quot' || n === 'lt' || n === 'gt' || n === 'nbsp' || n === 'apos' ? m : NAMED[n] ?? '')).replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/�/g, '').replace(/\s+/g, ' ').trim();
 const strip = (s) => dec(s.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>/gi, ' '));
 const count = (h, re) => (h.match(re) || []).length;
+// English UI: skip link texts in CJK scripts (e.g. Wikipedia language links)
+const CJK = /[\u3000-\u303f\u3400-\u9fff\uff00-\uffef]/;
 const onlyBars = (t) => !t.replace(/[▇\s\W]/g, '');
 const out = []; const sites = [];
 for (const s of SITES) {
@@ -18,7 +20,7 @@ for (const s of SITES) {
     const dm = h.match(/<meta[^>]+name=["']?description["']?[^>]*>/i);
     const desc = dm ? red(dec((dm[0].match(/content=["']([^"']*)/i) || [, ''])[1])).slice(0, 160) : '';
     const heads = [...new Set([...h.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)].map((m) => red(strip(m[1]))).filter((t) => t.length > 3 && t.length < 90 && !onlyBars(t)))];
-    const links = [...new Set([...h.matchAll(/<a\s[^>]*>([\s\S]*?)<\/a>/gi)].map((m) => red(strip(m[1]))).filter((t) => t.length >= 3 && t.length <= 36 && /[A-Za-z]/.test(t) && !onlyBars(t)))];
+    const links = [...new Set([...h.matchAll(/<a\s[^>]*>([\s\S]*?)<\/a>/gi)].map((m) => red(strip(m[1]))).filter((t) => t.length >= 3 && t.length <= 36 && /[A-Za-z]/.test(t) && !CJK.test(t) && !onlyBars(t)))];
     if (links.length < 6 && heads.length < 2) continue;
     const img = fs.existsSync(`../img/${id}-${r.y}.webp`) ? `img/${id}-${r.y}.webp` : null;
     if (!img) { console.log('skip (no screenshot)', id, r.y); continue; }

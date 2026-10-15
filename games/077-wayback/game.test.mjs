@@ -11,7 +11,7 @@ const puzzleFor = (day) => game.puzzle({ data, day, date: isoFromDay(day), slug,
 
 test('tld', () => assert.equal(tld('bbc.co.uk'), '.co.uk'));
 test('old page', () => { const n = eraNotes({ ...base, tables: 12, fonts: 9, flash: 1 }); assert.ok(n.some((x) => x.includes('table'))); assert.ok(n.some((x) => x.includes('Flash'))); });
-test('modern page', () => { const n = eraNotes({ ...base, viewport: true, fw: ['react'], og: true }); assert.ok(n.some((x) => x.includes('viewport'))); assert.ok(n.some((x) => x.includes('框架'))); });
+test('modern page', () => { const n = eraNotes({ ...base, viewport: true, fw: ['react'], og: true }); assert.ok(n.some((x) => x.includes('viewport'))); assert.ok(n.some((x) => x.includes('framework'))); });
 test('empty', () => assert.equal(eraNotes(base).length, 1));
 
 test('eraRange windows', () => {
