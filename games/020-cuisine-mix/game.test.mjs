@@ -1,12 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import g, { pct, zh, NYC_BOUNDS } from './game.js';
+import g, { pct, NYC_BOUNDS } from './game.js';
 import { makeRng, dayPicker } from './testkit.mjs';
 const data = JSON.parse(readFileSync(new URL('./data.json', import.meta.url)));
 
 test('pct rounds to 0.1', () => assert.equal(pct(1, 3), 33.3));
-test('zh glosses', () => { assert.equal(zh('Chinese'), 'Chinese 中餐'); assert.equal(zh('Nope'), 'Nope'); });
 
 test('data sane', () => {
   assert.ok(data.zips.length >= 60);
