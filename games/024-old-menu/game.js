@@ -11,20 +11,20 @@ export default {
     num: 24,
     slug: 'old-menu',
     title: 'Old Menu',
-    tagline: '一张百年前的菜单：给你餐厅、年份和一道菜的价格，猜另外三道菜卖多少钱。',
+    tagline: 'A century-old menu: given the restaurant, the year and one dish\'s price, guess what three other dishes cost.',
     category: 'money',
     data: 'snapshot',
     howTo: [
-      '看清餐厅、地点和年份，菜单上先给出一道菜的真实价格作为参照。',
-      '依次估三道菜的价格（对数滑杆，每一格约是上一格的固定倍数，也可直接输入）。每份菜单都是美元标价。',
-      '肉类、海鲜、正餐主菜通常比面包、配菜、甜点贵得多：用参照价和菜的“档次”来换算。若有「今天的美元」折算，可借它体会当年一块钱的购买力。',
+      'Read the restaurant, place and year; the menu first gives you the real price of one dish as a reference.',
+      'Estimate the prices of three more dishes in turn (a log slider, where each step is a fixed multiple of the last; you can also type a number). Every menu is priced in US dollars.',
+      'Meat, seafood and main courses usually cost much more than bread, sides and desserts: use the reference price and each dish\'s \u201cclass\u201d to scale. If a \u201ctoday\u2019s dollars\u201d conversion is shown, use it to get a feel for what a dollar bought back then.',
     ],
-    scoring: '每道菜按猜测与真实价格的倍数差打分（对数尺度）：差 1.25 倍约 76 分，差 2 倍约 42 分，差 10 倍约 6 分；三道相加，满分 300。',
+    scoring: 'Each dish is scored by how many times your guess differs from the real price (log scale): 1.25\u00d7 off is about 76 points, 2\u00d7 off about 42, 10\u00d7 off about 6. The three add up to a maximum of 300.',
     sources: [
-      { name: 'NYPL “What’s on the Menu?” 数据集', url: 'https://menus.nypl.org/data', note: '2023-03-16 快照，Menu / MenuPage / MenuItem / Dish 四张表' },
-      { name: 'US CPI-U 月度指数（datasets/cpi-us，源自 BLS）', url: 'https://github.com/datasets/cpi-us', note: '1913 年起；用来折算成今天的美元' },
+      { name: 'NYPL \u201cWhat\u2019s on the Menu?\u201d dataset', url: 'https://menus.nypl.org/data', note: 'Snapshot of Mar 16, 2023: the Menu / MenuPage / MenuItem / Dish tables' },
+      { name: 'US CPI-U monthly index (datasets/cpi-us, from BLS)', url: 'https://github.com/datasets/cpi-us', note: 'From 1913; used to convert to today\'s dollars' },
     ],
-    dataNote: '从约 1.7 万份菜单里筛出美元计价（或美国地点）、1880–1990 年、有 9 道以上标价食物的菜单，每份取 4 道菜：1 道中档菜作参照，另 3 道从便宜到最贵各取一道。酒水因按瓶/按杯计价不统一而剔除，只留食物。价格为菜单原文（美元），未做人工校对；今天的美元用 CPI 折算，1913 年以前没有 CPI 序列，不折算。',
+    dataNote: 'From about 17,000 menus, we keep those priced in US dollars (or from US locations), dated 1880\u20131990, with more than 9 priced food items, and take 4 dishes from each: 1 mid-range dish as the reference, and 3 more from cheapest to priciest. Drinks are dropped because bottle/glass pricing is inconsistent, leaving food only. Prices are as printed on the menu (US dollars) and have not been proofread by hand; today\'s dollars use the CPI, and before 1913 there is no CPI series, so no conversion is shown.',
   },
 
   puzzle({ data, pick }) {
@@ -38,13 +38,13 @@ export default {
     const f = cpi && cpi[menu.y];
     ctx.log('menu', menu.id, menu.who, menu.y);
     ctx.stage.append(
-      ui.panel({ kicker: `${menu.y} 年`, title: menu.who },
+      ui.panel({ kicker: `${menu.y}`, title: menu.who },
         ui.kv([
-          ...(menu.where && norm(menu.where) !== norm(menu.who) ? [['地点', menu.where]] : []),
-          ['场合', menu.ev || '日常菜单'],
-          ['年份', `${menu.y}（距今 ${2026 - menu.y} 年）`],
-          ['物价', f ? `那年的 $1 约等于今天的 $${f.toFixed(2)}` : '1913 年以前没有 CPI 数据，无法折算'],
-          ['参照', ui.h('span', {}, `${anchor[0]} = `, ui.h('b', { class: 'mono' }, usd(anchor[1])))],
+          ...(menu.where && norm(menu.where) !== norm(menu.who) ? [['Place', menu.where]] : []),
+          ['Occasion', menu.ev || 'Daily menu'],
+          ['Year', `${menu.y} (${2026 - menu.y} years ago)`],
+          ['Prices', f ? `$1 that year is about $${f.toFixed(2)} today` : 'No CPI data before 1913, so no conversion'],
+          ['Reference', ui.h('span', {}, `${anchor[0]} = `, ui.h('b', { class: 'mono' }, usd(anchor[1])))],
         ])));
 
     const { min, max } = rangeFor(menu.y);
@@ -52,8 +52,8 @@ export default {
     for (let i = 0; i < targets.length; i++) {
       const [name, price] = targets[i];
       const r = await ctx.estimate({
-        title: `第 ${i + 1}/3 道：${name}`,
-        prompt: `${menu.y} 年，同一份菜单上 ${anchor[0]} 卖 ${usd(anchor[1])}。这道卖多少？`,
+        title: `Dish ${i + 1} of 3: ${name}`,
+        prompt: `In ${menu.y}, ${anchor[0]} on the same menu sold for ${usd(anchor[1])}. What did this one cost?`,
         answer: price, min, max, log: true, step: 0.01, initial: anchor[1],
         format: usd, scoring: 'log', scale: 0.35,
       });
@@ -63,19 +63,19 @@ export default {
     const res = ctx.combine(rs);
     const hi = targets.reduce((a, b) => (b[1] > a[1] ? b : a));
     const lo = targets.reduce((a, b) => (b[1] < a[1] ? b : a));
-    const cols = [{ key: 'n', label: '菜' }, { key: 'p', label: '价格', num: true }, { key: 'r', label: '相对参照', num: true }, { key: 'k', label: '菜单内排位', num: true }];
-    if (f) cols.push({ key: 'm', label: '今天约', num: true });
+    const cols = [{ key: 'n', label: 'Dish' }, { key: 'p', label: 'Price', num: true }, { key: 'r', label: 'vs. ref.', num: true }, { key: 'k', label: 'Pricier than', num: true }];
+    if (f) cols.push({ key: 'm', label: 'Today', num: true });
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.table({
         columns: cols,
         rows: menu.d.map(([n, p, pct], i) => ({
-          n: i ? n : `${n}（参照）`, p: usd(p), r: i ? `×${(p / anchor[1]).toFixed(2)}` : '×1',
-          k: `贵过 ${pct}%`, m: f ? money(p * f) : '',
+          n: i ? n : `${n} (reference)`, p: usd(p), r: i ? `×${(p / anchor[1]).toFixed(2)}` : '×1',
+          k: `${pct}%`, m: f ? money(p * f) : '',
         })),
       }),
-      ui.callout(`这份菜单共有 ${menu.n} 道标价食物。${hi[0]}（${usd(hi[1])}）是 ${lo[0]}（${usd(lo[1])}）的 ${(hi[1] / lo[1]).toFixed(1)} 倍：`
-        + `参照菜 ${anchor[0]} 在菜单里贵过 ${anchor[2]}% 的菜，所以比它排位高的主菜、肉类、海鲜价格更高，排位低的配菜、面包、甜点更低。`
-        + (f ? `折成今天的美元，参照菜约 ${money(anchor[1] * f)}，估价时可以先想“今天这道菜多少钱”再除以 ${f.toFixed(1)}。` : ''),
+      ui.callout(`This menu has ${menu.n} priced food items. ${hi[0]} (${usd(hi[1])}) costs ${(hi[1] / lo[1]).toFixed(1)}\u00d7 as much as ${lo[0]} (${usd(lo[1])}). `
+        + `The reference dish, ${anchor[0]}, is pricier than ${anchor[2]}% of the menu, so mains, meat and seafood ranked above it cost more, and sides, bread and desserts ranked below it cost less. `
+        + (f ? `In today\'s dollars the reference dish is about ${money(anchor[1] * f)}; when estimating, think \u201cwhat would this dish cost today?\u201d and divide by ${f.toFixed(1)}.` : ''),
         'good'));
     return res;
   },
