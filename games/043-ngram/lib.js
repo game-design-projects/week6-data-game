@@ -15,8 +15,8 @@ export const pct = (x) => `${Math.round(x * 100)}%`;
 export const semState = (c) => (c >= 0.999 ? 'hit' : c >= 0.6 ? 'near' : undefined);
 export function trendText(item) {
   const r = item.last;
-  const t = r >= 0.9 ? '至今仍接近历史高点' : r >= 0.5 ? '近年有所回落，但仍在高位' : r >= 0.15 ? '峰值之后明显衰退' : '如今只剩峰值时的一小部分';
-  return `峰值在 ${item.peak} 年前后；${t}。`;
+  const t = r >= 0.9 ? 'it is still near its all-time high' : r >= 0.5 ? 'it has eased off lately but is still high' : r >= 0.15 ? 'it has clearly declined since the peak' : 'it is now a small fraction of its peak';
+  return `It peaked around ${item.peak}; ${t}.`;
 }
 
 const mean = (a) => a.reduce((s, x) => s + x, 0) / a.length;
@@ -39,11 +39,12 @@ export function shapeFacts(item, y0 = 1800) {
 export function whyText(item, y0 = 1800) {
   const s = shapeFacts(item, y0);
   const parts = [];
-  parts.push(s.riseFromStart ? `1800 年代起就已常见` : `${s.rise} 年前后词频首次升到峰值的十分之一以上`);
-  parts.push(`${s.peak} 年到达顶点`);
-  if (s.second) parts.push(`${s.second.year} 年前后另有一个高点（双峰）`);
-  const now = s.lastRatio >= 0.9 ? '2019 年仍在历史最高位附近' : `2019 年只剩峰值的 ${Math.max(1, Math.round(s.lastRatio * 100))}%`;
+  parts.push(s.riseFromStart ? `common since the 1800s` : `first rose above a tenth of its peak frequency around ${s.rise}`);
+  parts.push(`reached its peak in ${s.peak}`);
+  if (s.second) parts.push(`has a second high point around ${s.second.year} (a double peak)`);
+  const now = s.lastRatio >= 0.9 ? 'still near its all-time high in 2019' : `down to ${Math.max(1, Math.round(s.lastRatio * 100))}% of its peak by 2019`;
   parts.push(now);
-  return `${parts.join('，')}。峰值与谷底相差约 ${Math.round(10 ** item.range)} 倍。`;
+  const text = parts.join(', ');
+  return `The word ${text}. Peak and trough differ by about ${Math.round(10 ** item.range)}×.`;
 }
 export const peakNear = (a, b) => Math.abs(a - b) <= 10;

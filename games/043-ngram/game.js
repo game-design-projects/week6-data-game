@@ -5,21 +5,21 @@ export default {
     num: 43,
     slug: 'ngram',
     title: 'Ngram',
-    tagline: '一个英文词在 1800–2019 年书籍里的词频曲线，猜出这个词。语义相似度会告诉你离答案多近。',
+    tagline: 'An English word\'s frequency curve in books from 1800 to 2019. Guess the word; semantic similarity tells you how close you are.',
     category: 'words',
     data: 'snapshot',
     howTo: [
-      '图上是某个英文单词在 Google Books 里 1800–2019 年逐年的相对词频（对数刻度，纵轴不标数值）。',
-      '从列表里选一个词来猜，最多 6 次。每猜错一次解锁一条新线索。',
-      '每次猜测会显示：与答案的语义相似度（GloVe 词向量余弦，≥60% 算接近）、两条曲线的相关系数（≥0.92 算接近）、该词自己的峰值年份（箭头指向答案峰值所在的方向，相差 10 年内算接近）。',
-      '提示：战争、发明、潮流都会在曲线上留下形状——先想“什么事物在那一年冒出来”。',
+      'The chart shows how often an English word appeared in Google Books each year from 1800 to 2019 (log scale; the y-axis has no numbers).',
+      'Pick a word from the list, up to 6 guesses. Each wrong guess unlocks a new clue.',
+      'Each guess shows: its semantic similarity to the answer (cosine of GloVe word vectors; 60% or more counts as close), the correlation between the two curves (0.92 or more counts as close), and the guessed word\'s own peak year (the arrow points toward the answer\'s peak; within 10 years counts as close).',
+      'Hint: wars, inventions and fashions all leave a shape on the curve. Ask what came into being around that year.',
     ],
-    scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分，6 次都没猜中 0 分。',
+    scoring: '100 points for a correct first guess, then about 17 fewer for each extra guess; 0 if you do not get it in 6.',
     sources: [
       { name: 'Google Books Ngram Viewer (en-2019, smoothing 3)', url: 'https://books.google.com/ngrams' },
-      { name: 'GloVe 50d (wiki+gigaword) 词向量，经 fse/glove-wiki-gigaword-50', url: 'https://huggingface.co/fse/glove-wiki-gigaword-50' },
+      { name: 'GloVe 50d (wiki+gigaword) word vectors, via fse/glove-wiki-gigaword-50', url: 'https://huggingface.co/fse/glove-wiki-gigaword-50' },
     ],
-    dataNote: '词表为 234 个手选英文词，其中曲线起伏足够大（峰谷相差 ≥ 20 倍）的 94 个会成为谜底。曲线为 Ngram 逐年值（API 自带 3 年平滑），取对数显示。语义相似度用 GloVe 50 维词向量的余弦值（离线预算，浏览器内没有大模型）。Ngram 接口没有 CORS 头，浏览器无法实时请求，所以是快照。',
+    dataNote: 'The vocabulary is 234 hand-picked English words; the 94 whose curves swing enough (peak at least 20× the trough) can become answers. Curves are yearly Ngram values (the API applies 3-year smoothing), shown on a log scale. Semantic similarity is the cosine of GloVe 50-dimensional word vectors, precomputed offline (there is no large model in the browser). The Ngram API sends no CORS headers, so the browser cannot call it live; this is a snapshot.',
   },
 
   puzzle({ data, pick }) {
@@ -35,8 +35,8 @@ export default {
     const years = (it) => it.f.map((v, k) => ({ year: y0 + k * step, v }));
     const chart = (it, h = 220) => ui.plot((Plot, c) => ({
       height: h,
-      x: { label: '年份', tickFormat: 'd' },
-      y: { label: '相对词频（对数）', ticks: [], tickFormat: () => '' },
+      x: { label: 'Year', tickFormat: 'd' },
+      y: { label: 'Relative frequency (log)', ticks: [], tickFormat: () => '' },
       marks: [Plot.areaY(years(it), { x: 'year', y: 'v', y1: Math.min(...it.f) - 0.2, fill: c.accent, fillOpacity: 0.15 }),
         Plot.lineY(years(it), { x: 'year', y: 'v', stroke: c.accent, strokeWidth: 2.5 })],
     }));
@@ -44,22 +44,22 @@ export default {
 
     const clues = [
       ui.h('div', await chart(ans)),
-      `${trendText(ans)} 峰值与谷底相差约 ${Math.round(10 ** ans.range)} 倍。`,
-      `这个词有 ${ans.w.length} 个字母。`,
-      `首字母是 “${ans.w[0].toUpperCase()}”。语义上相近的词里有：${ans.nn.slice(0, 2).join('、')}。`,
-      `更多语义近邻：${ans.nn.join('、')}。`,
-      `最后一个字母是 “${ans.w.at(-1)}”。`,
+      `${trendText(ans)} Peak and trough differ by about ${Math.round(10 ** ans.range)}×.`,
+      `The word has ${ans.w.length} letters.`,
+      `It starts with "${ans.w[0].toUpperCase()}". Words close in meaning include: ${ans.nn.slice(0, 2).join(', ')}.`,
+      `More semantic neighbors: ${ans.nn.join(', ')}.`,
+      `The last letter is "${ans.w.at(-1)}".`,
     ];
     const options = items.map((x) => ({ id: x.w, label: x.w }));
     const res = await ctx.guess({
       options,
       answer: ans.w,
       maxGuesses: 6,
-      title: '这是哪个词？',
-      placeholder: '输入英文单词…',
+      title: 'Which word is it?',
+      placeholder: 'Type a word…',
       clues,
-      cluesTitle: '曲线和线索',
-      columns: ['语义', '曲线', '峰值'],
+      cluesTitle: 'Curve and clues',
+      columns: ['Meaning', 'Curve', 'Peak'],
       near: (g) => semState(cosine(byW.get(g.id).v, ans.v)) === 'near',
       feedback: (g) => {
         const it = byW.get(g.id);
@@ -74,9 +74,9 @@ export default {
       },
     });
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.h('div', { class: 'ink2' }, `答案是 `, ui.h('b', ans.w), `。${whyText(ans, y0)}`),
+      ui.h('div', { class: 'ink2' }, `The answer is `, ui.h('b', ans.w), `. ${whyText(ans, y0)}`),
       await chart(ans, 200),
-      ui.kv([['语义近邻', ans.nn.join('、')], ['怎么推出来', shapeFacts(ans, y0).emerged ? '曲线有明显的“出生点”：词频从很低的水平陡升，那一年前后通常就是这个事物出现或流行的时候，再看顶点之后是否被新事物取代。' : '这是个老词，曲线从 1800 年起就有底；线索在于缓慢的升降——对应社会长期的变化，而不是某次发明。']]));
+      ui.kv([['Semantic neighbors', ans.nn.join(', ')], ['How to work it out', shapeFacts(ans, y0).emerged ? 'The curve has a clear "birth point": the frequency shoots up from a very low level, and that year is usually when the thing appeared or became popular. Then see whether it was replaced by something newer after the peak.' : 'This is an old word with a solid floor since 1800. The clue is in the slow rises and falls, which track long social change rather than one invention.']]));
     return res;
   },
 };
