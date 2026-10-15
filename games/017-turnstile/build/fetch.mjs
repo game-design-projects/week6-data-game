@@ -19,3 +19,18 @@ for (const [f, sql] of Object.entries(jobs)) {
   console.log(f, t.length);
   await new Promise((s) => setTimeout(s, 1500));
 }
+
+// Station directory (complex_id <-> GTFS stop ids) and the static GTFS feed, used to count stops between stations.
+import { execFileSync } from 'node:child_process';
+const dl = async (url, p) => {
+  if (fs.existsSync(p)) return;
+  const r = await fetch(url, { headers: UA });
+  if (!r.ok) throw new Error(url + ' ' + r.status);
+  fs.writeFileSync(p, Buffer.from(await r.arrayBuffer()));
+  console.log(p, fs.statSync(p).size);
+  await new Promise((s) => setTimeout(s, 1500));
+};
+await dl('https://data.ny.gov/resource/39hk-dx4f.json?$limit=2000', 'raw/stations.json');
+await dl('https://rrgtfsfeeds.s3.amazonaws.com/gtfs_subway.zip', 'raw/gtfs_subway.zip');
+fs.mkdirSync('raw/gtfs', { recursive: true });
+if (!fs.existsSync('raw/gtfs/stop_times.txt')) execFileSync('unzip', ['-oq', 'raw/gtfs_subway.zip', 'stops.txt', 'trips.txt', 'stop_times.txt', '-d', 'raw/gtfs']);
