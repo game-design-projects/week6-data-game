@@ -22,22 +22,22 @@ export default {
     num: 80,
     slug: 'subdomain',
     title: 'Subdomain',
-    tagline: '一家公司（名字隐藏）最近签发的 TLS 证书里出现的子域名：vpn-、sso-、jira-……猜是哪家公司。',
+    tagline: 'Subdomains from a hidden company\'s newest TLS certificates: vpn, sso, jira\u2026 Name the company.',
     category: 'tech',
     data: 'live',
     howTo: [
-      '每家公司申请 HTTPS 证书时，子域名会被公开记录在证书透明度（CT）日志里。今天的公司是谁、它的子域名，都来自昨天为止 crt.sh 上仍有效的证书。',
-      '先看到最常见的几个子域名（api、status、admin……），从列表中猜公司，最多 6 次。公司名已涂黑。',
-      '每猜错一次，解锁一批更独特的子域名，越往后越能暴露身份。',
-      '每次猜测会告诉你：行业是否相同，以及你猜的公司和答案共有几个相同的子域名。',
-      '计分：第 1 次猜中 100 分，第 2 次 83，第 3 次 67，第 4 次 50，第 5 次 33，第 6 次 17，没猜中 0 分。',
+      'When a company requests an HTTPS certificate, its subdomains are recorded publicly in Certificate Transparency (CT) logs. Today\'s company and its subdomains come from certificates on crt.sh that were still valid as of yesterday.',
+      'You start with the most common subdomains (api, status, admin\u2026) and guess the company from the list, up to 6 times. The company name is blacked out.',
+      'Every miss unlocks a batch of more distinctive subdomains, and the later ones give the company away.',
+      'Each guess tells you whether the industry matches and how many subdomains your guess shares with the answer.',
+      'Scoring: 100 points for a first-try hit, then 83, 67, 50, 33 and 17; 0 if you miss all six.',
     ],
-    scoring: '第 n 次猜中得 100 × (7 − n) / 6 分，6 次都没猜中 0 分。',
+    scoring: 'A hit on guess n scores 100 \u00d7 (7 \u2212 n) / 6; 0 if you miss all six.',
     sources: [
-      { name: 'crt.sh 证书透明度日志检索', url: 'https://crt.sh/' },
+      { name: 'crt.sh Certificate Transparency log search', url: 'https://crt.sh/' },
       { name: 'Certificate Transparency (RFC 9162)', url: 'https://certificate.transparency.dev/' },
     ],
-    dataNote: '每天的公司固定从 93 家里抽取；打开页面时浏览器会实时向 crt.sh 查询该公司主域名下、昨天（UTC）及之前签发且当天仍有效的证书，只取域名下一层的子域名。crt.sh 偶尔超时或返回 502，这时自动改用 2026-10-14 的快照（data.json）。两种来源都已剔除含品牌名（含前缀）和随机哈希的子域名；“通用 / 独有”是按这 93 家公司快照里的出现次数划分的。',
+    dataNote: 'Each day\'s company is picked from a fixed set of 93. When you open the page, your browser queries crt.sh live for certificates under that company\'s main domain that were issued yesterday (UTC) or earlier and are still valid today, keeping only the label directly under the domain. crt.sh sometimes times out or returns a 502; then the game automatically falls back to the Oct 14, 2026 snapshot (data.json). Both sources drop subdomains containing the brand name (including prefixes) or random hashes. \u201cGeneric\u201d vs. \u201cunique\u201d is based on how often a label appears across the snapshot of these 93 companies.',
   },
 
   puzzle({ data, pick }) {
@@ -59,7 +59,7 @@ export default {
   },
 
   async play(ctx, p) {
-    const { ui } = ctx;
+    const { ui, core } = ctx;
     const cs = ctx.data.companies;
     const byId = new Map(cs.map((c) => [c.id, c]));
     const base = byId.get(p.id);
@@ -69,17 +69,17 @@ export default {
     const cloud = (xs) => ui.h('div', { class: 'ds-row', style: { flexWrap: 'wrap', gap: '6px' } },
       xs.map((l) => ui.h('span', { class: 'mono' }, `${l}.▇▇▇▇▇▇`)));
     const clues = bs.map((b, i) => ui.h('div', { class: 'ds-stack' },
-      ui.h('div', { class: 'small muted' }, i === 0 ? '最常见的子域名（很多公司都有）：' : `第 ${i + 1} 批：`),
+      ui.h('div', { class: 'small muted' }, i === 0 ? 'Most common subdomains (many companies have these):' : `Batch ${i + 1}:`),
       cloud(b)));
-    clues[bs.length - 1] = ui.h('div', { class: 'ds-stack' }, clues[bs.length - 1], ui.h('div', { class: 'small' }, `行业：${ans.cat}；名字首字母 “${ans.name[0]}”。`));
+    clues[bs.length - 1] = ui.h('div', { class: 'ds-stack' }, clues[bs.length - 1], ui.h('div', { class: 'small' }, `Industry: ${ans.cat}. The name starts with \u201c${ans.name[0]}\u201d.`));
 
     const shared = (a, b) => a.labels.filter((l) => b.labels.includes(l)).length;
     const options = cs.map((c) => ({ id: c.id, label: c.name, hint: c.cat, aliases: [c.domain, c.id] }));
     const res = await ctx.guess({
       options, answer: ans.id, maxGuesses: 6,
-      title: '这是哪家公司？', placeholder: '输入公司名…',
-      clues, cluesTitle: '证书里的子域名',
-      columns: ['行业', '共同子域名'],
+      title: 'Which company is this?', placeholder: 'Type a company, e.g. Stripe\u2026',
+      clues, cluesTitle: 'Subdomains in its certificates',
+      columns: ['Industry', 'Shared'],
       near: (g) => byId.get(g.id).cat === ans.cat,
       feedback: (g) => {
         const gc = byId.get(g.id);
@@ -95,12 +95,12 @@ export default {
     const first = uniq[0];
     const generic = ans.labels.slice(0, 4);
     const why = first
-      ? `第 ${batchOf(first)} 批里的 ${first} 是这批 93 家公司里只有 ${ans.name} 才有的子域名，是最早能锁定它的线索；其余独有的还有 ${uniq.slice(1, 8).join('、') || '（无）'}。`
-      : `这家公司没有独有的子域名，要靠多个线索组合才能排除其他公司。`;
+      ? `In batch ${batchOf(first)}, \u201c${first}\u201d is a subdomain only ${ans.name} has among these 93 companies, the earliest clue that could pin it down. Other unique ones: ${uniq.slice(1, 8).join(', ') || '(none)'}.`
+      : `This company has no unique subdomains, so you had to combine several clues to rule out the others.`;
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.kv([['答案', `${ans.name}（${ans.domain}）`], ['行业', ans.cat], ['有效证书里的单层子域名', `${ans.total} 个`], ['最近一张证书签发', ans.latest || '—'], ['数据', p.live ? '今天实时查询 crt.sh' : '2026-10-14 快照']]),
+      ui.kv([['Answer', `${ans.name} (${ans.domain})`], ['Industry', ans.cat], ['Subdomains', `${core.fmtNum(ans.total)} single-level names in valid certificates`], ['Latest cert', ans.latest || '\u2014'], ['Data', p.live ? 'Live crt.sh query today' : 'Oct 14, 2026 snapshot']]),
       ui.h('div', { class: 'ink2' }, why),
-      ui.h('div', { class: 'ink2' }, `${generic.join('、')} 这类很多公司都有的名字，只能说明规模和技术栈；产品线、内部系统和合作项目的名字才暴露身份。`));
+      ui.h('div', { class: 'ink2' }, `Names like ${generic.join(', ')} are shared by many companies and only hint at size and tech stack; product lines, internal systems and partner projects are what give an identity away.`));
     return res;
   },
 };
