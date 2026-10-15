@@ -35,36 +35,36 @@ export function stats(ways) {
 
 /** Human wording of a compass axis bearing (0–89). */
 export function axisText(b) {
-  if (b <= 3 || b >= 87) return '几乎正南北、正东西';
-  return b <= 45 ? `北偏东约 ${b}°` : `北偏西约 ${90 - b}°`;
+  if (b <= 3 || b >= 87) return 'almost exactly north-south and east-west';
+  return b <= 45 ? `about ${b}° east of north` : `about ${90 - b}° west of north`;
 }
 
 /** Final score of the pin preset (engine: expScore × max(0.4, 1 − 0.15 per extra try)); mirrored here for tests and copy. */
 export const SCALE_KM = 2500, ATTEMPTS = 4, HIT_KM = SCALE_KM * 0.02;
 export const finalScore = (km, tries) => Math.round(expScore(km, SCALE_KM, 100) * Math.max(0.4, 1 - 0.15 * (tries - 1)));
 
-const TEMPS = [[300, '🔥 滚烫'], [1000, '♨️ 很热'], [2500, '🌡️ 温热'], [5000, '🌤️ 微凉'], [9000, '❄️ 很冷']];
-export const temp = (km) => (TEMPS.find(([lim]) => km < lim) ?? [0, '🧊 冰冷'])[1];
+const TEMPS = [[300, '🔥 Scorching'], [1000, '♨️ Hot'], [2500, '🌡️ Warm'], [5000, '🌤️ Cool'], [9000, '❄️ Cold']];
+export const temp = (km) => (TEMPS.find(([lim]) => km < lim) ?? [0, '🧊 Freezing'])[1];
 
 export default {
   meta: {
     num: 5,
     slug: 'figure-ground',
     title: 'Figure-Ground',
-    tagline: '一平方公里的街道，黑底白线，没有任何文字。凭街网的肌理，猜出这是哪座城市。',
+    tagline: 'One square kilometer of streets, white on black, with no labels. From the texture of the street net, name the city.',
     category: 'geo',
     data: 'snapshot',
     howTo: [
-      '黑底上的白线是某座城市市中心 1 km × 1 km 范围内的机动车道路，上北下南；线越粗，路越宽，细线是小街、小巷。',
-      '读肌理：整齐的方格网多见于美洲和殖民城市，放射环路和斜向大道像欧洲古都，蜿蜒细密的窄巷是老城或山城，巨大的街区和立交是现代规划新城。',
-      '在世界地图上点出你的答案，一共 4 次机会；每次没猜中会告诉你「冷热」和离答案的公里数，但不告诉方向，可以用几次距离交叉定位。',
-      '离答案不到 50 km 即算命中，直接结束；否则用完 4 次后以最后一次为准。',
+      'The white lines on black are the drivable roads within a 1 km × 1 km square at the heart of a city, north up. Thicker lines are wider roads; thin ones are side streets and alleys.',
+      'Read the texture: tidy grids are common in the Americas and colonial cities; radial rings and diagonal boulevards look like old European capitals; winding, dense alleys mean an old town or a hill town; huge blocks and interchanges suggest a modern planned city.',
+      'Drop a pin on the world map. You have 4 tries. Each miss tells you how hot or cold you are and how many kilometers off, but not the direction, so use a couple of distances to triangulate.',
+      'Within 50 km counts as a hit and ends the round; otherwise your last try is scored after all 4.',
     ],
-    scoring: '以最后一次猜测的距离计：100 × e^(−距离 / 2500 km)；每多用一次机会，总分再 −15%（最多 −45%）。第一次就命中 100 分，第 4 次才命中约 55 分。',
+    scoring: 'Your last guess counts: 100 × e^(−distance / 2500 km). Each extra try costs another 15% of the total (up to 45%). A first-try hit is 100; a hit on the 4th try is about 55.',
     sources: [
-      { name: 'OpenStreetMap（Overpass API）', url: 'https://overpass-api.de/', note: '各城市中心 1 km² 内的 highway 线要素，© OpenStreetMap contributors，ODbL' },
+      { name: 'OpenStreetMap (Overpass API)', url: 'https://overpass-api.de/', note: 'Highway line features within 1 km² of each city center. © OpenStreetMap contributors, ODbL' },
     ],
-    dataNote: '数据是对 OpenStreetMap 的一次快照（构建脚本见 build/），道路按 2–3 m 容差简化。只画机动车道路（含小街、服务路）；步行道、自行车道、台阶、土路不画，因为这类线在各城市的 OSM 里录入完整度差别极大，会让「谁画得全」比「街网肌理」更显眼。方块的中心点是城市核心区的一个坐标（部分城市刻意避开立交、大片公园或水面，改选老城里的街区），答案就是这个中心点。',
+    dataNote: 'A one-time snapshot of OpenStreetMap (build scripts in build/), with roads simplified to a 2-3 m tolerance. Only drivable roads are drawn (including side streets and service roads). Footpaths, cycleways, steps and tracks are left out, because how completely they are mapped varies enormously between cities and would make \u201cwho mapped more\u201d louder than the street texture. The square is centered on a point in the city core (some cities deliberately avoid interchanges, big parks or water and use an old-town block instead); that center is the answer.',
   },
 
   puzzle({ data, pick }) {
@@ -78,9 +78,9 @@ export default {
     const st = stats(c.ways);
     ctx.log('figure-ground', { city: c.name, ways: c.ways.length, ...st });
 
-    const canvas = ui.h('canvas', { role: 'img', 'aria-label': '黑底白线的街道网络图，没有文字标注', style: { width: '100%', aspectRatio: '1', display: 'block', background: '#000', borderRadius: '8px', maxWidth: '560px', margin: '0 auto' } });
-    const scale = ui.h('div', { class: 'small mono muted', style: { textAlign: 'center', marginTop: '8px' } }, '底部白条 = 200 m', ui.h('br'), '全图 1 km × 1 km · 上为北');
-    ctx.stage.append(ui.panel({ kicker: '线索', title: '这是哪座城市的 1 km²？' }, canvas, scale));
+    const canvas = ui.h('canvas', { role: 'img', 'aria-label': 'Street network in white lines on black, with no text labels', style: { width: '100%', aspectRatio: '1', display: 'block', background: '#000', borderRadius: '8px', maxWidth: '560px', margin: '0 auto' } });
+    const scale = ui.h('div', { class: 'small mono muted', style: { textAlign: 'center', marginTop: '8px' } }, 'White bar at the bottom = 200 m', ui.h('br'), 'Whole image 1 km × 1 km · north is up');
+    ctx.stage.append(ui.panel({ kicker: 'Clue', title: 'Which city\'s square kilometer is this?' }, canvas, scale));
 
     const draw = () => {
       const px = canvas.clientWidth || 360, dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -106,13 +106,13 @@ export default {
     ro?.observe(canvas);
 
     const res = await ctx.pin({
-      answer: { lat: c.lat, lng: c.lng, label: `${c.name}，${c.country}` },
+      answer: { lat: c.lat, lng: c.lng, label: `${c.name}, ${c.country}` },
       view: { center: [25, 10], zoom: 2, bounds: [[-56, -170], [74, 178]] }, // whole world, fits 390 px too
       scale: SCALE_KM,
       attempts: ATTEMPTS,
-      title: '点出它在哪',
-      prompt: '没有地名的世界地图。每次提交后只告诉你冷热和公里数，不告诉方向。',
-      hint: (km) => `${temp(km)} · 离答案 ${core.fmtKm(km)}`,
+      title: 'Pin it on the map',
+      prompt: 'A world map with no place names. After each try you only learn hot or cold and the distance in km, not the direction.',
+      hint: (km) => `${temp(km)} · ${core.fmtKm(km)} from the answer`,
       reveal: async ({ L, map }) => {
         L.rectangle([[c.lat - 0.0045, c.lng - 0.0045 / Math.cos(c.lat * Math.PI / 180)], [c.lat + 0.0045, c.lng + 0.0045 / Math.cos(c.lat * Math.PI / 180)]], { color: ui.colors().accent, weight: 2, fillOpacity: 0.15 }).addTo(map);
       },
@@ -122,16 +122,16 @@ export default {
     // where does this square sit among the whole pool? (learn what "grid-ness" means)
     const all = ctx.data.cities.map((x) => stats(x.ways).grid);
     const rank = all.filter((g) => g > st.grid).length + 1;
-    const style = st.grid > 0.75 ? '高度方格化：街道近乎全部落在同一对垂直方向上，几乎一定是规划出来的格网城区'
-      : st.grid > 0.5 ? '半规整：主要街道成网格，但夹着斜街或不规则街区'
-        : '不规则：街道朝向各异，多半是自然生长的老城，或放射、曲线式布局';
+    const style = st.grid > 0.75 ? 'Highly gridded: nearly all streets share one pair of perpendicular directions, almost surely a planned grid district'
+      : st.grid > 0.5 ? 'Semi-regular: the main streets form a grid, mixed with diagonals or irregular blocks'
+        : 'Irregular: streets point every which way, most likely an organically grown old town or a radial or curvilinear layout';
     res.detail = ui.panel({ plain: true }, ui.kv([
-      ['答案', `${c.name}，${c.country}（${c.lat.toFixed(3)}°, ${c.lng.toFixed(3)}°）`],
-      ['这一方块的特征', c.note],
-      ['道路总长', `${st.km.toFixed(1)} km（${c.ways.length} 段）：街网越密、越碎，往往越像老城`],
-      ['格网度', `${Math.round(st.grid * 100)}%（在 ${all.length} 座城市里排第 ${rank}），主轴${axisText(st.axis)}`],
-      ['怎么读', style],
-      ['通用线索', '先看街区大小和朝向是否统一，再看有没有斜向干道、环路、立交和断头小巷：它们是不同时代、不同规划传统留下的指纹。'],
+      ['Answer', `${c.name}, ${c.country} (${c.lat.toFixed(3)}°, ${c.lng.toFixed(3)}°)`],
+      ['What marks this square', c.note],
+      ['Total road length', `${st.km.toFixed(1)} km (${c.ways.length} segments): the denser and more broken the net, the more it tends to be an old town`],
+      ['Grid-ness', `${Math.round(st.grid * 100)}% (rank ${rank} of ${all.length} cities), main axis ${axisText(st.axis)}`],
+      ['How to read it', style],
+      ['General clues', 'First check whether block size and orientation are uniform, then look for diagonal arterials, ring roads, interchanges and dead-end alleys: they are fingerprints of different eras and planning traditions.'],
     ]));
     return res;
   },

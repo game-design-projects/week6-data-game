@@ -19,9 +19,9 @@ test('axis is a compass bearing: a street running north-east-ish gives 45', () =
   // screen y grows downward, so (dx=+100, dy=-100) points north-east
   const ne = [[1, 0, 500, 100, -100], [1, 0, 600, 100, -100]];
   assert.equal(stats(ne).axis, 45);
-  assert.match(axisText(0), /正南北/); assert.match(axisText(30), /北偏东/); assert.match(axisText(60), /北偏西约 30/);
+  assert.match(axisText(0), /north-south/); assert.match(axisText(30), /east of north/); assert.match(axisText(60), /30° west of north/);
 });
-test('temp bands', () => { assert.match(temp(10), /滚烫/); assert.match(temp(20000), /冰冷/); });
+test('temp bands', () => { assert.match(temp(10), /Scorching/); assert.match(temp(20000), /Freezing/); });
 
 test('scoring extremes', () => {
   assert.equal(finalScore(0, 1), 100);                       // perfect first try
@@ -62,7 +62,7 @@ test('pool: every puzzle for days 1..120 is valid', () => {
 test('no leaks: the page text before the guess never names the city', () => {
   const m = game.meta;
   const text = JSON.stringify([m.tagline, m.howTo, m.scoring, m.dataNote]);
-  for (const c of data.cities) assert.ok(!text.includes(c.name) && !text.includes(c.country + '，'), 'meta mentions ' + c.name);
+  for (const c of data.cities) assert.ok(!text.includes(c.name) && !text.includes(c.country + ', '), 'meta mentions ' + c.name);
   // the city's own note is only shown in the result card, and no way geometry contains text
   for (const c of data.cities) for (const w of c.ways) assert.ok(w.every((v) => typeof v === 'number'));
 });
