@@ -1,8 +1,11 @@
 // Fetch ERA5 hourly weather (Open-Meteo archive) for ~40 cities, build puzzle pool.
 import fs from 'node:fs';
 import path from 'node:path';
+import { selectCities } from '../game.js';
+const ZH = {"Reykjavik": "雷克雅未克", "Oslo": "奥斯陆", "London": "伦敦", "Moscow": "莫斯科", "Madrid": "马德里", "Cairo": "开罗", "Dubai": "迪拜", "Riyadh": "利雅得", "Mumbai": "孟买", "Delhi": "德里", "Bangkok": "曼谷", "Singapore": "新加坡", "Beijing": "北京", "Shanghai": "上海", "Tokyo": "东京", "Seoul": "首尔", "Sydney": "悉尼", "Perth": "珀斯", "Auckland": "奥克兰", "Ulaanbaatar": "乌兰巴托", "Nairobi": "内罗毕", "Lagos": "拉各斯", "Cape Town": "开普敦", "Johannesburg": "约翰内斯堡", "New York": "纽约", "Chicago": "芝加哥", "Miami": "迈阿密", "Los Angeles": "洛杉矶", "Anchorage": "安克雷奇", "Mexico City": "墨西哥城", "Lima": "利马", "São Paulo": "圣保罗", "Buenos Aires": "布宜诺斯艾利斯", "Santiago": "圣地亚哥", "Manaus": "马瑙斯", "Vancouver": "温哥华", "Yakutsk": "雅库茨克", "Istanbul": "伊斯坦布尔", "Hong Kong": "香港", "La Paz": "拉巴斯", "Tehran": "德黑兰"};
 const dir = path.dirname(new URL(import.meta.url).pathname);
 const raw = path.join(dir, 'raw');
+fs.mkdirSync(raw, { recursive: true });
 const START = '2025-10-01', END = '2026-10-05';
 const C = [
  ['Reykjavik','冰岛',64.15,-21.94],['Oslo','挪威',59.91,10.75],['London','英国',51.51,-0.13],['Moscow','俄罗斯',55.76,37.62],
@@ -31,40 +34,36 @@ for (const [name, country, lat, lng] of C) {
     }
     await sleep(3000);
   }
-  cities.push({ name, country, lat, lng, j: JSON.parse(fs.readFileSync(f, 'utf8')) });
+  cities.push({ name, zh: ZH[name], country, lat, lng, j: JSON.parse(fs.readFileSync(f, 'utf8')) });
   console.log('ok', name);
 }
-// seeded rng
-let s = 12345; const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
 const days = []; for (let t = Date.parse(START); t <= Date.parse(END); t += 864e5) days.push(new Date(t).toISOString().slice(0, 10));
-const hm = (iso) => +iso.slice(11, 13) + +iso.slice(14, 16) / 60;
+const hm = (iso) => (iso ? +iso.slice(11, 13) + +iso.slice(14, 16) / 60 : null);
+const round = (x, d) => Math.round(x * 10 ** d) / 10 ** d;
 function card(c, date) {
   const di = days.indexOf(date), h = c.j.hourly;
   const sl = (k) => h[k].slice(di * 24, di * 24 + 24);
   const T = sl('temperature_2m'), cl = sl('cloud_cover'), w = sl('wind_speed_10m'), p = sl('precipitation');
   if ([T, cl, w, p].some((a) => a.length < 24 || a.some((x) => x == null))) return null;
   const sum = (a) => a.reduce((x, y) => x + y, 0);
-  return { t: T.map((x) => Math.round(x * 10) / 10), cloud: Math.round(sum(cl) / 24), wind: Math.round(Math.max(...w)), rain: Math.round(sum(p) * 10) / 10,
-    rise: Math.round(hm(c.j.daily.sunrise[di]) * 100) / 100, set: Math.round(hm(c.j.daily.sunset[di]) * 100) / 100 };
+  const rise = hm(c.j.daily.sunrise[di]), set = hm(c.j.daily.sunset[di]);
+  return { name: c.name, zh: c.zh, country: c.country, lat: c.lat, t: T.map((x) => round(x, 1)), cloud: Math.round(sum(cl) / 24), wind: Math.round(Math.max(...w)), rain: round(sum(p), 1),
+    rise: rise == null ? null : round(rise, 2), set: set == null ? null : round(set, 2) };
 }
-const puzzles = [];
-const usedDates = new Set();
-while (puzzles.length < 70) {
-  const date = days[Math.floor(rnd() * days.length)];
-  if (usedDates.has(date)) continue;
-  // pick 5 cities with distinct countries and mean temps spread >= 2C apart
-  const order = cities.map((c) => [rnd(), c]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
-  const chosen = [];
-  for (const c of order) {
-    const cd = card(c, date); if (!cd) continue;
-    const m = cd.t.reduce((a, b) => a + b, 0) / 24;
-    if (chosen.some((x) => x.c.country === c.country || Math.abs(x.m - m) < 2.5)) continue;
-    chosen.push({ c, cd, m });
-    if (chosen.length === 5) break;
-  }
+// daily mean temperature per city (climatology for deterministic live city selection)
+const meta = cities.map((c) => ({ name: c.name, zh: c.zh, country: c.country, lat: c.lat, lng: c.lng,
+  dm: days.map((_, di) => { const a = c.j.hourly.temperature_2m.slice(di * 24, di * 24 + 24); return a.some((x) => x == null) ? null : round(a.reduce((x, y) => x + y, 0) / 24, 1); }) }));
+const byName = new Map(cities.map((c) => [c.name, c]));
+// evenly spaced dates across the range so every season/hemisphere mix appears
+const N = 84, puzzles = [];
+for (let k = 0; k < N; k++) {
+  const date = days[Math.floor((k * 7919) % days.length)]; // 7919 prime: scattered, distinct while N <= days.length
+  if (puzzles.some((p) => p.date === date)) continue;
+  const chosen = selectCities(meta, [START, END], date);
   if (chosen.length < 5) continue;
-  usedDates.add(date);
-  puzzles.push({ date, cities: chosen.map((x) => ({ name: x.c.name, country: x.c.country, lat: x.c.lat, ...x.cd })) });
+  const cards = chosen.map((m) => card(byName.get(m.name), date));
+  if (cards.some((c) => !c)) continue;
+  puzzles.push({ date, cities: cards });
 }
-fs.writeFileSync(path.join(dir, '../data.json'), JSON.stringify({ range: [START, END], puzzles }));
+fs.writeFileSync(path.join(dir, '../data.json'), JSON.stringify({ range: [START, END], cities: meta, puzzles }));
 console.log('puzzles', puzzles.length);
