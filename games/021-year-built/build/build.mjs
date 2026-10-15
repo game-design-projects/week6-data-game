@@ -1,45 +1,68 @@
-// raw/wd.json (Wikidata SPARQL, see q.rq) -> data.json ; licence info from Commons API (cached raw/commons.json)
+// Step 3: Wikidata candidates (raw/wd.json) + PLUTO cross-check (raw/pluto.json) + Commons licence (raw/commons.json) -> ../data.json
+// Run from build/:  node fetch-pluto.mjs && node build.mjs
+// A building is kept only when a PLUTO lot within ~45 m has a yearbuilt within TOL years of the Wikidata inception year
+// (two independent sources agree), the photo is a landscape/portrait JPEG >= 640 px with a Commons licence.
 import fs from 'node:fs';
-const UA = 'daily-data-games/1.0 (class project)';
-const rows = JSON.parse(fs.readFileSync('raw/wd.json')).results.bindings;
-const m = new Map();
-for (const x of rows) {
-  const id = x.b.value.split('/').pop();
-  const y = +x.inc.value.slice(0, 4);
-  const file = decodeURIComponent(x.img.value.split('FilePath/').pop());
-  if (!m.has(id)) m.set(id, { id, n: x.bLabel.value, y, file, lat: +(+x.lat.value).toFixed(4), lng: +(+x.lon.value).toFixed(4) });
+import { candidates } from './lib.mjs';
+const UA = 'daily-data-games/1.0 (NYU class project)';
+export const TOL = 3;
+const BORO = { MN: '曼哈顿', BK: '布鲁克林', QN: '皇后区', BX: '布朗克斯', SI: '史坦顿岛' };
+
+export function matchPluto(b, lots) {
+  const near = (lots || []).map((l) => ({ ...l, py: +l.yearbuilt, d: Math.hypot((+l.latitude - b.lat) * 111, (+l.longitude - b.lng) * 84) }))
+    .filter((l) => l.py > 0 && Math.abs(l.py - b.year) <= TOL).sort((a, c) => a.d - c.d);
+  return near[0] || null;
 }
-const hash = (s) => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
-const buckets = [[1700,1849],[1850,1899],[1900,1919],[1920,1939],[1940,1959],[1960,1979],[1980,1999],[2000,2025]];
-let cand = [...m.values()].filter((b) => /\.jpe?g$/i.test(b.file) && b.y >= 1700 && b.y <= 2025 && !/\d{4}/.test(b.n) && !/^Q\d+$/.test(b.n)
-  && !/(map|plan|view of|panorama|skyline|aerial)/i.test(b.file) && !/(alma mater|boardwalk|street$|statue|station|bridge|park|cemetery|subway|tunnel)/i.test(b.n));
-cand.sort((a, b) => hash(a.id) - hash(b.id));
-let pool = [];
-for (const [lo, hi] of buckets) pool.push(...cand.filter((b) => b.y >= lo && b.y <= hi).slice(0, 22));
-// Commons metadata
-const cache = 'raw/commons.json';
-let meta = fs.existsSync(cache) ? JSON.parse(fs.readFileSync(cache)) : null;
-if (!meta) {
-  meta = {};
-  for (let i = 0; i < pool.length; i += 40) {
-    const titles = pool.slice(i, i + 40).map((b) => 'File:' + b.file).join('|');
+
+const strip = (s = '') => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim().slice(0, 60);
+
+async function main() {
+  const pluto = JSON.parse(fs.readFileSync('raw/pluto.json'));
+  const pool = [];
+  for (const b of candidates()) {
+    const l = matchPluto(b, pluto[b.id]);
+    if (l) pool.push({ ...b, lot: l });
+  }
+  console.log('candidates', candidates().length, 'pluto-confirmed', pool.length);
+
+  const cache = 'raw/commons.json';
+  const meta = fs.existsSync(cache) ? JSON.parse(fs.readFileSync(cache)) : {};
+  const key = (f) => f.replace(/ /g, '_');
+  const need = pool.filter((b) => !(key(b.file) in meta));
+  for (let i = 0; i < need.length; i += 40) {
+    const titles = need.slice(i, i + 40).map((b) => 'File:' + b.file).join('|');
     const u = 'https://commons.wikimedia.org/w/api.php?' + new URLSearchParams({ action: 'query', format: 'json', prop: 'imageinfo', iiprop: 'extmetadata|size', titles });
-    const j = await (await fetch(u, { headers: { 'User-Agent': UA } })).json();
-    for (const p of Object.values(j.query.pages)) meta[p.title.replace(/^File:/, '').replace(/ /g, '_')] = p.imageinfo?.[0];
-    await new Promise((r) => setTimeout(r, 1000));
+    let j = null;
+    for (let t = 0; t < 6 && !j; t++) {
+      try { j = await (await fetch(u, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(30000) })).json(); }
+      catch { console.warn('commons rate-limited, backing off'); await new Promise((r) => setTimeout(r, 15000 * (t + 1))); }
+    }
+    if (!j) throw new Error('commons unreachable');
+    const norm = Object.fromEntries((j.query.normalized || []).map((n) => [n.to, n.from]));
+    for (const p of Object.values(j.query.pages)) meta[key((norm[p.title] || p.title).replace(/^File:/, ''))] = p.imageinfo?.[0] || null;
+    console.log('commons', i, '/', need.length);
+    fs.writeFileSync(cache, JSON.stringify(meta));
+    await new Promise((r) => setTimeout(r, 3000));
   }
   fs.writeFileSync(cache, JSON.stringify(meta));
+
+  const items = []; const seenFile = new Set();
+  for (const b of pool) {
+    const mi = meta[key(b.file)];
+    if (!mi || mi.width < 640 || mi.height / mi.width > 1.6 || mi.width / mi.height > 2.2) continue;
+    const e = mi.extmetadata || {};
+    const lic = e.LicenseShortName?.value;
+    if (!lic || /fair use|non-free/i.test(lic) || seenFile.has(key(b.file))) continue;
+    seenFile.add(key(b.file));
+    const l = b.lot;
+    items.push({
+      id: b.id, name: b.name, year: b.year, boro: BORO[l.borough] || '', file: b.file,
+      author: strip(e.Artist?.value) || 'Wikimedia Commons', lic,
+      addr: (l.address || '').replace(/\s+/g, ' ').trim(), fl: Math.round(+l.numfloors) || 0, cls: l.bldgclass || '', py: l.py,
+    });
+  }
+  items.sort((a, b) => a.year - b.year || a.id.localeCompare(b.id));
+  fs.writeFileSync('../data.json', JSON.stringify({ items }));
+  console.log(items.length, 'items,', fs.statSync('../data.json').size, 'bytes');
 }
-const strip = (s = '') => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim().slice(0, 60);
-const items = [];
-for (const b of pool) {
-  const mi = meta[b.file.replace(/ /g, '_')];
-  if (!mi || mi.width < 640 || mi.height / mi.width > 1.6) continue;
-  const e = mi.extmetadata || {};
-  const lic = e.LicenseShortName?.value;
-  if (!lic) continue;
-  items.push({ id: b.id, name: b.n, year: b.y, lat: b.lat, lng: b.lng, file: b.file, author: strip(e.Artist?.value) || 'Wikimedia Commons', lic });
-}
-items.sort((a, b) => a.year - b.year);
-fs.writeFileSync('../data.json', JSON.stringify({ items }));
-console.log(items.length, 'items');
+if (import.meta.url === `file://${process.argv[1]}`) await main();
