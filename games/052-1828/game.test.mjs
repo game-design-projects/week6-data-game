@@ -11,7 +11,7 @@ const words = new Set(data.words.split(' '));
 test('parseEntry extracts pos, etymology and numbered senses', () => {
   const h = '<p><b>TUBE</b>, <i>noun</i> [Latin tubus.]</p><p><b>1.</b> A vessel; as a <i>tube</i>.</p><p><b>2.</b> A pipe.</p>';
   const e = parseEntry(h, 'tube');
-  assert.equal(e.pos, '名词');
+  assert.equal(e.pos, 'noun');
   assert.equal(e.ety, 'Latin tubus.');
   assert.deepEqual(e.senses, ['A vessel; as a tube.', 'A pipe.']);
   assert.equal(parseEntry(h, 'other'), null);

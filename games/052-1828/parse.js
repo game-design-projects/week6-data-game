@@ -1,5 +1,5 @@
 // Pure helpers: parse one 1828 HTML entry; redact the headword; score/feedback helpers.
-const POS = { noun: '名词', verb: '动词', adjective: '形容词', adverb: '副词', preposition: '介词', pronoun: '代词', conjunction: '连词', interjection: '感叹词' };
+const POS = { noun: 'noun', verb: 'verb', adjective: 'adjective', adverb: 'adverb', preposition: 'preposition', pronoun: 'pronoun', conjunction: 'conjunction', interjection: 'interjection' };
 
 export function stem(w) {
   return w.length <= 4 ? w : w.slice(0, Math.max(4, w.length - 2));
@@ -44,22 +44,22 @@ export function clueSpecs(e) {
   return s;
 }
 
-const list = (a) => a.map((x) => `“${x}”`).join('、');
+const list = (a) => a.map((x) => `\u201c${x}\u201d`).join(', ');
 
-/** Specific, per-word explanation of what in the entry gave the word away (Chinese strings; uses unredacted text). */
+/** Specific, per-word explanation of what in the entry gave the word away (English strings; uses unredacted text). */
 export function analyze(e) {
   const out = [];
   const first = e.senses[0];
   const segs = first.split(/;\s*/).map((x) => x.replace(/[.,]$/, '').trim());
   const syn = segs.filter((x) => /^[A-Za-z-]+( [A-Za-z-]+)?$/.test(x) && !/^(as|a|an|the|to)$/i.test(x)).slice(0, 4);
-  if (syn.length >= 2) out.push(`释义 1 用分号并列了近义词 ${list(syn)}，它们圈出了这个词的核心意思。`);
+  if (syn.length >= 2) out.push(`Sense 1 lists near-synonyms separated by semicolons (${list(syn)}); together they circle the core meaning.`);
   const ex = e.senses.map((x) => x.match(/\bas,?\s+([^;]{8,70})/i)).find(Boolean);
-  if (ex) out.push(`释义里的用例“${ex[1].replace(/\.$/, '')}”展示了它在 1828 年的典型搭配。`);
-  if (/^to\b/i.test(first)) out.push('释义 1 以 “To” 开头，是动词的典型写法。');
-  else if (e.pos === '名词' && /^(a|an|the)\b/i.test(first)) out.push('释义 1 以冠词开头，是名词（某种事物）的典型写法。');
-  if (e.ety) out.push(`词源注释“${e.ety}”交代了它的来源。`);
-  if (!out.length) out.push(`词典为它列了 ${e.senses.length} 条释义，先看最具体的本义。`);
-  out.push(`共 ${e.senses.length} 条释义：越靠后的释义往往越抽象、越接近今天的引申义。`);
+  if (ex) out.push(`The example \u201c${ex[1].replace(/\.$/, '')}\u201d in the definition shows a typical 1828 usage.`);
+  if (/^to\b/i.test(first)) out.push('Sense 1 starts with \u201cTo\u201d, the classic form of a verb definition.');
+  else if (e.pos === 'noun' && /^(a|an|the)\b/i.test(first)) out.push('Sense 1 starts with an article, the classic form of a noun definition (a kind of thing).');
+  if (e.ety) out.push(`The etymology note \u201c${e.ety}\u201d says where it comes from.`);
+  if (!out.length) out.push(`The dictionary lists ${e.senses.length} senses for it; start with the most concrete, literal one.`);
+  out.push(`${e.senses.length} senses in all: later senses tend to be more abstract and closer to today's extended meanings.`);
   return out;
 }
 
@@ -81,7 +81,7 @@ export function parseEntry(html, word) {
     if (m) senses.push(clean(m[1]));
   }
   if (!senses.length) return null;
-  if (!pos && /^To /.test(senses[0])) pos = '动词';
+  if (!pos && /^To /.test(senses[0])) pos = 'verb';
   return { pos, ety: ety && !/^See /i.test(ety) ? ety : null, senses };
 }
 
