@@ -17,7 +17,7 @@ test('summarize counts cities and types', () => {
   assert.deepEqual(s.top[0], ['NYC', 2]);
   assert.equal(s.spanDays, 9);
   assert.ok(s.km > 5000 && s.km < 6000);
-  assert.deepEqual(s.regions, [['北美洲', 2], ['欧洲', 1]]);
+  assert.deepEqual(s.regions, [['North America', 2], ['Europe', 1]]);
 });
 
 test('yearsWithWeekday', () => {
@@ -27,13 +27,13 @@ test('yearsWithWeekday', () => {
 });
 
 test('regionOf', () => {
-  assert.equal(regionOf(40.7, -74), '北美洲');
-  assert.equal(regionOf(-23.5, -46.6), '南美洲');
-  assert.equal(regionOf(51.5, 0), '欧洲');
-  assert.equal(regionOf(35.7, 139.7), '亚洲');
-  assert.equal(regionOf(-33.9, 151.2), '大洋洲');
-  assert.equal(regionOf(-26.2, 28), '非洲');
-  assert.equal(regionOf(25.2, 55.3), '亚洲');
+  assert.equal(regionOf(40.7, -74), 'North America');
+  assert.equal(regionOf(-23.5, -46.6), 'South America');
+  assert.equal(regionOf(51.5, 0), 'Europe');
+  assert.equal(regionOf(35.7, 139.7), 'Asia');
+  assert.equal(regionOf(-33.9, 151.2), 'Oceania');
+  assert.equal(regionOf(-26.2, 28), 'Africa');
+  assert.equal(regionOf(25.2, 55.3), 'Asia');
 });
 
 test('pool: every puzzle over days 1-120 is valid', () => {
