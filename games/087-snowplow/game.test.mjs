@@ -53,3 +53,57 @@ test('buildGraph contracts degree-2 nodes', () => {
   assert.equal(gr.edges.length, 3);
   assert.equal(gr.nodes.length, 4);
 });
+
+// ---- pool validity (days 1..120) ----
+import { readFileSync } from 'node:fs';
+import game, { pairs } from './game.js';
+import { greedy } from './plow.js';
+const data = JSON.parse(readFileSync(new URL('./data.json', import.meta.url)));
+import { mulberry } from './pool-rng.mjs';
+
+test('pool has >= 60 playable puzzles and data refs line up', () => {
+  assert.ok(pairs(data).length >= 60);
+  for (const a of data.areas) assert.equal(data.refs[a.id].length, data.storms[a.city].length);
+});
+test('every puzzle for days 1..120 is valid', () => {
+  const seen = new Set();
+  for (let day = 1; day <= 120; day++) {
+    const p = game.puzzle({ data, day, date: '2026-10-01', slug: 'snowplow', rng: mulberry(day), pick: (arr) => arr[(day - 1) % arr.length] });
+    const a = data.areas.find((x) => x.id === p.area);
+    assert.ok(a, `area ${p.area}`);
+    seen.add(p.area + p.storm.d);
+    assert.ok(p.storm.snow >= 3 && p.storm.snow < 60 && /^\d{4}-\d\d-\d\d$/.test(p.storm.d));
+    assert.ok(p.ref.time > 0.5 && p.ref.time < 120 && p.ref.plowMin <= p.ref.time && Number.isFinite(p.ref.greedy ?? 0));
+    const req = a.edges.map((e, i) => (e[3] ? i : -1)).filter((i) => i >= 0);
+    assert.deepEqual([...new Set(p.ref.seq.map((s) => s[0]))].sort((x, y) => x - y), req, 'ref covers every priority edge');
+    // reference replays to its stored time
+    assert.ok(Math.abs(simulate(a, adjacency(a), p.storm.snow, p.ref.seq).time - p.ref.time) < 0.02);
+    for (const e of a.edges) assert.ok(e[0] < a.nodes.length && e[1] < a.nodes.length && e[2] > 0 && e[2] < 2000 && (e[3] === 0 || e[3] === 1));
+    for (const n of a.nodes) assert.ok(n.every(Number.isFinite));
+    assert.ok(a.depot >= 0 && a.depot < a.nodes.length);
+  }
+  assert.ok(seen.size >= 100);
+});
+test('areas are connected (every node reachable from the depot)', () => {
+  for (const a of data.areas) {
+    const adj = adjacency(a), seen = new Set([a.depot]), q = [a.depot];
+    while (q.length) for (const [v] of adj[q.pop()]) if (!seen.has(v)) { seen.add(v); q.push(v); }
+    assert.equal(seen.size, a.nodes.length, a.id);
+  }
+});
+test('scoring extremes: perfect, typical greedy, worst', () => {
+  assert.equal(scoreFor(10, 10), 100);
+  assert.equal(scoreFor(10 * 1.5, 10), 0);
+  assert.equal(scoreFor(100, 10), 0);
+  let sum = 0, n = 0;
+  for (const a of data.areas) for (const r of data.refs[a.id]) {
+    if (r.greedy / r.time < 1.03) continue;
+    const s = scoreFor(r.greedy, r.time); sum += s; n++;
+    assert.ok(s < 100 && s > 20, `${a.id} greedy ${s}`);
+  }
+  assert.ok(sum / n < 92 && sum / n > 50, `mean greedy ${sum / n}`);
+});
+test('no puzzle text leaks anything odd', () => {
+  assert.ok(game.meta.howTo.every((s) => s.length > 5));
+  assert.ok(!/undefined|NaN/.test(JSON.stringify(game.meta)));
+});

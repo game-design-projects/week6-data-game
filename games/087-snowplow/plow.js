@@ -48,7 +48,7 @@ export function dijkstra(g, adj, src, cost) {
 }
 
 export function newState(g) {
-  return { pos: g.depot, cleared: g.edges.map(() => false), time: 0, plowMin: 0, trail: [] };
+  return { pos: g.depot, cleared: g.edges.map(() => false), time: 0, plowMin: 0, sideMin: 0, mainMin: 0, trail: [] };
 }
 
 /** Cheapest route (under the CURRENT plowed state) from state.pos to `to`. Returns list of [from,to,edge]. */
@@ -71,6 +71,8 @@ export function drive(g, depth, st, leg) {
   const e = g.edges[ei];
   const m = edgeMinutes(e, st.cleared[ei], depth);
   if (e[3] && !st.cleared[ei]) { st.cleared[ei] = true; st.plowMin += m; }
+  else if (e[3]) st.mainMin += m; // re-driving a cleared main road
+  else st.sideMin += m; // crawling through an unplowed side street
   st.time += m;
   st.pos = b;
   st.trail.push([a, b, ei]);
@@ -95,6 +97,23 @@ export function simulate(g, adj, depth, seq) {
     goTo(g, adj, depth, st, from);
     // plow it directly (the cheapest route to `from` could have crossed it already)
     if (!st.cleared[ei]) drive(g, depth, st, [from, to, ei]);
+  }
+  return st;
+}
+
+/** A naive "always go to the nearest unplowed road" driver — the baseline a casual player matches. */
+export function greedy(g, depth) {
+  const adj = adjacency(g);
+  const st = newState(g);
+  while (!done(g, st)) {
+    const { dist } = dijkstra(g, adj, st.pos, (ei) => edgeMinutes(g.edges[ei], st.cleared[ei], depth));
+    let best = null;
+    g.edges.forEach((e, i) => {
+      if (!e[3] || st.cleared[i]) return;
+      for (const [f, t] of [[e[0], e[1]], [e[1], e[0]]]) if (!best || dist[f] < best.c) best = { c: dist[f], f, t, i };
+    });
+    goTo(g, adj, depth, st, best.f);
+    if (!st.cleared[best.i]) drive(g, depth, st, [best.f, best.t, best.i]);
   }
   return st;
 }
@@ -162,8 +181,10 @@ export function solve(g, depth, seed = 7) {
   return { seq: best, time: st.time, plowMin: st.plowMin };
 }
 
-/** 100 at (or better than) the reference, 0 at 1.8× the reference time; −5 per restart. */
+export const ZERO_AT = 0.5; // 0 points when 50% slower than the reference
+export const RESET_COST = 5;
+/** 100 at (or better than) the reference, 0 at 1.5× the reference time; −5 per restart. */
 export function scoreFor(time, ref, resets = 0) {
   const over = time / ref - 1;
-  return Math.max(0, Math.min(100, Math.round(100 * (1 - over / 0.8)) - 5 * resets));
+  return Math.max(0, Math.min(100, Math.round(100 * (1 - over / ZERO_AT)) - RESET_COST * resets));
 }

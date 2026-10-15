@@ -1,7 +1,7 @@
 // raw OSM + NOAA -> ../data.json. Run: node build/build.mjs
 import { readFile, writeFile } from 'node:fs/promises';
 import { CITIES } from './cities.mjs';
-import { solve } from '../plow.js';
+import { solve, greedy } from '../plow.js';
 
 const LEVELS = [/^(primary|secondary|tertiary)(_link)?$/, /^(primary|secondary)(_link)?$/, /^primary(_link)?$/];
 const hav = (a, b) => {
@@ -79,7 +79,10 @@ export function buildGraph(osm, center, rad, REQ = LEVELS[0]) {
 }
 
 const hard = (g) => { const r = solve(g, 10); return (r.time - r.plowMin) / r.time >= 0.2; };
-const ok = (g) => g.nodes.length >= 14 && g.nodes.length <= 46 && g.edges.filter((e) => e[3]).length >= 5 && g.edges.filter((e) => e[3]).length <= 11 && g.edges.length <= 80 && hard(g);
+// a puzzle only counts if a naive nearest-road driver is clearly beaten by the reference (>= 4% at some depth)
+const gap = (g) => Math.max(...[6, 10, 16].map((d) => greedy(g, d).time / solve(g, d).time));
+const nreq = (g) => g.edges.filter((e) => e[3]).length;
+const ok = (g) => g.nodes.length >= 14 && g.nodes.length <= 60 && nreq(g) >= 6 && nreq(g) <= 13 && g.edges.length <= 100 && hard(g) && gap(g) >= 1.04;
 
 async function main() {
   const areas = [], storms = {};
@@ -104,7 +107,13 @@ async function main() {
   }
   // drop cities without storms
   const cities = Object.fromEntries(CITIES.map((c) => [c.id, { name: c.name, station: c.st }]));
-  const out = { cities, storms, areas, built: new Date().toISOString().slice(0, 10) };
+  // reference routes are precomputed per (area, storm): refs[areaId][stormIndex] = { seq, time, plowMin }
+  const refs = {};
+  for (const a of areas) {
+    refs[a.id] = storms[a.city].map((s) => { const r = solve(a, s.snow); return { seq: r.seq, time: +r.time.toFixed(2), plowMin: +r.plowMin.toFixed(2), greedy: +greedy(a, s.snow).time.toFixed(2) }; });
+    console.log('ref', a.id);
+  }
+  const out = { cities, storms, areas, refs, built: new Date().toISOString().slice(0, 10) };
   // sanity: solver runs on one sample
   const t0 = Date.now(); const a = areas[0]; const r = solve(a, 8);
   console.log('solve sample', Date.now() - t0, 'ms', r.time.toFixed(1), 'min');
