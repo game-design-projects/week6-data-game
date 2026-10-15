@@ -17,8 +17,9 @@ async function getJSON(url, file, tries = 4) {
 }
 const sparql = (q, file) => getJSON('https://query.wikidata.org/sparql?query=' + encodeURIComponent(q), file);
 
-// 1. houses found by the monarch-with-father query (houses.json came from build/q1.rq)
-const base = JSON.parse(fs.readFileSync(raw('houses.json'), 'utf8')).results.bindings
+// 1. houses found by the monarch-with-father query (build/q1.rq, cached as raw/houses.json)
+const q1 = fs.readFileSync(new URL('./q1.rq', import.meta.url), 'utf8');
+const base = ((await sparql(q1, 'houses.json'))?.results.bindings ?? [])
   .map((b) => ({ qid: b.h.value.split('/').pop(), name: b.hLabel.value }));
 
 // 2. famous houses that Wikidata models with weaker links: resolve by name
