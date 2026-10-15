@@ -1,11 +1,10 @@
+// raw USGS geojson -> ../data.json  (pool of real UTC days, same shaping as the live loader)
 import fs from 'node:fs';
-const g = JSON.parse(fs.readFileSync('raw/usgs.json', 'utf8'));
-const days = {};
-for (const f of g.features) {
-  const p = f.properties; const d = new Date(p.time).toISOString();
-  const day = d.slice(0, 10);
-  (days[day] ??= []).push({ m: +p.mag.toFixed(1), t: d.slice(11, 16), place: (p.place || '').replace(/^\d+ km [NSEW]+ of /, ''), depth: Math.round(f.geometry.coordinates[2]) });
-}
-const pool = Object.entries(days).filter(([, q]) => q.length >= 8 && q.slice(0, 16).some((x) => x.m >= 5.8)).map(([date, q]) => ({ date, quakes: q.slice(0, 16) }));
+import { fileURLToPath } from 'node:url';
+process.chdir(fileURLToPath(new URL('.', import.meta.url)));
+import { toPuzzle } from '../game.js';
+const g = JSON.parse(fs.readFileSync('raw/usgs-2026-06-01_2026-10-15.json', 'utf8'));
+const days = new Set(g.features.map((f) => new Date(f.properties.time).toISOString().slice(0, 10)));
+const pool = [...days].sort().map((d) => toPuzzle(g, d)).filter(Boolean);
 fs.writeFileSync('../data.json', JSON.stringify({ pool }));
-console.log(pool.length, 'days');
+console.log(pool.length, 'days', fs.statSync('../data.json').size, 'bytes');
