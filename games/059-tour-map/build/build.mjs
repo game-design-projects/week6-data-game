@@ -29,6 +29,15 @@ for (const a of artists) {
   }
 }
 
+// MusicBrainz lacks a country for some artists; fill from the artist's own area (verified by hand)
+const COUNTRY_FIX = { 'Harry Styles': 'GB', 'Stray Kids': 'KR', 'BTS': 'KR' };
+const countryOf = (a) => a.country || COUNTRY_FIX[a.name] || null;
+const WD_OK = (iso, year) => {
+  let n = 0;
+  const wd = new Date(`${iso}T12:00:00Z`).getUTCDay();
+  for (let y = 1965; y <= 2026; y++) if (new Date(`${y}-${iso.slice(5)}T12:00:00Z`).getUTCDay() === wd) n++;
+  return n >= 3 && n <= 14;
+};
 const pool = [];
 const usedArtists = new Set();
 for (const t of tours.values()) {
@@ -47,6 +56,7 @@ for (const t of tours.values()) {
   const year = +stops[0].date.slice(0, 4);
   if (year < 1965 || year > 2026) continue;
   const art = artists.find((x) => x.id === aid);
+  if (!countryOf(art) || !WD_OK(stops[0].date) || stops.some((s) => !s.venue || (Math.abs(s.lat) < 0.01 && Math.abs(s.lng) < 0.01))) continue;
   usedArtists.add(aid);
   pool.push({
     id: t.id, tour: t.name, artist: aid, year,
@@ -55,7 +65,7 @@ for (const t of tours.values()) {
 }
 pool.sort((a, b) => a.id.localeCompare(b.id));
 const out = {
-  artists: artists.filter((a) => usedArtists.has(a.id)).map((a) => ({ id: a.id, name: a.name, query: a.query, country: a.country })),
+  artists: artists.filter((a) => usedArtists.has(a.id)).map((a) => ({ id: a.id, name: a.name, query: a.query, country: countryOf(a) })),
   tours: pool,
 };
 fs.writeFileSync(path.join(here, '..', 'data.json'), JSON.stringify(out));
