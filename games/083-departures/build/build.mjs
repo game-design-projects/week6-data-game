@@ -1,6 +1,5 @@
 // raw OpenFlights -> data.json. Raw files fetched by: build/fetch.sh
 import { readFileSync, writeFileSync } from 'node:fs';
-import zh from './countries-zh.mjs';
 
 const csv = (l) => { const o = []; let c = '', q = false; for (const ch of l) { if (ch === '"') q = !q; else if (ch === ',' && !q) { o.push(c); c = ''; } else c += ch; } o.push(c); return o; };
 const R = (f) => readFileSync(new URL('./raw/' + f, import.meta.url), 'utf8').split('\n').filter(Boolean).map(csv);
@@ -10,7 +9,6 @@ for (const r of R('airports.dat')) if (/^[A-Z]{3}$/.test(r[4])) air.set(r[4], { 
 // OpenFlights leaves a few cities empty
 const CITY_FIX = { DWD: 'Dawadmi' };
 for (const a of air.values()) { if (!a.city) a.city = CITY_FIX[a.c] ?? a.n.replace(/ (International |Domestic )?Airport$/, ''); }
-for (const a of air.values()) if (!zh[a.co]) throw new Error('no zh name for ' + a.co);
 
 // airlines: by numeric id (exact), and by IATA code restricted to active airlines (fallback)
 const alById = new Map(); const alByCode = new Map();
@@ -46,6 +44,5 @@ const routes = {};
 for (const c of optionCodes) routes[c] = [...out.get(c).keys()].sort().join(' ');
 const used = new Set(optionCodes); for (const c of optionCodes) for (const d of out.get(c).keys()) used.add(d);
 const airports = [...air.values()].filter((a) => used.has(a.c));
-const countries = {}; for (const a of airports) countries[a.co] = zh[a.co];
-writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ airports, puzzles, optionCodes, routes, countries }));
+writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ airports, puzzles, optionCodes, routes }));
 console.log(airports.length, optionCodes.length, puzzles.length);

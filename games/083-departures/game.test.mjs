@@ -24,7 +24,7 @@ test('data pool is well formed', () => {
   for (const a of data.airports) {
     assert.match(a.c, /^[A-Z]{3}$/);
     assert.ok(a.n && a.city && a.co, a.c);
-    assert.ok(data.countries[a.co], 'zh country for ' + a.co);
+    assert.match(a.co, /^[A-Za-z][A-Za-z ,.'()-]+$/, 'country name for ' + a.c);
     assert.ok(Number.isFinite(a.lat) && Math.abs(a.lat) <= 90 && Number.isFinite(a.lng) && Math.abs(a.lng) <= 180, a.c);
   }
   assert.equal(new Set(data.optionCodes).size, data.optionCodes.length);
