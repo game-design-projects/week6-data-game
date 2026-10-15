@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import game, { fmtPrice, zhMonth, priceScore, sliderRange, explainItem } from './game.js';
+import game, { fmtPrice, fmtMonth, priceScore, sliderRange, explainItem } from './game.js';
 import { makeRng, dailyIndex } from '../../engine/core.js';
 
 const data = JSON.parse(readFileSync(new URL('./data.json', import.meta.url)));
@@ -12,7 +12,7 @@ test('fmtPrice', () => {
   assert.equal(fmtPrice(0.046), '$0.046');
   assert.equal(fmtPrice(2.272), '$2.27');
 });
-test('zhMonth', () => assert.equal(zhMonth('1983-03'), '1983 年 3 月'));
+test('fmtMonth', () => assert.equal(fmtMonth('1983-03'), 'Mar 1983'));
 
 test('scoring: perfect, typical, worst, symmetric', () => {
   assert.equal(priceScore(2, 2), 1);
