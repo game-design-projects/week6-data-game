@@ -72,5 +72,5 @@ test('lessonStats and monthLabel', () => {
   const by = new Map([['a', ['a', 50, 100]], ['b', ['b', 30, 400]], ['c', ['c', 20, 80]], ['d', ['d', 10, 40]]]);
   const L = lessonStats([['a', 'b'], ['c', 'd']], by);
   assert.deepEqual(L, { countWins: 1, rateWins: 1, upsets: 1, n: 2 });
-  assert.equal(monthLabel('2022-03'), '2022 年 3 月');
+  assert.equal(monthLabel('2022-03'), 'Mar 2022');
 });

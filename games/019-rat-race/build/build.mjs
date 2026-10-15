@@ -5,7 +5,7 @@ const fail = rd('fail_m'), all = rd('all_m'), boro = rd('boro');
 const MIN_INSP = 60;     // a zip-month needs this many conclusive inspections
 const MIN_ZIPS = 30;     // a month needs this many such zips to be playable
 const LAST = '2026-09';  // later months are still being filled in
-const bshort = { Manhattan: '曼哈顿', Brooklyn: '布鲁克林', Queens: '皇后区', Bronx: '布朗克斯', 'Staten Island': '史坦顿岛' };
+const bshort = { Manhattan: 'Manhattan', Brooklyn: 'Brooklyn', Queens: 'Queens', Bronx: 'Bronx', 'Staten Island': 'Staten Island' };
 const best = {};
 for (const r of boro) if (/^1\d{4}$/.test(r.zip_code) && bshort[r.borough] && (!best[r.zip_code] || +r.n > best[r.zip_code].n)) best[r.zip_code] = { b: bshort[r.borough], n: +r.n };
 const tot = {};
