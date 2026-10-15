@@ -43,22 +43,25 @@ for (const [id, t] of meta) {
   };
 }
 const ids = Object.keys(species);
+const nm = (x) => x.zh || x.en || x.sci;
 const h = (s) => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const puzzles = [];
 for (const id of ids) {
   const sp = species[id]; const ccs = Object.keys(sp.curves);
-  const pairs = [];
-  for (const a of ccs) for (const b of ccs) if (a !== b) pairs.push({ a, b, d: cdist(sp.curves[a].peak, sp.curves[b].peak) + ((a === 'AU' || a === 'NZ') !== (b === 'AU' || b === 'NZ') ? 0 : 0) });
-  // prefer: one cross-hemisphere (if any), one same-hemisphere
   const south = (c) => c === 'AU' || c === 'NZ';
-  const cross = pairs.filter((p) => south(p.a) !== south(p.b)), same = pairs.filter((p) => south(p.a) === south(p.b));
+  // Skill: a naive player guesses "same week" (same hemisphere) or "+26 weeks" (across the equator).
+  // Prefer pairs where that rule is off by >= 3 weeks so the second stage needs real knowledge.
+  const pairs = [];
+  for (const a of ccs) for (const b of ccs) if (a !== b) pairs.push({ a, b, err: cdist(south(a) !== south(b) ? sp.curves[a].peak + 26 : sp.curves[a].peak, sp.curves[b].peak) });
+  const best = (arr) => { const ok = arr.filter((x) => x.err >= 3); return ok.length ? ok.sort((x, y) => y.err - x.err).slice(0, 2) : []; };
+  const cross = best(pairs.filter((p) => south(p.a) !== south(p.b))), same = best(pairs.filter((p) => south(p.a) === south(p.b)));
   const pickP = (arr, k) => arr.length ? arr[h(id + k) % arr.length] : null;
   for (const p of [pickP(cross, 'x'), pickP(same, 's')]) {
     if (!p) continue;
-    const pool = ids.filter((o) => o !== id && species[o].g === sp.g && species[o].curves[p.a] && cdist(species[o].curves[p.a].peak, sp.curves[p.a].peak) >= 6 && (species[o].zh || species[o].en));
+    const pool = ids.filter((o) => o !== id && species[o].g === sp.g && species[o].curves[p.a] && cdist(species[o].curves[p.a].peak, sp.curves[p.a].peak) >= 6 && (species[o].zh || species[o].en) && nm(species[o]) !== nm(sp));
     if (pool.length < 4 || !(sp.zh || sp.en)) continue;
     const opts = []; let k = 0;
-    while (opts.length < 4 && k < 200) { const o = pool[h(id + p.a + p.b + k++) % pool.length]; if (!opts.includes(o) && opts.every((q) => cdist(species[q].curves[p.a].peak, species[o].curves[p.a].peak) >= 3)) opts.push(o); }
+    while (opts.length < 4 && k < 200) { const o = pool[h(id + p.a + p.b + k++) % pool.length]; if (!opts.includes(o) && nm(species[o]) !== nm(sp) && opts.every((q) => nm(species[q]) !== nm(species[o]) && cdist(species[q].curves[p.a].peak, species[o].curves[p.a].peak) >= 3)) opts.push(o); }
     if (opts.length < 4) continue;
     puzzles.push({ s: +id, a: p.a, b: p.b, o: opts.map(Number) });
   }
