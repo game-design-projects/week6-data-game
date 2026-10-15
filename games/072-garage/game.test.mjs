@@ -6,8 +6,8 @@ import game, { liftText, origText, patternText, scoreFor } from './game.js';
 const data = JSON.parse(fs.readFileSync(new URL('./data.json', import.meta.url)));
 const ids = new Set(data.counties.map((c) => c.id));
 
-test('liftText formats ratio', () => assert.equal(liftText(['RAM', 1.98, 3.2]), '2.0× 全州平均'));
-test('origText', () => assert.equal(origText([50, 40, 10]), '美系 50% · 日韩系 40% · 欧系 10%'));
+test('liftText formats ratio', () => assert.equal(liftText(['RAM', 1.98, 3.2]), '2.0× the state average'));
+test('origText', () => assert.equal(origText([50, 40, 10]), 'American 50% · Japanese/Korean 40% · European 10%'));
 
 test('scoring extremes: perfect, typical, worst', () => {
   assert.equal(scoreFor(1, true), 100);
@@ -26,7 +26,7 @@ test('data: 62 counties, top-10 sorted, mapped makes, sane numbers', () => {
     for (const [k, v] of c.top) { assert.ok(data.makes[k], k); assert.ok(v > 0 && v < 60); }
     assert.ok(c.lat > 40 && c.lat < 45.1 && c.lng < -71 && c.lng > -80, c.id);
     assert.ok(c.total > 500 && Number.isFinite(c.total));
-    assert.ok(c.zh && c.over.length === 3 && c.under.length === 2);
+    assert.ok(c.name && c.over.length === 3 && c.under.length === 2);
     assert.equal(c.orig.length, 3);
     assert.ok(c.orig.reduce((a, b) => a + b, 0) <= 100.3);
     for (const x of c.over) { assert.ok(data.makes[x[0]] && x[1] >= 1 && x[2] > 0); }
@@ -54,6 +54,6 @@ test('no answer leak in pre-guess text: county name never appears in a brand lab
 
 test('patternText is specific to the county', () => {
   const texts = data.counties.map((c) => patternText(c, data));
-  for (const t of texts) assert.match(t, /个百分点/);
+  for (const t of texts) assert.match(t, /points (above|below) the state/);
   assert.ok(new Set(texts).size > 40);
 });
