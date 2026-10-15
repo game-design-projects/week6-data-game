@@ -61,21 +61,21 @@ export default {
     num: 82,
     slug: 'changelog',
     title: 'Changelog',
-    tagline: '一行被涂黑名字的开源软件更新日志：先猜它是哪个软件，再猜是哪一年发布的。',
+    tagline: 'One line from an open-source changelog with the name blacked out. Guess the software, then the year it shipped.',
     category: 'tech',
     data: 'snapshot',
     howTo: [
-      '屏幕上是某个开源软件一次正式发布（Release）里的一行更新说明，软件名字、发布日期和年份都已被涂黑。',
-      '第一步：从列表里选出是哪个软件，最多 6 次。每猜错一次，解锁一条新线索：前几行说明、完整说明、编程语言、版本号、项目创建年份、首字母。',
-      '第二步：猜这个版本是哪一年发布的，每差 1 年就大幅扣分。',
-      '提示：依赖的运行时版本（如 Python 3.12）、支持的平台、被修的 bug 类型，都会暴露时代。',
+      'The screen shows one line from the release notes of an open-source project. The software\u2019s name, release date and year are blacked out.',
+      'Step 1: pick the software from the list, up to 6 guesses. Each miss unlocks a clue: the first few lines, the full note, the language, the version tag, the year the project started, the first letter.',
+      'Step 2: guess the year this version was released. Every year off costs a lot.',
+      'Tip: the runtime versions it depends on (like Python 3.12), the platforms it supports and the kind of bug fixed all give away the era.',
     ],
-    scoring: '软件 100 分（第 1 次猜中满分，之后每多猜一次约少 17 分）+ 年份 100 分（差 0 年满分，差 1 年约 61 分，差 2 年约 37 分，差 5 年不到 10 分），两项相加，满分 200。',
+    scoring: 'Software 100 points (full marks on guess 1, about 17 fewer for each extra guess) + year 100 points (exact is full, 1 year off is about 61, 2 years about 37, 5 years under 10), 200 in total.',
     sources: [
-      { name: 'GitHub Releases API', url: 'https://docs.github.com/en/rest/releases/releases', note: '53 个热门开源项目的正式发布说明（GET /repos/{owner}/{repo}/releases）' },
-      { name: 'GitHub Repos API', url: 'https://docs.github.com/en/rest/repos/repos#get-a-repository', note: '项目语言、星标数与创建年份' },
+      { name: 'GitHub Releases API', url: 'https://docs.github.com/en/rest/releases/releases', note: 'Release notes for 53 popular open-source projects (GET /repos/{owner}/{repo}/releases)' },
+      { name: 'GitHub Repos API', url: 'https://docs.github.com/en/rest/repos/repos#get-a-repository', note: 'Project language, star count and creation year' },
     ],
-    dataNote: '更新说明取自各项目 GitHub Release 页面，已去除链接、提交号与日期，只留前几行；名字涂黑由规则匹配加人工别名表完成，构建时对整个题库做过泄漏扫描。数据为快照：GitHub API 未登录每小时仅 60 次请求，且题目需要固定的历史发布，所以没有在浏览器里实时拉取。',
+    dataNote: 'Notes come from each project\u2019s GitHub Release page, with links, commit hashes and dates removed and only the first few lines kept. Names are blacked out by rule matching plus a hand-written alias list, and the whole pool was scanned for leaks at build time. This is a snapshot: the unauthenticated GitHub API allows only 60 requests an hour and the puzzles need fixed historical releases, so nothing is fetched live in the browser.',
   },
 
   puzzle({ data, pick }) {
@@ -95,19 +95,19 @@ export default {
     const clues = [
       ui.quote(redact(firstLine(P.lines), R)),
       list(P.lines),
-      `这个项目主要用 ${R.lang || '多种语言'} 编写。`,
-      ui.h('div', '这次发布的版本标签：', ui.code(redactTag(P.tag, R))),
-      `项目创建于 ${R.since} 年。`,
-      `名称以 “${R.name[0].toUpperCase()}” 开头，在 GitHub 上约 ${Math.round(R.stars / 1000)}k 星。`,
+      `This project is mostly written in ${R.lang || 'several languages'}.`,
+      ui.h('div', 'Version tag of this release: ', ui.code(redactTag(P.tag, R))),
+      `The project was created in ${R.since}.`,
+      `The name starts with \u201c${R.name[0].toUpperCase()}\u201d and it has about ${Math.round(R.stars / 1000)}k stars on GitHub.`,
     ];
 
     const options = repos.map((r) => ({ id: r.id, label: r.name, hint: r.lang || '', aliases: [r.id, r.id.split('/')[1]] }));
     const g = await ctx.guess({
       options, answer: R.id, maxGuesses: 6,
-      title: '这是哪个软件的更新日志？',
-      placeholder: '输入软件名…',
-      clues, cluesTitle: '更新说明与线索',
-      columns: ['语言', '创建年'],
+      title: 'Whose changelog is this?',
+      placeholder: 'Type a software name\u2026',
+      clues, cluesTitle: 'Release notes and clues',
+      columns: ['Language', 'Created'],
       near: (a, b) => byId.get(a.id).lang === byId.get(b.id).lang,
       feedback: (a, b) => {
         const x = byId.get(a.id), y = byId.get(b.id);
@@ -119,11 +119,11 @@ export default {
     });
     ctx.log('software stage', g.score);
 
-    ctx.stage.append(ui.callout(`答案是 ${R.name}。它的项目创建于 ${R.since} 年，现在来猜这个版本发布于哪一年（再看一眼上面的说明与版本号）。`, g.win ? 'good' : 'warn'));
+    ctx.stage.append(ui.callout(`The answer is ${R.name}, created in ${R.since}. Now guess the year this version shipped (take another look at the notes and version tag above).`, g.win ? 'good' : 'warn'));
     const y = await ctx.estimate({
-      title: '这个版本是哪年发布的？',
+      title: 'What year was this version released?',
       answer: P.year, min: R.since, max: 2026, step: 1, initial: Math.round((R.since + 2026) / 2),
-      format: (v) => `${Math.round(v)} 年`, scoring: 'abs', scale: 2,
+      format: (v) => String(Math.round(v)), scoring: 'abs', scale: 2,
     });
     ctx.log('year stage', y.score, y.guess);
 
@@ -132,15 +132,15 @@ export default {
     const hints = eraHints(raw);
     const age = P.year - R.since;
     const ys = yearMentions(raw);
-    const why = (ys.length ? `说明里被涂掉的年份：${ys.join('、')}，直接给出了答案。` : '')
+    const why = (ys.length ? `Years blacked out of the note: ${ys.join(', ')}, which hand you the answer. ` : '')
       + (hints.length
-        ? `这条说明里的时代线索：${hints.join('、')}——这些依赖或平台版本只在 ${P.year} 年前后流行。`
-        : ys.length ? '' : `这条说明没有写明依赖版本，主要靠版本号 ${P.tag} 推断：项目创建于 ${R.since} 年，这个版本发布时它已 ${age} 岁。`);
+        ? `Era clues in this note: ${hints.join(', ')}. Those dependency and platform versions were current only around ${P.year}.`
+        : ys.length ? '' : `The note names no dependency versions, so you have to infer from the version tag ${P.tag}: the project started in ${R.since} and was ${age} years old at this release.`);
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.kv([['软件', `${R.name}（${P.repo}）`], ['版本', `${P.tag} · ${P.date}`], ['项目年龄', `发布时已 ${age} 岁`], ['你猜的年份', y.guess != null ? `${Math.round(y.guess)} 年` : '—']]),
+      ui.kv([['Software', `${R.name} (${P.repo})`], ['Version', `${P.tag} · ${P.date}`], ['Project age', `${age} ${age === 1 ? 'year' : 'years'} old at release`], ['Your guess', y.guess != null ? String(Math.round(y.guess)) : '—']]),
       ui.h('ul', { style: { margin: 0, paddingLeft: '1.1em' } }, raw.map((l) => ui.h('li', l))),
-      ui.h('div', { class: 'small muted' }, `线索规律：${why}`),
-      ui.h('a', { href: P.url, target: '_blank', rel: 'noopener' }, '查看原始 Release'));
+      ui.h('div', { class: 'small muted' }, `How to tell: ${why.trim()}`),
+      ui.h('a', { href: P.url, target: '_blank', rel: 'noopener' }, 'View the original release'));
     return res;
   },
 };
