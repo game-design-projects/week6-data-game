@@ -37,7 +37,7 @@ function grams(group, measure) {
 }
 const groupOf = (name) => { for (const [g, re] of GROUPS) if (re.test(name.trim())) return g; return null; };
 
-const out = []; const seen = new Set();
+const out = []; const seen = new Set(); const seenRatio = new Set();
 for (const m of raw) {
   const tot = { flour: 0, liquid: 0, fat: 0, egg: 0, sugar: 0 }; let bad = false; const extra = [];
   for (let i = 1; i <= 20; i++) {
@@ -54,12 +54,20 @@ for (const m of raw) {
   const base = tot.flour + tot.liquid + tot.fat + tot.egg;
   if (base < 150 || base > 3000) continue;
   const pct = Object.fromEntries(['flour', 'liquid', 'fat', 'egg'].map((k) => [k, Math.round((tot[k] / base) * 100)]));
+  // largest-remainder fix so the four shares always add up to 100
+  const diff = 100 - Object.values(pct).reduce((a, b) => a + b, 0);
+  if (diff) { const big = Object.keys(pct).sort((a, b) => pct[b] - pct[a])[0]; pct[big] += diff; }
+  // soups/stews (flour only thickens) and deep-fried dishes (frying oil counted as fat) are not readable from a ratio
+  if (pct.flour < 5 || pct.fat > 60) continue;
+  const rkey = Object.values(pct).join(':');
+  if (seenRatio.has(rkey)) continue; seenRatio.add(rkey); // identical ratios would be indistinguishable
+  const words = m.strMeal.toLowerCase().split(/[^a-zà-ÿ]+/).filter((w) => w.length >= 4).map((w) => w.replace(/s$/, ''));
   const key = m.strMeal.toLowerCase().replace(/[^a-z]/g, '').slice(0, 14);
   if (seen.has(key)) continue; seen.add(key);
   out.push({
     id: m.idMeal, name: m.strMeal, cat: m.strCategory, area: m.strArea || m.strCountry || '', img: m.strMealThumb,
     pct, sugarPct: Math.round((tot.sugar / base) * 100), grams: Object.fromEntries(Object.entries(tot).map(([k, v]) => [k, Math.round(v)])),
-    extra: [...new Set(extra)].slice(0, 12), src: m.strSource || null,
+    extra: [...new Set(extra)].filter((e) => !words.some((w) => e.toLowerCase().includes(w))).slice(0, 12), src: m.strSource || null,
   });
 }
 console.log(raw.length, '->', out.length);
