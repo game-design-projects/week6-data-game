@@ -16,7 +16,7 @@ export async function cached(file, url) {
 }
 export const iso = (t) => new Date(t).toISOString().slice(0, 10);
 if (process.argv[1] === import.meta.filename) {
-  const start = Date.parse('2026-06-28T00:00:00Z'), end = Date.parse('2026-10-12T00:00:00Z');
+  const start = Date.parse('2026-06-28T00:00:00Z'), end = Date.parse('2026-10-14T00:00:00Z');
   for (let t = start; t <= end; t += 86400000) {
     const [y, m, d] = iso(t).split('-');
     await cached(`top-${iso(t)}.json`, `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/${y}/${m}/${d}`);
