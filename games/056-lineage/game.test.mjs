@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import game, { compare, aliasesOf, keyName, yearStr, spanStr, poolOf, scoreFor, CONT_ZH } from './game.js';
+import game, { compare, aliasesOf, keyName, yearStr, spanStr, poolOf, scoreFor, CONTINENTS } from './game.js';
 import { redactTitle, houseTokens, RANK_WORDS } from './build/build-helpers.mjs';
 import { makeRng, dailyIndex } from '../../engine/core.js';
 
@@ -10,7 +10,7 @@ const H = (first, last, cont) => ({ first, last, cont });
 
 test('era direction and continent', () => {
   const [era, reg] = compare(H(1500, 1700, ['Europe']), H(900, 1100, ['Europe']));
-  assert.match(era.text, /偏晚/); assert.equal(reg.state, 'hit');
+  assert.match(era.text, /Later/); assert.equal(reg.state, 'hit');
   const [e2, r2] = compare(H(1000, 1100, ['Asia']), H(1000, 1100, ['Europe']));
   assert.equal(e2.state, 'hit'); assert.equal(r2.state, 'miss');
 });
@@ -20,7 +20,7 @@ test('aliases, key names and years', () => {
   assert.ok(aliasesOf('House of Zähringen').includes('Zahringen'));
   assert.equal(keyName('House of Glücksburg (Denmark)'), 'Glücksburg');
   assert.equal(keyName('Imperial House of Japan'), 'Japan');
-  assert.equal(yearStr(-500), '前500');
+  assert.equal(yearStr(-500), '500 BC');
   assert.equal(spanStr({ by: 1000, dy: null }), '1000–?');
   assert.equal(spanStr({ by: 1990, dy: null }), '1990–');
 });
@@ -50,7 +50,7 @@ test('house pool is sane', () => {
     assert.match(h.q, /^Q\d+$/);
     assert.ok(h.name && h.famous && h.trees.length >= 1);
     assert.ok(Number.isFinite(h.first) && Number.isFinite(h.last) && h.first <= h.last, h.name);
-    assert.ok(h.cont.length >= 1 && h.cont.every((c) => CONT_ZH[c]), h.name);
+    assert.ok(h.cont.length >= 1 && h.cont.every((c) => CONTINENTS.includes(c)), h.name);
     assert.ok(h.total >= 8 && h.female >= 0 && h.female <= 100, h.name);
     assert.ok(h.avgLife == null || (h.avgLife > 15 && h.avgLife < 100), h.name);
     for (const [t, c] of h.titles) { assert.match(t, TITLE); assert.ok(c > 0); }
