@@ -1,5 +1,6 @@
 // Fetch well-known products from Open Food Facts (search-a-licious for barcode, then product API). Cached in raw/.
 import fs from 'node:fs'; import path from 'node:path';
+import { LIST2 } from './list2.mjs';
 const UA = 'daily-data-games/1.0 (NYU class project)';
 const raw = path.join(import.meta.dirname, 'raw'); fs.mkdirSync(raw, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -45,7 +46,8 @@ export const LIST = [
  ['Rice Krispies','Rice Krispies','kellogg'],['Shreddies','Shreddies','shreddies'],['Weetabix','Weetabix','weetabix'],['Nesquik 麦片','Nesquik cereal','nesquik'],
 ];
 const get = async (u) => { for (let i = 0; i < 3; i++) { const r = await fetch(u, { headers: { 'User-Agent': UA } }); const t = await r.text(); if (r.ok && t[0] === '{') return t; await sleep(3000); } return null; };
-if (process.argv[1] === import.meta.filename) for (const [name, q] of LIST) {
+export const ALL = [...LIST, ...LIST2];
+if (process.argv[1] === import.meta.filename) for (const [name, q] of ALL) {
   const key = q.toLowerCase().replace(/\W+/g, '_');
   const f = path.join(raw, key + '.json'); if (fs.existsSync(f) && fs.existsSync(f.replace('.json','__1.json'))) continue;
   const s = await get(`https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&page_size=8&fields=code,product_name,brands,ingredients_n,countries_tags,unique_scans_n&langs=en`);
