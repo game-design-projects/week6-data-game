@@ -31,7 +31,7 @@ test('data sane', () => {
     assert.ok(p.title && p.artist); assert.match(p.thumb, /^data:image\/jpeg;base64,/);
   }
 });
-test('styles have copy', () => { for (const s of data.styles) { assert.ok(s.zh && s.note && s.from < s.to); } });
+test('styles have copy', () => { for (const s of data.styles) { assert.ok(s.name && s.note && s.from < s.to); } });
 test('puzzle days 1-120 valid, no leaks in the visible part', () => {
   const { meta } = game;
   for (let day = 1; day <= 120; day++) {
@@ -40,7 +40,7 @@ test('puzzle days 1-120 valid, no leaks in the visible part', () => {
     assert.equal(pz.options.length, 4);
     assert.equal(new Set(pz.options.map((o) => o.id)).size, 4);
     assert.equal(pz.options.filter((o) => o.id === pz.p.style).length, 1);
-    for (const o of pz.options) assert.ok(o.zh && o.id);
+    for (const o of pz.options) assert.ok(o.name && o.id);
     // answer option is formatted exactly like the others (same keys)
     assert.deepEqual(Object.keys(pz.options[0]).sort(), Object.keys(pz.options[1]).sort());
     const ex = explain(pz.p, data.paintings, data.styles.find((s) => s.id === pz.p.style));
