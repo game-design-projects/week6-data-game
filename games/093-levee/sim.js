@@ -24,7 +24,6 @@ export function simulate(z, rain, levees = []) {
   const w = new Float64Array(N * N);
   const mx = new Float64Array(N * N);
   const d = new Float64Array(N * N);
-  const out = new Float64Array(N * N * 4);
   const dr = [-1, 1, 0, 0], dc = [0, 0, -1, 1];
   for (let t = 0; t < STEPS; t++) {
     if (t < RAIN_STEPS) for (let i = 0; i < w.length; i++) w[i] += rain / RAIN_STEPS;
@@ -50,7 +49,6 @@ export function simulate(z, rain, levees = []) {
     }
     for (let i = 0; i < w.length; i++) { w[i] += d[i]; if (w[i] > mx[i]) mx[i] = w[i]; }
   }
-  void out;
   return mx;
 }
 
@@ -73,14 +71,34 @@ export function scoreOf(base, best, got) {
   return Math.max(0, Math.min(100, Math.round((100 * (got - base)) / (best - base))));
 }
 
+/** Every distinct levee placement (canonical centre; clamped duplicates removed). */
+export function candidates() {
+  const out = [];
+  const half = Math.floor(LEN / 2);
+  for (const o of ['h', 'v']) for (let r = 0; r < N; r++) for (let c = half; c <= N - LEN + half; c++) {
+    out.push(o === 'h' ? { r, c, o } : { r: c, c: r, o });
+  }
+  return out;
+}
+
+/** Per-cell building counts from flat points [x10, y10, ...] (tenths of a cell, window coords). */
+export function cellCounts(pts) {
+  const b = new Array(N * N).fill(0);
+  for (let i = 0; i < pts.length; i += 2) {
+    const c = Math.min(N - 1, Math.floor(pts[i] / 10)), r = Math.min(N - 1, Math.floor(pts[i + 1] / 10));
+    b[r * N + c]++;
+  }
+  return b;
+}
+
 /** Greedy search of n levees (offline reference). */
 export function greedy(z, b, rain, n = 3) {
   const chosen = [];
   let cur = dryCount(b, simulate(z, rain, chosen));
+  const cands = candidates();
   for (let k = 0; k < n; k++) {
     let bestV = null, bestN = cur;
-    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) for (const o of ['h', 'v']) {
-      const lv = { r, c, o };
+    for (const lv of cands) {
       const v = dryCount(b, simulate(z, rain, [...chosen, lv]));
       if (v > bestN) { bestN = v; bestV = lv; }
     }
@@ -88,4 +106,29 @@ export function greedy(z, b, rain, n = 3) {
     chosen.push(bestV); cur = bestN;
   }
   return { levees: chosen, dry: cur };
+}
+
+/** Coordinate-descent polish: re-place each levee in turn until nothing improves. */
+export function refine(z, b, rain, levees, rounds = 3) {
+  let cur = levees.slice();
+  let best = dryCount(b, simulate(z, rain, cur));
+  const cands = candidates();
+  for (let t = 0; t < rounds; t++) {
+    let improved = false;
+    for (let k = 0; k < cur.length; k++) {
+      for (const lv of cands) {
+        const trial = cur.slice(); trial[k] = lv;
+        const v = dryCount(b, simulate(z, rain, trial));
+        if (v > best) { best = v; cur = trial; improved = true; }
+      }
+    }
+    if (!improved) break;
+  }
+  return { levees: cur, dry: best };
+}
+
+/** Buildings each levee contributes on its own within a set (drop-one marginal). */
+export function marginals(z, b, rain, levees) {
+  const all = dryCount(b, simulate(z, rain, levees));
+  return levees.map((_, k) => all - dryCount(b, simulate(z, rain, levees.filter((__, j) => j !== k))));
 }

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import zlib from 'node:zlib';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { N, simulate, dryCount, total, greedy } from '../sim.js';
+import { N, simulate, dryCount, total, greedy, refine, cellCounts } from '../sim.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const raw = path.join(here, 'raw');
@@ -180,7 +180,7 @@ const RAINS = [0.4, 0.8, 1.5, 3, 5];
 async function windowFor(site, bl, eKm, nKm) {
   const mLat = 111320, mLng = 111320 * Math.cos((site.lat * Math.PI) / 180);
   const c0lat = site.lat + (nKm * 1000) / mLat, c0lng = site.lng + (eKm * 1000) / mLng;
-  const z = new Array(N * N), b = new Array(N * N).fill(0);
+  const z = new Array(N * N), pts = [];
   const north = c0lat + ((N / 2) * CELL) / mLat, west = c0lng - ((N / 2) * CELL) / mLng;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     let s = 0, n = 0;
@@ -190,15 +190,16 @@ async function windowFor(site, bl, eKm, nKm) {
     z[r * N + c] = s / n;
   }
   for (const [la, lo] of bl) {
-    const r = Math.floor(((north - la) * mLat) / CELL), c = Math.floor(((lo - west) * mLng) / CELL);
-    if (r >= 0 && r < N && c >= 0 && c < N) b[r * N + c]++;
+    const y = Math.round((((north - la) * mLat) / CELL) * 10), x = Math.round((((lo - west) * mLng) / CELL) * 10);
+    if (x >= 0 && x < N * 10 && y >= 0 && y < N * 10) pts.push(x, y);
   }
   const zmin = Math.min(...z);
-  return { lat: +c0lat.toFixed(5), lng: +c0lng.toFixed(5), z: z.map((v) => +(v - zmin).toFixed(1)), b };
+  const b = cellCounts(pts);
+  return { lat: +c0lat.toFixed(5), lng: +c0lng.toFixed(5), z: z.map((v) => +(v - zmin).toFixed(1)), pts, b };
 }
 
 const [shard, shards] = (process.env.SHARD || '0/1').split('/').map(Number);
-const resFile = (site) => path.join(raw, `res_${site.name.replace(/\W+/g, '_')}.json`);
+const resFile = (site) => path.join(raw, `res2_${site.name.replace(/\W+/g, '_')}.json`);
 if (shards > 0 && !process.env.MERGE_ONLY) for (const [idx, site] of SITES.entries()) {
   if (idx % shards !== shard || fs.existsSync(resFile(site))) continue;
   const bl = await buildings(site, 2000);
@@ -218,10 +219,12 @@ if (shards > 0 && !process.env.MERGE_ONLY) for (const [idx, site] of SITES.entri
     if (base / nb > 0.9 || base / nb < 0.1) continue;
     const g = greedy(w.z, w.b, pickR, 3);
     const gain = g.dry - base;
+    if (gain < 8 || gain < 0.05 * nb) continue;
     if (!best || gain > best.gain) best = { ...w, rain: pickR, levees: g.levees, gain, base, nb };
   }
-  const ok = best && best.gain >= 8;
-  fs.writeFileSync(resFile(site), JSON.stringify(ok ? { name: site.name, lat: best.lat, lng: best.lng, rain: best.rain, z: best.z, b: best.b, ref: best.levees } : null));
+  let ok = !!best;
+  if (ok) { const rf = refine(best.z, best.b, best.rain, best.levees); best.levees = rf.levees; best.gain = rf.dry - best.base; }
+  fs.writeFileSync(resFile(site), JSON.stringify(ok ? { name: site.name, lat: best.lat, lng: best.lng, rain: best.rain, z: best.z, pts: best.pts, ref: best.levees } : null));
   console.log(ok ? 'ok' : 'drop', site.name, best ? `bld ${best.nb} base ${best.base} gain ${best.gain} R ${best.rain}` : '');
 }
 if (!process.env.SHARD || process.env.MERGE_ONLY) {
