@@ -88,6 +88,13 @@ for (const c of countries) for (const w of new Set(c.holidays.flatMap((h) => wor
 const common = [...vocab].filter(([, n]) => n >= 8).map(([w]) => w);
 for (const c of countries) c.terms = c.terms.filter((t) => !common.some((w) => w.startsWith(t) && t.length < w.length));
 
+// Han-script stems only matter where the country's own holiday text contains Han characters (CN, HK, JP);
+// everywhere else they are dead weight and would put Chinese text into the data.
+const HAN = /[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+for (const c of countries) {
+  if (!c.holidays.some((h) => HAN.test(h.local))) c.terms = c.terms.filter((t) => !HAN.test(t));
+}
+
 // which countries may be the daily answer: not a dependency / tiny territory, and ≥ 6 statutory holidays.
 // (Every country stays selectable as a guess.)
 const DEPENDENCIES = new Set('AI AW AX BL BM BQ CC CK CW CX FK FO GF GG GI GL GP IM JE KY MF MP MQ MS NC NF NU PF PM PN PR SH SJ SX TC VG VI WF'.split(' '));

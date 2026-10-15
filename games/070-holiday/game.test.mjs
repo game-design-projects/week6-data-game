@@ -73,7 +73,7 @@ test('redact: names, adjectives, local-language names, CJK, collapsing', () => {
   assert.equal(redact('Dan državnosti Srbije', data.countries.find((c) => c.cc === 'RS').terms), 'Dan državnosti ▇▇▇');
   assert.ok(!/Swiss|suisse/i.test(redact('Fête nationale suisse', data.countries.find((c) => c.cc === 'CH').terms)));
   assert.equal(redact('Hong Kong Special Administrative Region Establishment Day', data.countries.find((c) => c.cc === 'HK').terms).includes('Hong'), false);
-  assert.equal(redact('日本の日', ['日本']), '▇▇▇の日');
+  assert.equal(redact('\u65e5\u672c\u306e\u65e5', ['\u65e5\u672c']), '\u2587\u2587\u2587\u306e\u65e5');
   assert.equal(redact('Keep Everything', []), 'Keep Everything');
 });
 
@@ -83,7 +83,7 @@ test('every playable puzzle has usable clues', () => {
     const out = redact(rarest(c.holidays, 1)[0].name, c.terms);
     assert.ok(out.replace(/▇▇▇/g, '').trim().length > 0, `${c.cc}: rarest clue is fully blacked out`);
   }
-  assert.deepEqual(faithCounts([{ name: 'Easter Sunday' }, { name: 'Eid al-Fitr' }, { name: 'Labour Day' }]).map((x) => x.label), ['基督教', '伊斯兰教']);
+  assert.deepEqual(faithCounts([{ name: 'Easter Sunday' }, { name: 'Eid al-Fitr' }, { name: 'Labour Day' }]).map((x) => x.label), ['Christian', 'Islamic']);
 });
 
 test('scoring: perfect, typical and worst', () => {
