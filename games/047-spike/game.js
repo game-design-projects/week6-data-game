@@ -96,21 +96,21 @@ export default {
     num: 47,
     slug: 'spike',
     title: 'Spike',
-    tagline: '两天前维基百科浏览量暴涨最猛的词条，只给你一条没有名字的曲线。猜错一次，揭示一篇同一天一起暴涨的词条。',
+    tagline: 'The Wikipedia article that surged hardest two days ago, shown only as a nameless pageview curve. Each wrong guess reveals another article that spiked the same day.',
     category: 'words',
     data: 'live',
     howTo: [
-      '图里是英文维基百科某个词条 21 天的每日浏览量（对数坐标），最后一天是暴涨日，日期已告诉你。今天的谜题取两天前那一天：那时榜单已定稿，全球玩家看到的是同一条曲线。',
-      '从列表里选词条来猜，最多 6 次（列表是近期热门词条，不只是答案候选）。每猜错一次，揭示一篇同一天也在暴涨的词条；你猜的词条若也在暴涨，会标成黄色。',
-      '线索是互相关联的：同一天暴涨的往往是同一件事里的人、球队、作品。把它们拼起来，想想那天发生了什么。',
-      '曲线形状也有信息：平静后陡升多半是突发新闻；曲线本来就高，则是持续热点。',
+      'The chart shows 21 days of daily pageviews (log scale) for one English Wikipedia article. The last day is the spike, and its date is given. Today\u2019s puzzle uses the day two days ago, when the ranking is final, so players everywhere see the same curve.',
+      'Pick an article from the list to guess, up to 6 times (the list is recent popular articles, not just answer candidates). Each wrong guess reveals another article that also spiked that day; if your guess was also surging, it turns yellow.',
+      'The clues connect: articles that surge on the same day are often people, teams or works from one event. Put them together and work out what happened.',
+      'The curve\u2019s shape tells you something too: a steep climb after calm usually means breaking news, while a curve that was already high points to a sustained trend.',
     ],
-    scoring: '第 1 次猜中 100 分，第 2 次 83，第 3 次 67，第 4 次 50，第 5 次 33，第 6 次 17，没猜中 0 分。',
+    scoring: 'Solve on guess 1 for 100 points, guess 2 for 83, guess 3 for 67, guess 4 for 50, guess 5 for 33, guess 6 for 17, and 0 if you never find it.',
     sources: [
-      { name: 'Wikimedia Pageviews API：每日热门榜（top）', url: 'https://wikimedia.org/api/rest_v1/#/Pageviews%20data/get_metrics_pageviews_top__project___access___year___month___day_', note: 'en.wikipedia，all-access，每天前 1000 名' },
-      { name: 'Wikimedia Pageviews API：单篇词条每日浏览（per-article）', url: 'https://wikimedia.org/api/rest_v1/#/Pageviews%20data/get_metrics_pageviews_per_article__project___access___agent___article___granularity___start___end_', note: '曲线为真人（user）流量' },
+      { name: 'Wikimedia Pageviews API: daily top list', url: 'https://wikimedia.org/api/rest_v1/#/Pageviews%20data/get_metrics_pageviews_top__project___access___year___month___day_', note: 'en.wikipedia, all-access, top 1,000 per day' },
+      { name: 'Wikimedia Pageviews API: per-article daily views', url: 'https://wikimedia.org/api/rest_v1/#/Pageviews%20data/get_metrics_pageviews_per_article__project___access___agent___article___granularity___start___end_', note: 'curves use human (user) traffic' },
     ],
-    dataNote: '实时数据：打开页面时，浏览器直接向 Wikimedia 取「谜题日期前两天」的每日榜单，并选出当天「浏览量 ÷ 前三天平均」最高的词条（当天 ≥ 4 万次，剔除首页、特殊页、Deaths in … 和 List of … 等），再取它 21 天的真人浏览曲线；若曲线不能证明是真人流量暴涨（机器人流量），顺延到下一名。前三天不在前 1000 名的词条，按当时榜单第 1000 名的浏览量估计基线，所以榜单倍数是保守估计。取数失败时回退到 data.json 里 2026-07 至 10 月的存档谜题。「同日暴涨」线索来自含机器人流量的全访问榜单，个别条目可能是爬虫造成的。',
+    dataNote: 'Live data: when the page opens, your browser fetches the daily top lists for the two days before the puzzle date straight from Wikimedia and picks the article with the highest views \u00f7 previous-3-day average that day (at least 40,000 views, excluding the Main Page, special pages, \u201cDeaths in \u2026\u201d and \u201cList of \u2026\u201d). It then fetches that article\u2019s 21-day human traffic curve; if the curve cannot show a genuine human surge (bot traffic), the next candidate is used. Articles outside the top 1,000 in the prior three days get a baseline estimated from the 1,000th-ranked article\u2019s views, so the ratios are conservative. If fetching fails, the game falls back to the archived puzzles in data.json from July to October 2026. The \u201csame-day surge\u201d clues come from the all-access list, which includes bot traffic, so a few entries may be caused by crawlers.',
   },
 
   puzzle({ data, pick }) {
@@ -159,52 +159,52 @@ export default {
         Plot.areaY(rows, { x: 'date', y: 'v', y1: lo, fill: c.accent, fillOpacity: 0.15 }),
         Plot.lineY(rows, { x: 'date', y: 'v', stroke: c.accent, strokeWidth: 2 }),
         Plot.dot(rows.slice(-1), { x: 'date', y: 'v', fill: c.accent, r: 5 }),
-        Plot.tip(rows, Plot.pointerX({ x: 'date', y: 'v', title: (d) => `${d.date.toISOString().slice(0, 10)}\n${core.fmtNum(d.v)} 次浏览` })),
+        Plot.tip(rows, Plot.pointerX({ x: 'date', y: 'v', title: (d) => `${d.date.toISOString().slice(0, 10)}\n${core.fmtNum(d.v)} views` })),
       ],
     }));
-    const coClue = (c) => `同一天也在暴涨：「${c.t}」（${core.fmtNum(c.v)} 次，约 ${c.r.toFixed(1)} 倍）`;
+    const coClue = (c) => `Also surging that day: \u201c${c.t}\u201d (${core.fmtNum(c.v)} views, about ${c.r.toFixed(1)}\u00d7)`;
     const clues = [
       ui.h('div', chart,
         ui.h('div', { class: 'ds-grid', style: { '--min': '110px', marginTop: '12px' } },
-          ui.stat({ label: '暴涨日', value: P.date.slice(5), sub: P.date.slice(0, 4) }),
-          ui.stat({ label: '当天浏览', value: core.fmtCompact(sp.last), sub: '次' }),
-          ui.stat({ label: '此前日均', value: core.fmtCompact(sp.base), sub: '次' }),
-          ui.stat({ label: '暴涨倍数', value: `${sp.factor.toFixed(1)}×`, sub: '对数坐标' }))),
+          ui.stat({ label: 'Spike day', value: P.date.slice(5), sub: P.date.slice(0, 4) }),
+          ui.stat({ label: 'Views that day', value: core.fmtCompact(sp.last) }),
+          ui.stat({ label: 'Daily average before', value: core.fmtCompact(sp.base) }),
+          ui.stat({ label: 'Surge factor', value: `${sp.factor.toFixed(1)}\u00d7`, sub: 'log scale' }))),
       ...P.co.map(coClue),
     ];
-    while (clues.length < 6) clues.push(`词条标题以 “${P.title[0]}” 开头。`);
+    while (clues.length < 6) clues.push(`The article title starts with \u201c${P.title[0]}\u201d.`);
 
     const coSet = new Map(P.co.map((c) => [c.t, c]));
     const res = await ctx.guess({
-      title: '这是哪个词条？',
+      title: 'Which article is this?',
       options: ctx.data.options.map((t) => ({ id: t, label: t })),
       answer: P.title,
       maxGuesses: 6,
-      placeholder: '输入词条名（英文）…',
+      placeholder: 'Type an article title, e.g. Taylor Swift\u2026',
       clues,
-      cluesTitle: `${P.date} 的暴涨线索`,
-      columns: ['同日暴涨'],
+      cluesTitle: `Clues for the ${P.date} spike`,
+      columns: ['Same-day spike'],
       near: (g) => coSet.has(g.id),
       scoring: scoreFor,
       feedback: (g) => (g.id === P.title
-        ? [{ text: '就是它', state: 'hit' }]
-        : coSet.has(g.id) ? [{ text: `是 · ${coSet.get(g.id).r.toFixed(1)}×`, state: 'near', num: true }] : [{ text: '否', state: 'miss' }]),
+        ? [{ text: 'That\u2019s it', state: 'hit' }]
+        : coSet.has(g.id) ? [{ text: `Yes \u00b7 ${coSet.get(g.id).r.toFixed(1)}\u00d7`, state: 'near', num: true }] : [{ text: 'No', state: 'miss' }]),
       onGuess: (opt, { correct }) => ctx.log('guess', opt.id, correct),
     });
 
     const shape = sp.calm >= 15
-      ? `暴涨前 ${sp.calm} 天都低于日均的 2 倍，前一天只有 ${core.fmtNum(sp.prior)} 次，然后一天内冲到 ${core.fmtNum(sp.last)} 次：平地起飞，典型的突发事件（新闻、赛事、讣告、新作发布）。`
-      : `这条曲线本来就不平静（此前 20 天里最高 ${core.fmtNum(sp.peak)} 次），暴涨日在此基础上又抬高到 ${core.fmtNum(sp.last)} 次：更像持续热点上的新一波。`;
+      ? `For ${sp.calm} days before the spike the curve stayed under twice its average, with only ${core.fmtNum(sp.prior)} views the day before, then it leapt to ${core.fmtNum(sp.last)} in a day: a bolt from the blue, typical of breaking events (news, a match, an obituary, a release).`
+      : `This curve was never quiet (the highest of the prior 20 days was ${core.fmtNum(sp.peak)} views), and the spike day pushed it up to ${core.fmtNum(sp.last)}: more like a new wave on a sustained trend.`;
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.kv([
-        ['答案', ui.h('a', { href: `https://en.wikipedia.org/wiki/${encodeURIComponent(P.id)}`, target: '_blank', rel: 'noopener' }, P.title)],
-        ['日期', P.date],
-        ['当天浏览', `${core.fmtNum(sp.last)} 次真人浏览，约为此前 20 天日均的 ${sp.factor.toFixed(1)} 倍；按榜单口径（对比前三天）是 ${P.ratio.toFixed(1)} 倍，当天全站第 ${P.rank} 名`],
-        ['曲线特征', shape],
-        ['怎么推出来', `同一天一起暴涨的还有 ${P.co.map((c) => c.t).join('、')}。它们彼此相关的那件事，就是「${P.title}」当天暴涨的原因。`],
+        ['Answer', ui.h('a', { href: `https://en.wikipedia.org/wiki/${encodeURIComponent(P.id)}`, target: '_blank', rel: 'noopener' }, P.title)],
+        ['Date', P.date],
+        ['Views that day', `${core.fmtNum(sp.last)} human views, about ${sp.factor.toFixed(1)}\u00d7 the daily average of the prior 20 days; by the ranking\u2019s measure (against the prior three days) ${P.ratio.toFixed(1)}\u00d7, and #${P.rank} sitewide that day`],
+        ['Curve shape', shape],
+        ['How to work it out', `Also surging the same day: ${P.co.map((c) => c.t).join(', ')}. Whatever connects them is the reason \u201c${P.title}\u201d spiked that day.`],
       ]),
       ui.table({
-        columns: [{ key: 't', label: '同日暴涨词条' }, { key: 'v', label: '浏览', num: true, fmt: (v) => core.fmtNum(v) }, { key: 'r', label: '倍数', num: true, fmt: (v) => `${v.toFixed(1)}×` }],
+        columns: [{ key: 't', label: 'Same-day surges' }, { key: 'v', label: 'Views', num: true, fmt: (v) => core.fmtNum(v) }, { key: 'r', label: 'Factor', num: true, fmt: (v) => `${v.toFixed(1)}\u00d7` }],
         rows: P.co,
       }));
     return res;
