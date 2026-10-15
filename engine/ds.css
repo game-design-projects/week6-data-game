@@ -306,13 +306,14 @@ select.ds-input { background-image: linear-gradient(45deg, transparent 50%, var(
 .ds-combo .empty { padding: 10px 12px; color: var(--muted); font-size: 0.9rem; }
 
 /* ───────── feedback tiles (guess rows) ───────── */
-.ds-guesses { display: flex; flex-direction: column; gap: 6px; }
+.ds-guesses { display: grid; grid-template-columns: var(--cols, 1fr); gap: 6px; }
 .ds-guess-head, .ds-guess { display: grid; grid-template-columns: var(--cols, 1fr); gap: 6px; }
+.ds-guesses > .ds-guess-head, .ds-guesses > .ds-guess { grid-column: 1 / -1; grid-template-columns: subgrid; }
 .ds-guess-head > span { font: 600 0.64rem/1.2 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0 4px; }
 .ds-tile {
   min-height: 44px; display: flex; align-items: center; justify-content: center; text-align: center; gap: 6px;
   padding: 6px 10px; border-radius: var(--r-sm); font: 600 0.92rem/1.15 var(--font-ui);
-  background: var(--paper-2); color: var(--ink); border: 1px solid var(--rule); overflow-wrap: anywhere;
+  background: var(--paper-2); color: var(--ink); border: 1px solid var(--rule); overflow-wrap: break-word;
   animation: ds-flip 0.5s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms);
 }
 .ds-tile.lead { justify-content: flex-start; text-align: left; }

@@ -14,7 +14,7 @@ const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/M
 async function dumpDom(url) {
   const profile = await mkdtemp(path.join(os.tmpdir(), 'ddg-test-'));
   const p = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-first-run', `--user-data-dir=${profile}`,
-    '--window-size=1000,1000', '--virtual-time-budget=10000', '--dump-dom', url], { stdio: ['ignore', 'pipe', 'ignore'] });
+    '--window-size=540,1000', '--virtual-time-budget=10000', '--dump-dom', url], { stdio: ['ignore', 'pipe', 'ignore'] });
   let out = '';
   p.stdout.on('data', (d) => (out += d));
   await new Promise((r) => p.on('close', r));
@@ -34,6 +34,9 @@ test('presets behave in a real browser', { skip: !existsSync(CHROME) && 'Chrome 
     assert.equal(out.estimateReadout.split('$').length - 1, 1, `unit printed twice: ${out.estimateReadout}`);
     assert.equal(out.canvasEvents, 'down,move,up');
     assert.equal(out.canvasRedrawnAfterResize, true);
+    assert.equal(out.guessRowsWidth, 330, 'guess test panel should model a phone row width');
+    assert.equal(out.guessDistanceLines, 1, "'11,056 km' wraps inside a 330 px guess panel");
+    assert.equal(out.guessHeadAligned, true, 'guess header and feedback columns are misaligned');
     assert.equal(out.dateShort, 'Thu, Oct 15, 2026');
     assert.equal(out.dateLong, 'Thursday, October 15, 2026');
   } finally {

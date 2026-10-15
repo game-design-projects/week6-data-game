@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- Browser tests for engine presets. Run via `node --test tests/presets.test.mjs`
      (headless Chrome dumps the DOM; results are JSON in <pre id="out">). -->
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../engine/ds.css"></head>
+<html class="ds-static"><head><meta charset="utf-8"><link rel="stylesheet" href="../engine/ds.css"></head>
 <body><main class="ds-stage"></main><pre id="out"></pre>
 <script type="module">
 import * as presets from '../engine/presets.js';
@@ -63,6 +63,32 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   box.style.width = '200px';
   await new Promise((r) => setTimeout(r, 50));
   out.canvasRedrawnAfterResize = frames > before;
+}
+
+// guess: feedback columns size to their content and line up with the header, so a
+// distance like '11,056 km' stays on one line in a phone-width panel (rows 330 px wide and mobile styles, as on a
+// 390 px phone; the test window is 540 px, under the 560 px breakpoint)
+{
+  const box = document.createElement('div');
+  box.style.width = '360px';
+  stage.append(box);
+  const options = [{ id: 'a', label: 'Bosnia and Herzegovina' }, { id: 'b', label: 'Chad' }];
+  presets.guess({ ...ctx }, { options, answer: 'b', columns: ['Distance', 'Direction', 'Fit'], container: box,
+    feedback: () => [{ text: '11,056 km', num: true }, { text: '↗' }, { text: '12%', num: true }] });
+  await tick();
+  const input = box.querySelector('input.ds-input');
+  input.value = 'Bosnia and Herzegovina';
+  input.dispatchEvent(new Event('input'));
+  box.querySelector('form').requestSubmit();
+  await tick();
+  const dist = [...box.querySelectorAll('.ds-guess .ds-tile')].find((t) => t.textContent === '11,056 km');
+  const range = document.createRange();
+  range.selectNodeContents(dist);
+  const tops = [...range.getClientRects()].map((r) => r.top).sort((x, y) => x - y);
+  out.guessDistanceLines = 1 + tops.filter((t, i) => i && t - tops[i - 1] > 2).length; // line boxes; sub-pixel duplicates merge
+  const head = [...box.querySelectorAll('.ds-guess-head span')].find((s) => s.textContent === 'Distance');
+  out.guessRowsWidth = Math.round(box.querySelector('.ds-guesses').getBoundingClientRect().width);
+  out.guessHeadAligned = Math.abs(head.getBoundingClientRect().left - dist.getBoundingClientRect().left) < 1;
 }
 
 // dates: English long form used by the page dateline and the gallery

@@ -48,7 +48,8 @@ export async function guess(ctx, {
   if (clues.length) mount(ctx, { container }, panel({ kicker: `${clues.length} ${clues.length === 1 ? 'clue' : 'clues'}`, title: cluesTitle }, h('div', { class: 'ds-clues' }, clueEls)));
 
   // guess rows
-  const cols = `minmax(0, 2.2fr) ${columns.map(() => 'minmax(0, 1fr)').join(' ')}`.trim();
+  // feedback columns fit their content (shared by every row via subgrid); the guess name takes the rest
+  const cols = `minmax(6em, 1fr) ${columns.map(() => 'auto').join(' ')}`.trim();
   const rows = h('div', { class: 'ds-guesses', style: { '--cols': cols } },
     columns.length ? h('div', { class: 'ds-guess-head' }, h('span', 'Guess'), columns.map((c) => h('span', c))) : null);
   const pipEl = h('span');
