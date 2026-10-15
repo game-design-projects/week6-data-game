@@ -37,13 +37,13 @@ for (const [id, t] of meta) {
   if (Object.keys(curves).length < 2) continue;
   const p = t.default_photo;
   species[id] = {
-    id: +id, sci: t.name, zh: t.preferred_common_name || null, en: t.english_common_name || null, g,
+    id: +id, sci: t.name, en: t.english_common_name || null, g,
     photo: p ? { id: p.id, by: p.attribution_name || '', lic: p.license_code || '' } : null,
     curves,
   };
 }
 const ids = Object.keys(species);
-const nm = (x) => x.zh || x.en || x.sci;
+const nm = (x) => x.en || x.sci;
 const h = (s) => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const puzzles = [];
 for (const id of ids) {
@@ -58,8 +58,8 @@ for (const id of ids) {
   const pickP = (arr, k) => arr.length ? arr[h(id + k) % arr.length] : null;
   for (const p of [pickP(cross, 'x'), pickP(same, 's')]) {
     if (!p) continue;
-    const pool = ids.filter((o) => o !== id && species[o].g === sp.g && species[o].curves[p.a] && cdist(species[o].curves[p.a].peak, sp.curves[p.a].peak) >= 6 && (species[o].zh || species[o].en) && nm(species[o]) !== nm(sp));
-    if (pool.length < 4 || !(sp.zh || sp.en)) continue;
+    const pool = ids.filter((o) => o !== id && species[o].g === sp.g && species[o].curves[p.a] && cdist(species[o].curves[p.a].peak, sp.curves[p.a].peak) >= 6 && species[o].en && nm(species[o]) !== nm(sp));
+    if (pool.length < 4 || !sp.en) continue;
     const opts = []; let k = 0;
     while (opts.length < 4 && k < 200) { const o = pool[h(id + p.a + p.b + k++) % pool.length]; if (!opts.includes(o) && nm(species[o]) !== nm(sp) && opts.every((q) => nm(species[q]) !== nm(species[o]) && cdist(species[q].curves[p.a].peak, species[o].curves[p.a].peak) >= 3)) opts.push(o); }
     if (opts.length < 4) continue;
@@ -69,7 +69,7 @@ for (const id of ids) {
 // drop unused species
 const used = new Set(puzzles.flatMap((p) => [p.s, ...p.o]));
 for (const id of ids) if (!used.has(+id)) delete species[id];
-const out = { fetched: new Date().toISOString().slice(0, 10), places: { US: '美国', CA: '加拿大', GB: '英国', AU: '澳大利亚', NZ: '新西兰' }, species, puzzles };
+const out = { fetched: new Date().toISOString().slice(0, 10), places: { US: 'United States', CA: 'Canada', GB: 'United Kingdom', AU: 'Australia', NZ: 'New Zealand' }, species, puzzles };
 fs.writeFileSync(OUT, JSON.stringify(out));
 console.log('species', Object.keys(species).length, 'puzzles', puzzles.length, 'bytes', fs.statSync(OUT).size);
 if (process.env.DBG) console.log(Object.keys(species).length, ids.length);

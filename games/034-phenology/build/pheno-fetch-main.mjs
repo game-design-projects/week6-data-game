@@ -19,7 +19,7 @@ async function cached(name, url) {
 const base = 'https://api.inaturalist.org/v1/observations';
 const lists = {};
 for (const [cc, pid] of Object.entries(PLACES)) for (const g of GROUPS) {
-  const j = await cached(`sp_${cc}_${g}.json`, `${base}/species_counts?place_id=${pid}&iconic_taxa=${g}&per_page=200&quality_grade=research&locale=zh-CN`);
+  const j = await cached(`sp_${cc}_${g}.json`, `${base}/species_counts?place_id=${pid}&iconic_taxa=${g}&per_page=200&quality_grade=research&locale=en`);
   lists[`${cc}_${g}`] = j.results.map((x) => ({ id: x.taxon.id, count: x.count }));
 }
 for (const [cc, pid] of Object.entries(PLACES)) for (const g of GROUPS)

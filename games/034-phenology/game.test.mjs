@@ -32,7 +32,7 @@ import { readFileSync } from 'node:fs';
 import { makeRng, dailyIndex } from '../../engine/core.js';
 import { seasonWidth } from './game.js';
 const DATA = JSON.parse(readFileSync(new URL('./data.json', import.meta.url)));
-const nm = (s) => s.zh || s.en || s.sci;
+const nm = (s) => s.en || s.sci;
 const real = (day) => game.puzzle({ data: DATA, day, date: `d${day}`, slug: 'phenology', rng: makeRng(`phenology:${day}`), pick: (arr) => arr[dailyIndex('phenology', day, arr.length)] });
 
 test('pool: every puzzle for days 1-120 is valid', () => {
@@ -69,7 +69,7 @@ test('pool: every puzzle for days 1-120 is valid', () => {
 test('pool: no answer leak in pre-guess text (names never appear in static copy)', () => {
   const copy = [game.meta.tagline, ...game.meta.howTo, game.meta.dataNote, game.meta.title].join('|');
   for (const s of Object.values(DATA.species)) {
-    for (const n of [s.zh, s.en, s.sci]) if (n && n.length > 2) assert.ok(!copy.includes(n), n);
+    for (const n of [s.en, s.sci]) if (n && n.length > 2) assert.ok(!copy.includes(n), n);
   }
 });
 

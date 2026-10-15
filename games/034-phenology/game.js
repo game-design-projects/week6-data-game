@@ -1,6 +1,7 @@
 // #34 Phenology — a species' weekly observation curve in one country; name the species,
 // then predict when the same species peaks in another country.
 
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MD = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 /** Month/day label for the start of week w (1..52) of a non-leap year. */
 export function weekDate(w) {
@@ -9,7 +10,7 @@ export function weekDate(w) {
   while (doy >= MD[m]) { doy -= MD[m]; m++; }
   return { m: m + 1, d: doy + 1 };
 }
-export const weekLabel = (w) => { const { m, d } = weekDate(w); return `第 ${w} 周 · ${m} 月 ${d} 日前后`; };
+export const weekLabel = (w) => { const { m, d } = weekDate(w); return `Week ${w} (${MON[m - 1]} ${d})`; };
 /** Circular distance between two weeks of the year (0..26). */
 export const weekDist = (a, b) => { const d = Math.abs(a - b) % 52; return Math.min(d, 52 - d); };
 /** Score 0..1: full marks on the exact week, ~0.37 at 6 weeks off. */
@@ -17,30 +18,30 @@ export const weekDist = (a, b) => { const d = Math.abs(a - b) % 52; return Math.
 export const seasonWidth = (c) => c.filter((v) => v >= 50).length;
 export const weekScore = (guess, answer) => Math.exp(-weekDist(guess, answer) / 6);
 
-const GROUP_ZH = { Aves: '鸟类', Insecta: '昆虫', Plantae: '植物', Fungi: '真菌', Reptilia: '爬行动物', Amphibia: '两栖动物', Mammalia: '哺乳动物' };
+const GROUP_EN = { Aves: 'Birds', Insecta: 'Insects', Plantae: 'Plants', Fungi: 'Fungi', Reptilia: 'Reptiles', Amphibia: 'Amphibians', Mammalia: 'Mammals' };
 const SOUTH = new Set(['AU', 'NZ']);
-const name = (s) => s.zh || s.en || s.sci;
+const name = (s) => { const n = s.en || s.sci; return n[0].toUpperCase() + n.slice(1); };
 
 export default {
   meta: {
     num: 34,
     slug: 'phenology',
     title: 'Phenology',
-    tagline: '某物种在某个国家一年里每周被观测到的曲线。先认出它是谁，再预测它在另一个国家什么时候最热闹。',
+    tagline: 'One species\' weekly sightings across a year in one country. Name the species, then predict when it peaks in another country.',
     category: 'science',
     data: 'snapshot',
     howTo: [
-      '图里是 iNaturalist 公民科学家一年里观测到某个物种的相对频率（已除以同类生物的总观测量，扣掉“夏天人人出门拍照”的偏差）。',
-      '第一步：从 5 个同类物种里选出这条曲线属于谁。高峰窄说明季节性强（迁徙鸟、开花期），高峰宽说明常年可见。',
-      '第二步：同一物种在另一个国家的观测高峰在第几周？注意南北半球的季节是反的，纬度不同高峰也会前后挪动。',
-      '第一步答对得 1/3，第二步按周数误差计分：差 0 周满分，差约 6 周降到约三分之一（首尾相接按环形计算）。',
+      'The curve shows how often iNaturalist citizen scientists spotted one species through the year, as a share of all sightings of its group, which cancels out the "everyone goes outside in summer" bias.',
+      'Step 1: pick which of 5 related species this curve belongs to. A narrow peak means strong seasonality (migrating birds, flowering); a wide one means it is around all year.',
+      'Step 2: in which week does the same species peak in another country? Remember the seasons are reversed between hemispheres, and latitude shifts the peak earlier or later.',
+      'Step 1 is worth a third. Step 2 is scored by weeks off: 0 weeks is full marks, about 6 weeks off drops to roughly a third (the year wraps around).',
     ],
-    scoring: '第一步 33 分（选对）；第二步 67 × e^(−周差/6)。',
+    scoring: 'Step 1: 33 points for the right species. Step 2: 67 × e^(−weeks off / 6).',
     sources: [
-      { name: 'iNaturalist API · observations/histogram（research grade）', url: 'https://api.inaturalist.org/v1/docs/#!/Observations/get_observations_histogram' },
+      { name: 'iNaturalist API · observations/histogram (research grade)', url: 'https://api.inaturalist.org/v1/docs/#!/Observations/get_observations_histogram' },
       { name: 'iNaturalist API · observations/species_counts', url: 'https://api.inaturalist.org/v1/docs/#!/Observations/get_observations_species_counts' },
     ],
-    dataNote: '快照数据（95 道题、132 个物种，鸟类、昆虫、植物、两栖类）：美国、加拿大、英国、澳大利亚、新西兰五个地区的 research-grade 观测，按“物种每周观测数 ÷ 同地区同类生物每周观测总数”归一化后做 3 周平滑。曲线反映的是“被人观测到”的季节，并不严格等于物种的生理物候。第二步只选“按同半球同周、跨半球加半年”这类朴素猜法也会错 3 周以上的题，所以得靠对物种的了解。没有做成实时：这是按年份汇总的季节曲线，每天变化很小，没有必要实时抓取。照片版权归原作者，来自 iNaturalist。',
+    dataNote: 'Snapshot data (95 puzzles, 132 species: birds, insects, plants, amphibians). Research-grade observations from the US, Canada, UK, Australia and New Zealand, normalized as "species sightings per week ÷ all sightings of the same group in that region per week" and smoothed over 3 weeks. The curve shows the season in which people see a species, which is not strictly its biological phenology. Step 2 only uses puzzles where the naive guess (same week in the same hemisphere, shifted half a year across hemispheres) is off by 3+ weeks, so you need to know the species. Not live: these are yearly seasonal curves that barely change day to day. Photos belong to their authors, via iNaturalist.',
   },
 
   puzzle({ data, rng, pick }) {
@@ -58,7 +59,7 @@ export default {
 
     const rows = (c, label) => c.c.map((v, i) => ({ w: i + 1, v, label }));
     const ticks = Array.from({ length: 12 }, (_, i) => Array.from({ length: 52 }, (_, k) => k + 1).find((w) => weekDate(w).m === i + 1 && weekDate(w).d <= 7));
-    const monthOf = (w) => `${weekDate(w).m}月`;
+    const monthOf = (w) => MON[weekDate(w).m - 1];
     const ticks2 = ticks.filter((_, i) => i % 2 === 0);
     const chart = (series, height = 220) => ui.plot((Plot, c) => ({
       height, marginLeft: 12,
@@ -67,34 +68,34 @@ export default {
       marks: [
         Plot.areaY(series[0].rows, { x: 'w', y: 'v', fill: c.accent, fillOpacity: 0.18, curve: 'monotone-x' }),
         ...series.map((s, i) => Plot.lineY(s.rows, { x: 'w', y: 'v', stroke: [c.accent, c.ink][i], strokeWidth: 2.5, curve: 'monotone-x' })),
-        Plot.tip(series[0].rows, Plot.pointerX({ x: 'w', y: 'v', title: (d) => `${weekLabel(d.w)}\n相对频率 ${d.v}%` })),
+        Plot.tip(series[0].rows, Plot.pointerX({ x: 'w', y: 'v', title: (d) => `${weekLabel(d.w)}\nRelative frequency ${d.v}%` })),
       ],
     }), { height });
 
     ctx.stage.append(ui.panel(
-      { kicker: `${places[p.a]}（${SOUTH.has(p.a) ? '南' : '北'}半球）· 一年 52 周`, title: '这是谁的季节？' },
+      { kicker: `${places[p.a]} (${SOUTH.has(p.a) ? 'southern' : 'northern'} hemisphere) · 52 weeks`, title: 'Whose season is this?' },
       await chart([{ label: places[p.a], rows: rows(A) }]),
       ui.h('div', { class: 'ds-grid', style: { '--min': '140px', marginTop: '12px' } },
-        ui.stat({ label: '类群', value: GROUP_ZH[ans.g] || ans.g }),
-        ui.stat({ label: '观测数', value: core.fmtNum(A.n), sub: '研究级' })),
+        ui.stat({ label: 'Group', value: GROUP_EN[ans.g] || ans.g }),
+        ui.stat({ label: 'Observations', value: core.fmtNum(A.n), sub: 'research grade' })),
     ));
 
     const r1 = await ctx.rounds({
-      title: '第一步：认出物种',
+      title: 'Step 1: name the species',
       rounds: [{
-        prompt: `同属“${GROUP_ZH[ans.g] || ans.g}”，哪一个在${places[p.a]}的曲线是这样？`,
+        prompt: `All are ${(GROUP_EN[ans.g] || ans.g).toLowerCase()}. Which one makes this curve in ${places[p.a]}?`,
         options: p.o.map((id) => ({ label: name(sp[id]), sub: sp[id].sci })),
         correct: p.o.indexOf(p.s),
-        explain: `${name(ans)}（${ans.sci}）在${places[p.a]}的高峰在 ${weekLabel(A.peak)}。`,
+        explain: `${name(ans)} (${ans.sci}) peaks in ${places[p.a]} at ${weekLabel(A.peak)}.`,
       }],
     });
     ctx.log('stage1', r1.score);
 
-    ctx.stage.append(ui.callout(`${name(ans)} 在${places[p.a]}的高峰是 ${weekLabel(A.peak)}。同一个物种在${places[p.b]}（${SOUTH.has(p.b) ? '南' : '北'}半球）呢？`));
+    ctx.stage.append(ui.callout(`${name(ans)} peaks in ${places[p.a]} at ${weekLabel(A.peak)}. What about the same species in ${places[p.b]} (${SOUTH.has(p.b) ? 'southern' : 'northern'} hemisphere)?`));
     const r2 = await ctx.estimate({
-      title: `第二步：它在${places[p.b]}什么时候最热闹？`,
+      title: `Step 2: when does it peak in ${places[p.b]}?`,
       answer: B.peak, min: 1, max: 52, step: 1, initial: 26, attempts: 1,
-      scoring: weekScore, format: (v) => weekLabel(Math.round(v)),
+      scoring: weekScore, format: (v) => { const w = Math.round(v), { m, d } = weekDate(w); return `Wk ${w} · ${MON[m - 1]} ${d}`; },
     });
     ctx.log('stage2', { guess: r2.guess, answer: B.peak });
 
@@ -109,15 +110,15 @@ export default {
     res.detail = ui.h('div', { class: 'ds-stack' },
       ans.photo ? ui.h('img', { src: `https://inaturalist-open-data.s3.amazonaws.com/photos/${ans.photo.id}/medium.jpeg`, alt: ans.sci, onerror: (e) => { e.target.style.display = 'none'; }, style: { width: '100%', maxHeight: '240px', objectFit: 'cover', borderRadius: 'var(--radius, 8px)' } }) : null,
       ui.kv([
-        ['物种', `${name(ans)}（${ans.sci}）`],
-        [`${places[p.a]}高峰`, weekLabel(A.peak)],
-        [`${places[p.b]}高峰`, weekLabel(B.peak)],
-        ['相差', `${shift} 周${cross ? '，南北半球季节相反' : ''}`],
-        ['怎么看出来', `${places[p.a]}的曲线有 ${wA} 周高于峰值的一半（${wA <= 8 ? '窄峰，季节性很强' : wA <= 16 ? '中等宽度的季节' : '宽峰，常年可见'}），高峰在第 ${A.peak} 周。${places[p.b]}${cross ? `在对面半球，季节反过来，两地高峰相隔 ${shift} 周（整半年是 26 周）` : shift <= 2 ? '与它几乎同步' : `比${places[p.a]}${signed > 0 ? '晚' : '早'} ${shift} 周`}，高峰第 ${B.peak} 周，宽度 ${wB} 周。`],
-        ['照片', ans.photo ? `${ans.photo.by || 'iNaturalist 用户'} · ${String(ans.photo.lic).toUpperCase()}` : '—'],
+        ['Species', `${name(ans)} (${ans.sci})`],
+        [`Peak in ${places[p.a]}`, weekLabel(A.peak)],
+        [`Peak in ${places[p.b]}`, weekLabel(B.peak)],
+        ['Difference', `${shift} ${shift === 1 ? 'week' : 'weeks'}${cross ? '; the hemispheres have opposite seasons' : ''}`],
+        ['How to read it', `${places[p.a]}\'s curve spends ${wA} weeks above half its peak (${wA <= 8 ? 'a narrow peak, very seasonal' : wA <= 16 ? 'a season of medium length' : 'a wide peak, around all year'}), peaking in week ${A.peak}. ${places[p.b]} ${cross ? `is in the opposite hemisphere, so the seasons flip and the two peaks are ${shift} weeks apart (a full half year is 26)` : shift <= 2 ? 'is almost in sync' : `peaks ${shift} weeks ${signed > 0 ? 'later' : 'earlier'} than ${places[p.a]}`}, in week ${B.peak}, with a width of ${wB} weeks.`],
+        ['Photo', ans.photo ? `${ans.photo.by || 'iNaturalist user'} · ${String(ans.photo.lic).toUpperCase()}` : '—'],
       ]),
       await chart([{ label: places[p.b], rows: rows(B) }, { label: places[p.a], rows: rows(A) }], 200),
-      ui.h('div', { class: 'small muted' }, `彩线 ${places[p.b]}，白线 ${places[p.a]}。` + (cross ? '跨过赤道，季节差约半年。' : '同半球，高峰随纬度、海拔和气候前后挪几周。')));
+      ui.h('div', { class: 'small muted' }, `Colored line: ${places[p.b]}. White line: ${places[p.a]}.` + (cross ? ' Across the equator, the seasons differ by about half a year.' : ' Same hemisphere: the peak shifts a few weeks with latitude, altitude and climate.')));
     return res;
   },
 };
