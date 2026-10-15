@@ -74,18 +74,18 @@ export default {
     num: 89,
     slug: 'ticker-runner',
     title: 'Ticker Runner',
-    tagline: '横版跳跃，地形就是某个交易日美股指数的日内走势：吃涨幅金币，跳过暴跌尖刺。',
+    tagline: 'A side-scrolling runner whose terrain is one trading day of a US stock index: grab coins on the rallies, jump the spikes on the sell-offs.',
     category: 'levels',
     data: 'snapshot',
     howTo: [
-      '每天的关卡是一个真实交易日的 5 分钟走势（最近约 60 个交易日里的标普 500、纳指、道指或罗素 2000），地形越高价格越高。每天的地形都被拉伸到同样高度，所以平静的一天也有起伏。',
-      '角色自动向右跑，点击屏幕（或按空格 / 上箭头）起跳，落地后才能再跳。',
-      '金币悬在当天涨得最快的 5 段上，要在跳到最高点附近时才吃得到；红色尖刺立在跌得最狠的 4 段，要提前起跳跳过去。',
-      '起跳到最高点大约需要 2 根 K 线（0.37 秒）：看到陡坡就要提前跳。别乱跳，多余的跳跃会扣分。',
+      'Each day\u2019s level is a real trading day in 5-minute bars (S&P 500, Nasdaq, Dow or Russell 2000, from roughly the last 60 sessions). Higher ground means a higher price. Every day is stretched to the same height, so even a quiet day has hills.',
+      'Your runner moves right automatically. Tap the screen (or press Space or Up) to jump; you can only jump again after landing.',
+      'Coins hover over the five fastest rallies of the day and are only collectable near the top of a jump. Red spikes stand on the four steepest sell-offs, so jump early to clear them.',
+      'A jump takes about 2 bars (0.37 s) to reach its peak: see a steep slope coming and jump ahead of it. Do not spam the jump button; extra jumps cost points.',
     ],
-    scoring: '吃到的金币占总数的百分比；每踩中一次尖刺扣 10 分；起跳次数超过「金币组 + 尖刺 + 3」后，每多跳一次扣 4 分。60 分以上算通关。',
-    sources: [{ name: 'Yahoo Finance chart API（5 分钟 K 线）', url: 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?range=60d&interval=5m', note: '标普 500 ^GSPC、纳指 ^IXIC、道指 ^DJI、罗素 2000 ^RUT；每日重采样为 78 根收盘价' }],
-    dataNote: '数据是构建时下载的快照（最近约 60 个交易日），不是实时的“昨天”。原创意要求实时行情，但已逐一验证过的免费端点都不能在浏览器直接调用：Yahoo Finance chart API 与 Cboe 延迟行情（cdn.cboe.com，仅最近一天的分钟线）、Stooq、FRED 均不返回 Access-Control-Allow-Origin；Twelve Data、Polygon、Financial Modeling Prep、MarketData 需要 API Key。密钥不能放进前端，也不做代理，所以保留快照。',
+    scoring: 'Percent of coins collected, minus 10 for each spike hit, minus 4 for every jump beyond \u201ccoin groups + spikes + 3\u201d. 60 or more clears the level.',
+    sources: [{ name: 'Yahoo Finance chart API (5-minute bars)', url: 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?range=60d&interval=5m', note: 'S&P 500 ^GSPC, Nasdaq Composite ^IXIC, Dow Jones ^DJI, Russell 2000 ^RUT; each day resampled to 78 closing prices' }],
+    dataNote: 'This is a snapshot downloaded at build time (roughly the last 60 trading days), not live data for \u201cyesterday\u201d. The original idea called for live quotes, but none of the free endpoints we checked can be called from a browser: the Yahoo Finance chart API, Cboe delayed quotes (cdn.cboe.com, latest day of minute bars only), Stooq and FRED send no Access-Control-Allow-Origin header, and Twelve Data, Polygon, Financial Modeling Prep and MarketData need API keys. A key cannot live in front-end code and we run no proxy, so the snapshot stays.',
   },
 
   puzzle({ data, pick }) {
@@ -99,10 +99,10 @@ export default {
     const log = ctx.log.scope('runner');
     const open = p.bars[0], close = p.bars[p.bars.length - 1];
     log('course', p.sym, p.date, { coins: c.coins.length, spikes: c.spikes.length });
-    ctx.stage.append(ui.panel({ kicker: `${p.date} · ${p.name}`, title: '今天的地形' },
+    ctx.stage.append(ui.panel({ kicker: `${p.date} · ${p.name}`, title: 'Today\u2019s terrain' },
       ui.h('div', { class: 'ds-grid', style: { '--min': '100px' } },
-        ui.stat({ label: '日内振幅', value: core.fmtPct((c.hi - c.lo) / open, 2) }), ui.stat({ label: '最低', value: core.fmtNum(c.lo, 0) }), ui.stat({ label: '最高', value: core.fmtNum(c.hi, 0) }),
-        ui.stat({ label: '金币', value: String(c.coins.length) }), ui.stat({ label: '尖刺', value: String(c.spikes.length) }))));
+        ui.stat({ label: 'Day range', value: core.fmtPct((c.hi - c.lo) / open, 2) }), ui.stat({ label: 'Low', value: core.fmtNum(c.lo, 0) }), ui.stat({ label: 'High', value: core.fmtNum(c.hi, 0) }),
+        ui.stat({ label: 'Coins', value: String(c.coins.length) }), ui.stat({ label: 'Spikes', value: String(c.spikes.length) }))));
 
     const W = 20; // visible bars
     const draw = (g, k, s, wait) => {
@@ -128,7 +128,7 @@ export default {
       g.globalAlpha = s.inv && Math.floor((k.t || 0) * 20) % 2 ? 0.35 : 1;
       g.beginPath(); g.arc(X(s.x), py - r, r, 0, 7); g.fillStyle = col.accent; g.fill(); g.strokeStyle = col.ink; g.lineWidth = 2; g.stroke();
       g.globalAlpha = 1;
-      k.hud.textContent = wait > 0 ? '准备…点击屏幕起跳' : `${hhmm(s.x, c.n)} · 金币 ${s.got.size}/${c.coins.length} · 尖刺 ${s.hits} · 起跳 ${s.jumps}`;
+      k.hud.textContent = wait > 0 ? 'Get ready... tap to jump' : `${hhmm(s.x, c.n)} \u00b7 coins ${s.got.size}/${c.coins.length} \u00b7 spikes ${s.hits} \u00b7 jumps ${s.jumps}`;
     };
     const run = await new Promise((resolve) => {
       const s = newRun();
@@ -161,18 +161,18 @@ export default {
     const gotIn = (g) => c.coins.reduce((n, q, i) => n + (q.grp === g && run.got.has(i) ? 1 : 0), 0);
     const missed = c.up.filter((g) => gotIn(g) < 3).sort((a, b) => a - b);
     const biggest = c.up[0], worst = c.down[0];
-    const trend = close >= open ? '收涨' : '收跌';
+    const trend = close >= open ? 'closed up' : 'closed down';
     return {
       score: sc, max: 100, win: sc >= 60,
       emoji: `🏃 ${p.name} ${p.date}\n${c.up.slice().sort((a, b) => a - b).map((g) => (gotIn(g) === 3 ? '🟡' : gotIn(g) ? '🟠' : '⚪')).join('')}${run.hits ? ' ' + '🔺'.repeat(run.hits) : ''}`,
-      summary: `${run.got.size}/${c.coins.length} 金币 · ${run.hits} 次受伤 · 起跳 ${run.jumps} 次`,
+      summary: `${run.got.size}/${c.coins.length} coins \u00b7 ${run.hits} ${run.hits === 1 ? 'hit' : 'hits'} \u00b7 ${run.jumps} ${run.jumps === 1 ? 'jump' : 'jumps'}`,
       detail: ui.kv([
-        ['这一天', `${p.date} ${p.name}：开 ${core.fmtNum(open, 0)} → 收 ${core.fmtNum(close, 0)}（${core.fmtPct((close - open) / open, 2)}，${trend}），日内振幅 ${core.fmtPct((c.hi - c.lo) / open, 2)}`],
-        ['金币在哪', `5 组金币对应当天涨得最快的 5 个 15 分钟：${c.up.slice().sort((a, b) => a - b).map((g) => `${t(g)}（+${core.fmtNum(p.bars[g + 3] - p.bars[g], 1)} 点）`).join('、')}`],
-        ['尖刺在哪', `4 根尖刺对应跌得最狠的 15 分钟：${c.down.slice().sort((a, b) => a - b).map((g) => `${t(g)}（−${core.fmtNum(p.bars[g] - p.bars[g + 3], 1)} 点）`).join('、')}。最狠的是 ${t(worst)}，最陡的上坡在 ${t(biggest)}`],
-        ['你的失误', missed.length || run.hits ? `${missed.length ? `没吃满的金币组：${missed.map(t).join('、')}。` : ''}${run.hits ? `踩中尖刺 ${run.hits} 次（${run.hitAt.map((x) => t(x)).join('、')}）。` : ''}` : '金币全吃、尖刺全躲，没有失误。'],
-        ['规律', `起跳到最高点要 2.2 根 K 线：金币组悬在上涨起点之后，要在上涨开始前约 1 根 K 线起跳；尖刺在下跌起点，要在下跌开始前约 2 根 K 线起跳。本局你跳了 ${run.jumps} 次，免扣分额度是 ${jumpBudget(c)} 次。`],
-        ['满分参考', `机器人最优跳法 ${scoreRun(c, best)} 分（${best.jumps} 次起跳）`],
+        ['The day', `${p.date} ${p.name}: open ${core.fmtNum(open, 0)} \u2192 close ${core.fmtNum(close, 0)} (${core.fmtPct((close - open) / open, 2)}, ${trend}), day range ${core.fmtPct((c.hi - c.lo) / open, 2)}`],
+        ['Where the coins are', `The 5 coin groups sit on the day\u2019s five fastest 15-minute rallies: ${c.up.slice().sort((a, b) => a - b).map((g) => `${t(g)} (+${core.fmtNum(p.bars[g + 3] - p.bars[g], 1)} pts)`).join(', ')}`],
+        ['Where the spikes are', `The 4 spikes sit on the steepest 15-minute drops: ${c.down.slice().sort((a, b) => a - b).map((g) => `${t(g)} (\u2212${core.fmtNum(p.bars[g] - p.bars[g + 3], 1)} pts)`).join(', ')}. The worst was at ${t(worst)}, the steepest climb at ${t(biggest)}`],
+        ['Your slips', missed.length || run.hits ? `${missed.length ? `Coin groups not fully collected: ${missed.map(t).join(', ')}. ` : ''}${run.hits ? `Spike hits: ${run.hits} (${run.hitAt.map((x) => t(x)).join(', ')}).` : ''}`.trim() : 'Every coin collected, every spike dodged: no slips.'],
+        ['Pattern', `A jump takes 2.2 bars to peak: coin groups hover just after a rally starts, so jump about 1 bar before the climb begins; spikes sit where a drop starts, so jump about 2 bars before it. You jumped ${run.jumps} times; the penalty-free allowance is ${jumpBudget(c)}.`],
+        ['Perfect-run reference', `The bot\u2019s best jump plan scores ${scoreRun(c, best)} (${best.jumps} jumps)`],
       ]),
     };
   },

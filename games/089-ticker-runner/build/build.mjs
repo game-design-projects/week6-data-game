@@ -2,7 +2,7 @@
 import fs from 'node:fs'; import path from 'node:path';
 const dir = path.dirname(new URL(import.meta.url).pathname);
 const raw = path.join(dir, 'raw'); fs.mkdirSync(raw, { recursive: true });
-const SYMS = [['^GSPC', 'S&P 500'], ['^IXIC', 'Nasdaq 综指'], ['^DJI', '道琼斯'], ['^RUT', '罗素 2000']];
+const SYMS = [['^GSPC', 'S&P 500'], ['^IXIC', 'Nasdaq Composite'], ['^DJI', 'Dow Jones'], ['^RUT', 'Russell 2000']];
 const N = 78;
 const out = [];
 for (const [sym, name] of SYMS) {
