@@ -6,34 +6,34 @@ import { fileURLToPath } from 'node:url';
 import { redactDesc, cleanDesc } from './redact.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-// id: [中文名, English name, group, 一句话特征]
+// id: [English name, group, one-line tip, aliases]
 export const CWES = {
-  'CWE-79': ['跨站脚本 XSS', 'Cross-site Scripting', 'inj', '页面把用户输入当成 HTML/JS 输出，常见于 Web 应用、插件的参数与表单；多需要受害者点开链接，所以 UI:R、分数偏中等。'],
-  'CWE-89': ['SQL 注入', 'SQL Injection', 'inj', '参数被拼进数据库查询，几乎总是网络可达；未认证的 SQL 注入常拿到 9.8，要登录的则降到 8.8 左右。'],
-  'CWE-22': ['路径遍历', 'Path Traversal', 'file', '用 ../ 之类跳出目录读写任意文件；以“读取”为主时机密性高、完整性无，分数多在 7.5 上下。'],
-  'CWE-78': ['OS 命令注入', 'OS Command Injection', 'inj', '输入被拼进系统命令，常见于路由器、IoT 设备的管理接口；机密/完整/可用性三项全高。'],
-  'CWE-352': ['跨站请求伪造 CSRF', 'Cross-Site Request Forgery', 'web', '诱使已登录用户的浏览器发出请求；因为要受害者操作，向量里几乎一定有 UI:R。'],
-  'CWE-787': ['越界写入', 'Out-of-bounds Write', 'mem', '写到缓冲区之外，常见于 C/C++ 解析器与驱动；多为本地或需要打开恶意文件，影响三项全高。'],
-  'CWE-125': ['越界读取', 'Out-of-bounds Read', 'mem', '读到缓冲区之外，主要伤机密性，或导致崩溃；完整性通常为无，分数偏低。'],
-  'CWE-416': ['释放后使用', 'Use After Free', 'mem', '内存释放后仍被使用，浏览器、内核、媒体解析器里常见；多为本地/需用户操作，三项影响高。'],
-  'CWE-476': ['空指针解引用', 'NULL Pointer Dereference', 'mem', '程序访问空指针而崩溃，影响基本只有可用性（A:H），机密/完整为无，分数通常 5.5–7.5。'],
-  'CWE-862': ['缺少授权', 'Missing Authorization', 'acc', 'WordPress 插件的典型问题：功能没检查调用者权限；常见 PR:L 或 PR:N，影响多为低/中。'],
-  'CWE-918': ['服务端请求伪造 SSRF', 'Server-Side Request Forgery', 'web', '让服务器替攻击者去访问内网或任意地址；常见 S:C（影响范围扩散），分数多在 5–9。'],
-  'CWE-434': ['危险文件上传', 'Unrestricted File Upload', 'file', '上传可执行文件（如 WebShell）就能控制服务器；需要登录时 8.8，不需要时 9.8。'],
-  'CWE-502': ['不可信数据反序列化', 'Deserialization of Untrusted Data', 'file', '反序列化恶意对象触发代码执行，Java/PHP/Python 应用里常见；多为 9.8 或 8.1（复杂度高）。'],
-  'CWE-287': ['身份认证不当', 'Improper Authentication', 'acc', '认证逻辑可被绕过，攻击者无需凭据就能登录；PR:N + 三项高 = 9.8 或 9.1。'],
-  'CWE-94': ['代码注入', 'Code Injection', 'inj', '输入被当成代码执行（eval、模板、脚本引擎）；多为 8.8–9.8。'],
-  'CWE-200': ['敏感信息泄露', 'Exposure of Sensitive Information', 'res', '把不该给的数据给了不该看的人，只伤机密性：C:H/I:N/A:N 就是 7.5，C:L 就是 5.3。'],
-  'CWE-120': ['经典缓冲区溢出', 'Classic Buffer Overflow', 'mem', '不检查长度直接拷贝（strcpy/memcpy），常见于路由器固件；网络可达时是 9.8，本地则降到 7.8。'],
-  'CWE-400': ['资源消耗失控', 'Uncontrolled Resource Consumption', 'res', '请求能耗尽 CPU/内存/磁盘，只影响可用性：A:H 单项就是 7.5。'],
-  'CWE-611': ['XXE 外部实体', 'XML External Entity', 'file', 'XML 解析器加载外部实体，读本地文件或发 SSRF；机密性高居多。'],
-  'CWE-601': ['开放重定向', 'Open Redirect', 'web', '站点把用户跳转到攻击者指定的地址，用于钓鱼；影响小，需用户点击，分数多在 4–6。'],
-  'CWE-798': ['硬编码凭据', 'Hard-coded Credentials', 'acc', '固件/软件里写死账号密码，任何人都能用；网络可达、无需权限，9.8 常见。'],
-  'CWE-190': ['整数溢出', 'Integer Overflow', 'mem', '整数运算回绕后得出错误的大小，进而引发内存破坏；分数跨度大，取决于是否可远程。'],
-  'CWE-77': ['命令注入', 'Command Injection', 'inj', '输入被拼进命令；与 CWE-78 很像，区别在于不一定是操作系统命令。'],
-  'CWE-639': ['越权访问对象 IDOR', 'Authorization Bypass via User-Controlled Key', 'acc', '改一个 ID 参数就能看到别人的数据；需要登录（PR:L），多为 6.5 或 8.1。'],
+  'CWE-79': ['Cross-site Scripting (XSS)', 'Cross-site Scripting', 'inj', 'The page outputs user input as HTML/JS. Common in web apps and plugins (parameters, forms). The victim usually has to open a link, so UI:R and a middling score.', ['XSS']],
+  'CWE-89': ['SQL Injection', 'SQL Injection', 'inj', 'A parameter is spliced into a database query. Almost always reachable over the network: unauthenticated SQL injection often scores 9.8, one that needs a login drops to about 8.8.', ['SQLi']],
+  'CWE-22': ['Path Traversal', 'Path Traversal', 'file', 'Uses ../ and friends to escape a directory and read or write arbitrary files. When it is mostly a read, confidentiality is high and integrity none, so scores sit around 7.5.', ['directory traversal']],
+  'CWE-78': ['OS Command Injection', 'OS Command Injection', 'inj', 'Input is spliced into a system command. Common in router and IoT admin interfaces; confidentiality, integrity and availability are all high.', ['shell injection']],
+  'CWE-352': ['Cross-Site Request Forgery (CSRF)', 'Cross-Site Request Forgery', 'web', 'Tricks a logged-in user\'s browser into sending a request. The victim has to act, so the vector almost always has UI:R.', ['CSRF']],
+  'CWE-787': ['Out-of-bounds Write', 'Out-of-bounds Write', 'mem', 'Writes past the end of a buffer. Common in C/C++ parsers and drivers; usually local or needs a malicious file, with all three impacts high.', ['OOB write']],
+  'CWE-125': ['Out-of-bounds Read', 'Out-of-bounds Read', 'mem', 'Reads past the end of a buffer. Mostly hurts confidentiality or causes a crash; integrity is usually none, so scores run lower.', ['OOB read']],
+  'CWE-416': ['Use After Free', 'Use After Free', 'mem', 'Memory is used after being freed. Common in browsers, kernels and media parsers; usually local or needs user action, with all three impacts high.', ['UAF']],
+  'CWE-476': ['NULL Pointer Dereference', 'NULL Pointer Dereference', 'mem', 'The program touches a null pointer and crashes. Impact is basically availability only (A:H), with confidentiality and integrity none, so scores are usually 5.5-7.5.', ['null pointer', 'NPD']],
+  'CWE-862': ['Missing Authorization', 'Missing Authorization', 'acc', 'A classic WordPress plugin bug: a function never checks the caller\'s permissions. Usually PR:L or PR:N, with low to medium impact.', ['broken access control']],
+  'CWE-918': ['Server-Side Request Forgery (SSRF)', 'Server-Side Request Forgery', 'web', 'Makes the server fetch internal or arbitrary addresses for the attacker. Often S:C (scope changed), with scores mostly 5-9.', ['SSRF']],
+  'CWE-434': ['Unrestricted File Upload', 'Unrestricted File Upload', 'file', 'Uploading an executable file (such as a web shell) hands over the server: 8.8 if a login is needed, 9.8 if not.', ['file upload']],
+  'CWE-502': ['Deserialization of Untrusted Data', 'Deserialization of Untrusted Data', 'file', 'Deserializing a malicious object triggers code execution. Common in Java, PHP and Python apps; usually 9.8, or 8.1 when complexity is high.', ['insecure deserialization']],
+  'CWE-287': ['Improper Authentication', 'Improper Authentication', 'acc', 'The authentication logic can be bypassed, so attackers log in without credentials. PR:N plus three highs gives 9.8 or 9.1.', ['authentication bypass']],
+  'CWE-94': ['Code Injection', 'Code Injection', 'inj', 'Input is executed as code (eval, templates, script engines). Mostly 8.8-9.8.', ['RCE']],
+  'CWE-200': ['Exposure of Sensitive Information', 'Exposure of Sensitive Information', 'res', 'Data goes to people who should not see it, which only hurts confidentiality: C:H/I:N/A:N is 7.5, C:L is 5.3.', ['information disclosure', 'info leak']],
+  'CWE-120': ['Classic Buffer Overflow', 'Classic Buffer Overflow', 'mem', 'Copies without checking length (strcpy/memcpy). Common in router firmware; 9.8 when reachable over the network, 7.8 when local.', ['buffer overflow']],
+  'CWE-400': ['Uncontrolled Resource Consumption', 'Uncontrolled Resource Consumption', 'res', 'A request can exhaust CPU, memory or disk and only affects availability: A:H alone is 7.5.', ['resource exhaustion', 'DoS']],
+  'CWE-611': ['XML External Entity (XXE)', 'XML External Entity', 'file', 'The XML parser loads external entities, reading local files or issuing SSRF. Confidentiality is mostly high.', ['XXE']],
+  'CWE-601': ['Open Redirect', 'Open Redirect', 'web', 'A site sends users to an attacker-chosen address, used for phishing. Low impact and needs a click, so scores are mostly 4-6.', ['URL redirection']],
+  'CWE-798': ['Hard-coded Credentials', 'Hard-coded Credentials', 'acc', 'A username and password baked into firmware or software that anyone can use. Network reachable with no privileges required, 9.8 is common.', ['hardcoded password']],
+  'CWE-190': ['Integer Overflow', 'Integer Overflow', 'mem', 'Integer arithmetic wraps around and yields a wrong size, leading to memory corruption. Scores vary widely, depending on whether it is remote.', ['integer wraparound']],
+  'CWE-77': ['Command Injection', 'Command Injection', 'inj', 'Input is spliced into a command. Very close to CWE-78; the difference is that it need not be an operating system command.', ['argument injection']],
+  'CWE-639': ['IDOR (User-Controlled Key)', 'Authorization Bypass via User-Controlled Key', 'acc', 'Change one ID parameter and see someone else\'s data. Needs a login (PR:L), mostly 6.5 or 8.1.', ['IDOR', 'insecure direct object reference']],
 };
-const GROUPS = { inj: '注入类', mem: '内存安全类', acc: '访问控制与认证类', web: 'Web 请求与跳转类', file: '文件与数据解析类', res: '信息泄露与资源耗尽类' };
+const GROUPS = { inj: 'Injection', mem: 'Memory safety', acc: 'Access control', web: 'Web requests', file: 'Files & parsing', res: 'Leaks & DoS' };
 
 const files = fs.readdirSync(path.join(here, 'raw')).filter((f) => f.startsWith('p-')).sort();
 if (!files.length) throw new Error('no raw pages; run fetch.mjs first');
@@ -78,6 +78,6 @@ for (const [k, all] of Object.entries(byCwe)) {
   pool.push(...[...idx].map((i) => v[i]));
 }
 pool.sort((a, b) => (a.id < b.id ? -1 : 1));
-const cwes = Object.fromEntries(Object.entries(CWES).map(([k, [zh, en, grp, tip]]) => [k, { zh, en, grp, tip }]));
+const cwes = Object.fromEntries(Object.entries(CWES).map(([k, [label, en, grp, tip, alias]]) => [k, { label, en, grp, tip, alias }]));
 fs.writeFileSync(path.join(here, '..', 'data.json'), JSON.stringify({ groups: GROUPS, cwes, puzzles: pool }));
 console.log('pool', pool.length, fs.statSync(path.join(here, '..', 'data.json')).size, 'bytes');

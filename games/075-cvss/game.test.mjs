@@ -21,12 +21,12 @@ function base(vec) {
   return roundup(Math.min(ch ? 1.08 * (imp + ex) : imp + ex, 10));
 }
 
-test('parseVector', () => { const v = parseVector('AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N'); assert.equal(v.length, 8); assert.deepEqual(v[0], ['攻击途径', '网络（远程）']); });
-test('sevOf', () => { assert.equal(sevOf(9.8), '严重'); assert.equal(sevOf(7.5), '高危'); assert.equal(sevOf(4.3), '中危'); assert.equal(sevOf(0.1), '低危'); });
+test('parseVector', () => { const v = parseVector('AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N'); assert.equal(v.length, 8); assert.deepEqual(v[0], ['Attack vector', 'Network (remote)']); });
+test('sevOf', () => { assert.equal(sevOf(9.8), 'Critical'); assert.equal(sevOf(7.5), 'High'); assert.equal(sevOf(4.3), 'Medium'); assert.equal(sevOf(0.1), 'Low'); });
 test('vectorStory is specific to the vector', () => {
-  assert.match(vectorStory('AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H', 9.8), /网络可达.*无需权限.*三项全高/);
-  assert.match(vectorStory('AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H', 7.8), /压低：只能本地利用、需要用户点击/);
-  assert.match(vectorStory('AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H', 7.5), /只有可用性一项为高/);
+  assert.match(vectorStory('AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H', 9.8), /reachable over the network.*no privileges needed.*all high/);
+  assert.match(vectorStory('AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H', 7.8), /holds down: local only, needs the user to click/);
+  assert.match(vectorStory('AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H', 7.5), /only availability is high/);
 });
 test('descCues reads wording against the vector', () => {
   const cues = descCues('An authenticated remote attacker can crash the service.', 'AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H');
@@ -50,11 +50,11 @@ test('pool: every puzzle of days 1-120 is valid', () => {
   assert.ok(Object.keys(data.cwes).length === 24);
   for (const [k, w] of Object.entries(data.cwes)) {
     assert.match(k, /^CWE-\d+$/);
-    for (const f of ['zh', 'en', 'grp', 'tip']) assert.ok(typeof w[f] === 'string' && w[f].length >= 3, k + f);
+    for (const f of ['label', 'en', 'grp', 'tip']) assert.ok(typeof w[f] === 'string' && w[f].length >= 3, k + f);
     assert.ok(data.groups[w.grp], k + ' group');
     assert.ok(RULES[k], k + ' has redaction rules');
   }
-  const labels = Object.entries(data.cwes).map(([k, w]) => `${k} ${w.zh}`);
+  const labels = Object.entries(data.cwes).map(([k, w]) => `${k} ${w.label}`);
   assert.equal(new Set(labels).size, labels.length, 'option labels distinct');
   for (let day = 1; day <= 120; day++) {
     const date = new Date(Date.UTC(2026, 9, day)).toISOString().slice(0, 10);
