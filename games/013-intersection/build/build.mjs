@@ -54,14 +54,17 @@ export function findJunctions(ways, min = 4) {
 }
 
 /** The city's name in its own language(s) — a street called "Wiener Straße" or "Москва" would give it away. */
-export const ENDONYMS = { Vienna: ['Wien'], Prague: ['Praha'], Munich: ['München', 'Muenchen'], Cologne: ['Köln'], Rome: ['Roma'], Warsaw: ['Warszawa'], Copenhagen: ['København'], Lisbon: ['Lisboa'], Moscow: ['Москва', 'Moskva'], Kyiv: ['Київ', 'Киев', 'Kiev'], Athens: ['Αθήνα', 'Αθηνών', 'Athína'], Tokyo: ['東京'], Seoul: ['서울'], Cairo: ['القاهرة'], Krakow: ['Kraków'], Gothenburg: ['Göteborg'], Antwerp: ['Antwerpen', 'Anvers'], Brussels: ['Bruxelles', 'Brussel'], Florence: ['Firenze'], Naples: ['Napoli'], Turin: ['Torino'], Milan: ['Milano'], Seville: ['Sevilla'], Porto: ['Oporto'], Frankfurt: ['Frankfurter'], Hamburg: ['Hamburger'], Belgrade: ['Beograd'], Bucharest: ['București', 'Bucuresti'], Beijing: ['北京', 'Peking'], Odesa: ['Одеса', 'Одесса', 'Odessa'], Lviv: ['Львів', 'Lwów'], Zagreb: [], Helsinki: ['Helsingfors'], Edinburgh: ['Edina'], Istanbul: ['İstanbul', 'Stamboul'], Tbilisi: ['თბილისი'], Tehran: ['تهران'], Baghdad: ['بغداد'], Beirut: ['بيروت'], Amman: ['عمان'], Tunis: ['تونس'], Algiers: ['Alger', 'الجزائر'], Casablanca: ['الدار البيضاء'], Marrakech: ['مراكش'], Riyadh: ['الرياض'], Doha: ['الدوحة'], Dubai: ['دبي'], Mumbai: ['Bombay'], Kolkata: ['Calcutta'], Chennai: ['Madras'], Bangalore: ['Bengaluru'], Yangon: ['Rangoon'], Jakarta: ['Batavia'], 'Ho Chi Minh City': ['Saigon', 'Sài Gòn'], Hanoi: ['Hà Nội'], Minsk: ['Мінск', 'Минск'], Sofia: ['София', 'София'], Skopje: ['Скопје'], 'Saint Petersburg': ['Петербург', 'Peterburg', 'Leningrad', 'Ленинград'], Tallinn: [], Riga: ['Rīga'], Vilnius: [], Bratislava: [], Ljubljana: [], Valletta: [], Nicosia: ['Λευκωσία', 'Lefkosa'], Yerevan: ['Երևան'], Baku: ['Bakı'], Tashkent: ['Toshkent', 'Ташкент'], Almaty: ['Алматы'], Ulaanbaatar: ['Улаанбаатар'], Kathmandu: ['Kantipur'] };
+export const ENDONYMS = { Vienna: ['Wien'], Prague: ['Praha'], Munich: ['München', 'Muenchen'], Cologne: ['Köln'], Rome: ['Roma'], Warsaw: ['Warszawa'], Copenhagen: ['København'], Lisbon: ['Lisboa'], Moscow: ['Москва', 'Moskva'], Kyiv: ['Київ', 'Киев', 'Kiev'], Athens: ['Αθήνα', 'Αθηνών', 'Athína'], Tokyo: ['\u6771\u4eac', '\u4e1c\u4eac'], Seoul: ['서울', '\u9996\u5c14'], Cairo: ['القاهرة'], Krakow: ['Kraków'], Gothenburg: ['Göteborg'], Antwerp: ['Antwerpen', 'Anvers'], Brussels: ['Bruxelles', 'Brussel'], Florence: ['Firenze'], Naples: ['Napoli'], Turin: ['Torino'], Milan: ['Milano'], Seville: ['Sevilla'], Porto: ['Oporto'], Frankfurt: ['Frankfurter'], Hamburg: ['Hamburger'], Belgrade: ['Beograd'], Bucharest: ['București', 'Bucuresti'], Beijing: ['\u5317\u4eac', 'Peking'], Odesa: ['Одеса', 'Одесса', 'Odessa'], Lviv: ['Львів', 'Lwów'], Zagreb: [], Helsinki: ['Helsingfors'], Edinburgh: ['Edina'], Istanbul: ['İstanbul', 'Stamboul'], Tbilisi: ['თბილისი'], Tehran: ['تهران'], Baghdad: ['بغداد'], Beirut: ['بيروت'], Amman: ['عمان'], Tunis: ['تونس'], Algiers: ['Alger', 'الجزائر'], Casablanca: ['الدار البيضاء'], Marrakech: ['مراكش'], Riyadh: ['الرياض'], Doha: ['الدوحة'], Dubai: ['دبي'], Mumbai: ['Bombay'], Kolkata: ['Calcutta'], Chennai: ['Madras'], Bangalore: ['Bengaluru'], Yangon: ['Rangoon'], Jakarta: ['Batavia'], 'Ho Chi Minh City': ['Saigon', 'Sài Gòn'], Hanoi: ['Hà Nội'], Minsk: ['Мінск', 'Минск'], Sofia: ['София', 'София'], Skopje: ['Скопје'], 'Saint Petersburg': ['Петербург', 'Peterburg', 'Leningrad', 'Ленинград'], Tallinn: [], Riga: ['Rīga'], Vilnius: [], Bratislava: [], Ljubljana: [], Valletta: [], Nicosia: ['Λευκωσία', 'Lefkosa'], Yerevan: ['Երևան'], Baku: ['Bakı'], Tashkent: ['Toshkent', 'Ташкент'], Almaty: ['Алматы'], Ulaanbaatar: ['Улаанбаатар'], Kathmandu: ['Kantipur'], 'Osaka': ['\u5927\u962a'], 'Shanghai': ['\u4e0a\u6d77'], 'Hong Kong': ['\u9999\u6e2f'], 'Taipei': ['\u53f0\u5317', '\u81fa\u5317'], 'Singapore': ['\u65b0\u52a0\u5761'], 'Kuala Lumpur': ['\u5409\u9686\u5761'], 'Kyoto': ['\u4eac\u90fd'], 'Nagoya': ['\u540d\u53e4\u5c4b'], 'Shenzhen': ['\u6df1\u5733'], 'Guangzhou': ['\u5e7f\u5dde', '\u5ee3\u5dde'], 'Chengdu': ['\u6210\u90fd'], 'Busan': ['\u91dc\u5c71'], 'Kaohsiung': ['\u9ad8\u96c4'] };
+
+/** Country names in CJK scripts (Chinese street names can spell them). */
+const COUNTRY_ENDONYMS = { JP: ['\u65e5\u672c'], CN: ['\u4e2d\u56fd', '\u4e2d\u570b'], KR: ['\u97e9\u56fd', '\u97d3\u570b'], TW: ['\u53f0\u6e7e', '\u81fa\u7063', '\u53f0\u7063'], HK: ['\u9999\u6e2f'], SG: ['\u65b0\u52a0\u5761'] };
 
 /** true when a street name spells the city or country (would give the answer away). */
 export function leaks(name, c, countryEn) {
   const f = fold(name);
   const words = [c.city, c.city.replace(/^Saint /, 'St '), countryEn].filter(Boolean).map(fold);
-  const zh = [c.zh.replace(/（.*）/, ''), c.country, ...(ENDONYMS[c.city] || [])];
-  if (zh.some((z) => z.length >= 2 && name.includes(z))) return true;
+  const endo = [...(ENDONYMS[c.city] || []), ...(COUNTRY_ENDONYMS[c.cc] || [])];
+  if (endo.some((z) => z.length >= 2 && name.includes(z))) return true;
   return words.some((w) => w.length >= 4 && f.includes(w.length > 6 ? w.slice(0, w.length - 2) : w));
 }
 
@@ -84,15 +87,16 @@ export function chooseJunction(ways, c, countryEn) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const en = new Intl.DisplayNames(['en'], { type: 'region' });
   const out = [];
-  for (const [city, zh, country, continent, cc, lat, lng] of cities) {
+  for (const [city, continent, cc, lat, lng] of cities) {
+    const country = en.of(cc);
     if (SKIP_CITIES.has(city)) continue;
     const f = `raw/${city.replace(/\W/g, '_')}.r3.json.gz`;
     if (!fs.existsSync(f)) { console.log('missing', city); continue; }
     const { R, ways } = JSON.parse(zlib.gunzipSync(fs.readFileSync(f)));
-    const best = chooseJunction(ways, { city, zh, country, lat, lng }, en.of(cc));
+    const best = chooseJunction(ways, { city, country, cc, lat, lng }, country);
     if (!best) { console.log('none', city); continue; }
     const streets = best.names.slice(0, 6).map((n) => { const e = ways.find((w) => w.n === n && w.en)?.en; return e && e !== n ? { n, en: e } : { n }; });
-    out.push({ city, zh, country, continent, cc, lat, lng, junction: [+best.lat.toFixed(5), +best.lng.toFixed(5)], streets, radius: R });
+    out.push({ city, country, continent, cc, lat, lng, junction: [+best.lat.toFixed(5), +best.lng.toFixed(5)], streets, radius: R });
     console.log(city, streets.length, streets.map((s) => s.n).join(' | '));
   }
   fs.writeFileSync('../data.json', JSON.stringify({ osmDate: new Date().toISOString().slice(0, 10), puzzles: out }));

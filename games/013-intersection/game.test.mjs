@@ -7,19 +7,19 @@ const data = JSON.parse(fs.readFileSync(new URL('./data.json', import.meta.url))
 const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 test('scripts', () => {
-  assert.deepEqual(scriptsOf(['长安街', '王府井大街']), ['汉字']);
+  assert.deepEqual(scriptsOf(['\u957f\u5b89\u8857', '\u738b\u5e9c\u4e95\u5927\u8857']), ['Han characters']);
   assert.match(scriptsOf(['Rue de Rivoli', 'Avenue de l’Opéra'])[0], /é/);
-  assert.ok(scriptsOf(['Тверская улица']).includes('西里尔字母'));
-  assert.match(scriptsOf(['Oxford Street'])[0], /无变音/);
+  assert.ok(scriptsOf(['Тверская улица']).includes('Cyrillic'));
+  assert.match(scriptsOf(['Oxford Street'])[0], /no diacritics/);
 });
 test('common word', () => {
   assert.deepEqual(commonWord(['Rue A', 'Rue B', 'Foo']), { word: 'Rue', count: 2 });
   assert.equal(commonWord(['A one', 'B two']), null);
 });
 test('patterns', () => {
-  assert.match(patternsIn(['Rue Dauphine', 'Quai de Conti'])[0].text, /法语/);
-  assert.match(patternsIn(['Torstraße'])[0].text, /德语/);
-  assert.match(patternsIn(['West 49th Street', '5th Avenue'])[0].text, /北美/);
+  assert.match(patternsIn(['Rue Dauphine', 'Quai de Conti'])[0].text, /French/);
+  assert.match(patternsIn(['Torstraße'])[0].text, /German/);
+  assert.match(patternsIn(['West 49th Street', '5th Avenue'])[0].text, /North American/);
   assert.equal(patternsIn(['Zzz']).length, 0);
 });
 test('scoring extremes', () => {
@@ -40,10 +40,10 @@ test('junctions', () => {
   assert.equal(baseKey('Sherrard Street Lower'), baseKey('Sherrard Street Upper'));
 });
 test('leak detection', () => {
-  const c = { city: 'Paris', zh: '巴黎', country: '法国' };
+  const c = { city: 'Paris', cc: 'FR', country: 'France' };
   assert.ok(leaks('Rue de Paris', c, 'France'));
   assert.ok(leaks('Avenue de France', c, 'France'));
-  assert.ok(leaks('巴黎路', c, 'France'));
+  assert.ok(leaks('\u5317\u4eac\u8def', { city: 'Beijing', cc: 'CN', country: 'China' }, 'China'));
   assert.ok(!leaks('Rue Dauphine', c, 'France'));
   const ways = [{ n: 'Rue de Paris', g: [[0, 0], [1, 1]] }, { n: 'B', g: [[0, 0], [1, 2]] }, { n: 'C', g: [[0, 0], [2, 2]] }, { n: 'D', g: [[0, 0], [3, 3]] }];
   assert.equal(chooseJunction(ways, { ...c, lat: 0, lng: 0 }, 'France'), null);
@@ -67,7 +67,7 @@ test('pool: 120 days of valid puzzles', () => {
   assert.ok(seen.size >= 40, 'too little variety');
   for (const c of data.puzzles) {
     const tag = c.city;
-    for (const k of ['city', 'zh', 'country', 'continent', 'cc']) assert.ok(typeof c[k] === 'string' && c[k].trim() && !/undefined|NaN/.test(c[k]), `${tag}.${k}`);
+    for (const k of ['city', 'country', 'continent', 'cc']) assert.ok(typeof c[k] === 'string' && c[k].trim() && !/undefined|NaN/.test(c[k]), `${tag}.${k}`);
     assert.match(c.cc, /^[A-Z]{2}$/);
     assert.ok(Math.abs(c.lat) <= 90 && Math.abs(c.lng) <= 180, `${tag} centre`);
     assert.ok(Math.abs(c.junction[0] - c.lat) < 0.04 && Math.abs(c.junction[1] - c.lng) < 0.06, `${tag} junction far from centre`);
@@ -80,9 +80,10 @@ test('pool: 120 days of valid puzzles', () => {
     }
   }
   // distinct labels in the autocomplete (an answer label that differs from the rest would be a tell)
-  const labels = data.puzzles.map((c) => c.zh);
-  assert.equal(new Set(labels).size, labels.length, 'duplicate zh labels');
+  const labels = data.puzzles.map((c) => c.city);
+  assert.equal(new Set(labels).size, labels.length, 'duplicate labels');
 });
 test('static page text has no answer', () => {
-  assert.ok(!/city|answer/i.test(game.meta.tagline));
+  const text = [game.meta.tagline, ...game.meta.howTo].join(' ');
+  for (const c of data.puzzles) assert.ok(!new RegExp(`\\b${c.city}\\b`).test(text), `static text names ${c.city}`);
 });

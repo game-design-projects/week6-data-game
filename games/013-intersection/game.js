@@ -5,15 +5,15 @@ import { haversineKm, bearingDeg, arrow, fmtKm } from '../../engine/core.js';
 export function scriptsOf(names) {
   const text = names.join('');
   const tests = [
-    ['汉字', /[一-鿿]/], ['日文假名', /[぀-ヿ]/], ['韩文', /[가-힯]/], ['西里尔字母', /[Ѐ-ӿ]/],
-    ['阿拉伯字母', /[؀-ۿ]/], ['希腊字母', /[Ͱ-Ͽ]/], ['希伯来字母', /[֐-׿]/], ['泰文', /[฀-๿]/],
-    ['天城文', /[ऀ-ॿ]/], ['孟加拉文', /[ঀ-৿]/], ['格鲁吉亚字母', /[Ⴀ-ჿ]/], ['亚美尼亚字母', /[԰-֏]/],
-    ['僧伽罗文', /[඀-෿]/], ['缅甸文', /[က-႟]/], ['高棉文', /[ក-៿]/], ['蒙古文', /[᠀-᢯]/],
+    ['Han characters', /[\u4e00-\u9fff]/], ['Japanese kana', /[぀-ヿ]/], ['Hangul', /[가-힯]/], ['Cyrillic', /[Ѐ-ӿ]/],
+    ['Arabic', /[؀-ۿ]/], ['Greek', /[Ͱ-Ͽ]/], ['Hebrew', /[֐-׿]/], ['Thai', /[฀-๿]/],
+    ['Devanagari', /[ऀ-ॿ]/], ['Bengali', /[ঀ-৿]/], ['Georgian', /[Ⴀ-ჿ]/], ['Armenian', /[԰-֏]/],
+    ['Sinhala', /[඀-෿]/], ['Burmese', /[က-႟]/], ['Khmer', /[ក-៿]/], ['Mongolian', /[᠀-᢯]/],
   ];
   const found = tests.filter(([, re]) => re.test(text)).map(([n]) => n);
   if (/[A-Za-z]/.test(text)) {
     const marks = [...new Set(text.normalize('NFC').match(/[^\u0000-\u007f]/g) || [])].filter((c) => /\p{L}/u.test(c) && /[À-ɏ]/.test(c));
-    found.unshift(marks.length ? `拉丁字母（含 ${marks.slice(0, 6).join(' ')}）` : '拉丁字母（无变音符号）');
+    found.unshift(marks.length ? `Latin (with ${marks.slice(0, 6).join(' ')})` : 'Latin (no diacritics)');
   }
   return found;
 }
@@ -26,33 +26,33 @@ export function commonWord(names) {
   return best ? { word: best[0], count: best[1] } : null;
 }
 
-/** Naming conventions that point to a language family / region. [regex, 说明] */
+/** Naming conventions that point to a language family / region. [regex, explanation] */
 export const PATTERNS = [
-  [/\b(Rue|Quai|Impasse|Chemin|Allée)\b/i, '“Rue / Quai / Impasse” 是法语街名'],
-  [/(straße|strasse|str\.|\bgasse\b|platz\b|\bweg\b|\bufer\b|damm\b)/i, '“-straße / -gasse / -platz” 是德语街名'],
-  [/\b(Calle|Avenida|Paseo|Plaza|Carrer|Plaça|Ronda|Travesía|Jirón|Carrera|Transversal|Calzada)\b/i, '“Calle / Carrer / Avenida” 是西语（或加泰罗尼亚语）街名'],
-  [/\b(Rua|Praça|Travessa|Largo|Calçada)\b|\bAvenida\b.*[ãçõ]/i, '“Rua / Praça / Calçada” 是葡语街名'],
-  [/\b(Via|Viale|Piazza|Corso|Vicolo)\b/i, '“Via / Corso / Piazza” 是意大利语街名'],
-  [/\b(Strada|Bulevardul|Calea|Șoseaua)\b/i, '“Strada / Bulevardul” 是罗马尼亚语街名'],
-  [/(gatan|gata\b|gate\b|gade\b|vägen|vej\b|veien|torg\b)/i, '“-gatan / -gata / -gade” 是北欧语言街名'],
-  [/(katu\b|tie\b|kuja\b)/i, '“-katu / -tie” 是芬兰语街名'],
-  [/(straat|laan\b|plein\b|gracht\b|kade\b)/i, '“-straat / -plein / -gracht” 是荷兰语街名'],
-  [/\b(utca|tér|körút|lépcső)\b/i, '“utca / tér” 是匈牙利语街名'],
-  [/(ulica|ul\.|aleja|plac\b|aleje)/i, '“ulica / aleja / plac” 是波兰语街名'],
-  [/\b(ulice|náměstí|nábřeží|třída)\b|^U\s/i, '“ulice / náměstí” 是捷克语街名'],
-  [/\b(улица|площадь|проспект|переулок|бульвар|вулиця|площа)\b/i, '“улица / площадь / вулиця” 是俄语或乌克兰语街名'],
-  [/(sokağı|sokak|caddesi|cad\.)/i, '“Sokağı / Caddesi” 是土耳其语街名'],
-  [/\b(Jalan|Lorong|Lebuh)\b/i, '“Jalan” 是马来语 / 印尼语的“路”'],
-  [/\b(Phố|Đường|Ngõ)\b/i, '“Phố / Đường” 是越南语的“街 / 路”'],
-  [/^ถนน|ซอย/, '“ถนน / ซอย” 是泰语的“路 / 巷”'],
-  [/(通り|道路|国道|駅前)/, '“通り / 国道” 是日语街名'],
-  [/[가-힣]+(로|길)\b/, '“-로 / -길” 是韩国的道路命名制度'],
-  [/(胡同|大街|路|街|巷)/, '“路 / 街 / 巷 / 胡同” 是中文街名'],
-  [/(شارع|طريق)/, '“شارع” 是阿拉伯语的“街”'],
-  [/(ქუჩა|გამზირი)/, '“ქუჩა” 是格鲁吉亚语的“街”'],
-  [/(רחוב|שדרות)/, '“שדרות / רחוב” 是希伯来语的“大道 / 街”'],
-  [/\b\d+(st|nd|rd|th)\b.*\b(Street|Avenue)\b|\b(North|South|East|West)\w*\b.*\b(Street|Avenue)\b/i, '数字街 + 方位词（North / West…）是北美网格城市的命名习惯'],
-  [/\b(Street|Road|Lane|Crescent|Terrace|Close|Parade|Place|Way)\b/i, '“Street / Road / Crescent / Close” 是英语街名（英国、爱尔兰、澳新、南非、东非等英联邦国家常见）'],
+  [/\b(Rue|Quai|Impasse|Chemin|Allée)\b/i, '“Rue / Quai / Impasse” are French street names'],
+  [/(straße|strasse|str\.|\bgasse\b|platz\b|\bweg\b|\bufer\b|damm\b)/i, '“-straße / -gasse / -platz” are German street names'],
+  [/\b(Calle|Avenida|Paseo|Plaza|Carrer|Plaça|Ronda|Travesía|Jirón|Carrera|Transversal|Calzada)\b/i, '“Calle / Carrer / Avenida” are Spanish (or Catalan) street names'],
+  [/\b(Rua|Praça|Travessa|Largo|Calçada)\b|\bAvenida\b.*[ãçõ]/i, '“Rua / Praça / Calçada” are Portuguese street names'],
+  [/\b(Via|Viale|Piazza|Corso|Vicolo)\b/i, '“Via / Corso / Piazza” are Italian street names'],
+  [/\b(Strada|Bulevardul|Calea|Șoseaua)\b/i, '“Strada / Bulevardul” are Romanian street names'],
+  [/(gatan|gata\b|gate\b|gade\b|vägen|vej\b|veien|torg\b)/i, '“-gatan / -gata / -gade” are Nordic street names'],
+  [/(katu\b|tie\b|kuja\b)/i, '“-katu / -tie” are Finnish street names'],
+  [/(straat|laan\b|plein\b|gracht\b|kade\b)/i, '“-straat / -plein / -gracht” are Dutch street names'],
+  [/\b(utca|tér|körút|lépcső)\b/i, '“utca / tér” are Hungarian street names'],
+  [/(ulica|ul\.|aleja|plac\b|aleje)/i, '“ulica / aleja / plac” are Polish street names'],
+  [/\b(ulice|náměstí|nábřeží|třída)\b|^U\s/i, '“ulice / náměstí” are Czech street names'],
+  [/\b(улица|площадь|проспект|переулок|бульвар|вулиця|площа)\b/i, '“улица / площадь / вулиця” are Russian or Ukrainian street names'],
+  [/(sokağı|sokak|caddesi|cad\.)/i, '“Sokağı / Caddesi” are Turkish street names'],
+  [/\b(Jalan|Lorong|Lebuh)\b/i, '“Jalan” is the Malay / Indonesian word for road'],
+  [/\b(Phố|Đường|Ngõ)\b/i, '“Phố / Đường” are Vietnamese for street / road'],
+  [/^ถนน|ซอย/, '“ถนน / ซอย” are Thai for road / lane'],
+  [/(\u901aり|\u9053\u8def|\u56fd\u9053|\u99c5\u524d)/, '“\u901aり / \u56fd\u9053” are Japanese street names'],
+  [/[가-힣]+(로|길)\b/, '“-로 / -길” come from the Korean road-naming system'],
+  [/(\u80e1\u540c|\u5927\u8857|\u8def|\u8857|\u5df7)/, '“\u8def / \u8857 / \u5df7 / \u80e1\u540c” are Chinese street names'],
+  [/(شارع|طريق)/, '“شارع” is Arabic for street'],
+  [/(ქუჩა|გამზირი)/, '“ქუჩა” is Georgian for street'],
+  [/(רחוב|שדרות)/, '“שדרות / רחוב” are Hebrew for boulevard / street'],
+  [/\b\d+(st|nd|rd|th)\b.*\b(Street|Avenue)\b|\b(North|South|East|West)\w*\b.*\b(Street|Avenue)\b/i, 'Numbered streets plus compass words (North / West…) are the habit of North American grid cities'],
+  [/\b(Street|Road|Lane|Crescent|Terrace|Close|Parade|Place|Way)\b/i, '“Street / Road / Crescent / Close” are English street names (common in the UK, Ireland, Australia, New Zealand, South Africa, East Africa and other Commonwealth countries)'],
 ];
 
 /** Which naming conventions show up in these names (specific to this puzzle). */
@@ -73,21 +73,21 @@ export default {
     num: 13,
     slug: 'intersection',
     title: 'Intersection',
-    tagline: '几条街道在同一个路口交汇。只凭街道名，猜这是世界上哪座城市。',
+    tagline: 'Several streets meet at one junction. From the street names alone, name the city.',
     category: 'geo',
     data: 'snapshot',
     howTo: [
-      '给你 OpenStreetMap 上某个真实路口交汇的街道名（3 到 6 条，能凑 5 条以上的路口优先）。',
-      '从列表里选一座城市来猜，最多 6 次。每猜错一次，多解锁一条线索：文字系统、大洲、国家、首字母……',
-      '每次猜测会告诉你那座城市离答案多远、在哪个方向——用它缩小范围。',
-      '提示：Rue、Straße、Calle、通り、路……命名习惯、变音符号、纪念人物的名字，都是线索。',
-      '计分：第 1 次猜中 100 分，之后每多用一次少约 17 分，6 次都没猜中 0 分。',
+      'You get the names of streets that meet at one real OpenStreetMap junction (3 to 6 of them; junctions with 5 or more are preferred).',
+      'Pick a city from the list. You have 6 guesses, and every miss unlocks another clue: writing system, continent, country, first letter…',
+      'Each guess tells you how far that city is from the answer, and in which direction. Use it to narrow things down.',
+      'Tips: Rue, Straße, Calle, \u901aり, \u8def… naming habits, diacritics and the names of people honored on street signs are all clues.',
+      'Scoring: 100 points for a first-try hit, about 17 fewer for each extra guess, and 0 if you miss all six.',
     ],
-    scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分，6 次都没猜中 0 分。',
+    scoring: '100 points for a first-try hit, about 17 fewer for each extra guess, 0 if you miss all six.',
     sources: [
-      { name: 'OpenStreetMap（Overpass API）', url: 'https://overpass-api.de/', note: '© OpenStreetMap contributors, ODbL。取每座城市中心 3 km 半径内的已命名道路。' },
+      { name: 'OpenStreetMap (Overpass API)', url: 'https://overpass-api.de/', note: '© OpenStreetMap contributors, ODbL. Named roads within 3 km of each city center.' },
     ],
-    dataNote: '数据为 OpenStreetMap 的快照，不是实时数据：当天的谜题由日期决定，跟地图是否更新无关。城市中心坐标为手工选取的近似值；路口是中心 3 km 范围内同时交汇街道名最多的节点（尽量 5 条以上，部分城市只有 3–4 条），并排除街名里直接写出城市名或国家名的路口，因此不一定是最著名的路口。不含步行道、小径和停车场道路。街名为 OSM 当地原文，不翻译。',
+    dataNote: 'A snapshot of OpenStreetMap, not live data: each day\'s puzzle is set by the date, whether or not the map has changed. City centers are hand-picked approximations. The junction is the node within 3 km of the center where the most differently named streets meet (5 or more where possible; a few cities only have 3 or 4). Junctions whose street names spell out the city or country are excluded, so it is not necessarily the best-known intersection. Footpaths, trails and parking aisles are left out. Street names are the local OSM originals, untranslated.',
   },
 
   puzzle({ data, pick }) {
@@ -109,19 +109,19 @@ export default {
       ans.streets.map((s, i) => ui.h('div', { class: 'ds-row', style: { gap: '10px', alignItems: 'baseline' } },
         ui.h('span', { class: 'mono muted small' }, String(i + 1)),
         ui.h('span', { style: { fontSize: '1.1rem', fontWeight: 600, overflowWrap: 'anywhere' } }, s.n))));
-    ctx.stage.append(ui.panel({ kicker: '同一个路口 · 来自 OpenStreetMap', title: `${ans.streets.length} 条街道在这里交汇` }, streetList));
+    ctx.stage.append(ui.panel({ kicker: 'One junction · from OpenStreetMap', title: `${ans.streets.length} streets meet here` }, streetList));
 
     const clues = [
-      `一共 ${ans.streets.length} 条街道，名字原样取自当地地图。`,
-      `文字系统：${scripts.join('、') || '未知'}。${cw ? `其中 ${cw.count} 条街名都带 “${cw.word}”。` : ''}`,
-      `这座城市在 ${ans.continent}。`,
-      `这座城市在 ${ans.country}。`,
-      `城市英文名以 “${ans.city[0]}” 开头，共 ${ans.city.length} 个字母。`,
+      `${ans.streets.length} streets in all, with names exactly as they appear on the local map.`,
+      `Writing system: ${scripts.join(', ') || 'unknown'}.${cw ? ` ${cw.count} of the names contain “${cw.word}”.` : ''}`,
+      `The city is in ${ans.continent}.`,
+      `The city is in ${ans.country}.`,
+      `The city name starts with “${ans.city[0]}” and has ${ans.city.length} letters.`,
     ];
-    const options = all.map((c) => ({ id: c.city, label: c.zh, hint: `${c.city} · ${c.country}`, aliases: [c.city, c.country, c.cc] }));
+    const options = all.map((c) => ({ id: c.city, label: c.city, hint: c.country, aliases: [c.country, c.cc, ...(c.city.startsWith('Saint ') ? ['St ' + c.city.slice(6)] : [])] }));
     const res = await ctx.guess({
-      options, answer: ans.city, maxGuesses: 6, title: '这是哪座城市？', placeholder: '输入城市名（中文或英文）…',
-      clues, cluesTitle: '线索', columns: ['距离', '方向'],
+      options, answer: ans.city, maxGuesses: 6, title: 'Which city is this?', placeholder: 'Type a city, e.g. Lima…',
+      clues, cluesTitle: 'Clues', columns: ['Distance', 'Direction'],
       scoring: (n, won) => scoreFor(n, won),
       near: (g, a) => haversineKm(byId.get(g.id), byId.get(a.id)) < 1000,
       feedback: (g) => {
@@ -135,9 +135,9 @@ export default {
 
     const pats = patternsIn(names);
     const why = ui.h('ul', { style: { margin: 0, paddingLeft: '1.1em' } }, [
-      ui.h('li', null, `文字系统：${scripts.join('、')}${cw ? `；${cw.count} 条街名共用 “${cw.word}”` : ''}。`),
-      ...pats.map((x) => ui.h('li', null, `${x.text}：${x.hit.slice(0, 3).join('、')}`)),
-      ui.h('li', null, `这个路口在 ${ans.city} 市中心约 ${fmtKm(haversineKm({ lat: ans.junction[0], lng: ans.junction[1] }, ans))} 外，共 ${ans.streets.length} 条街道交汇。`),
+      ui.h('li', null, `Writing system: ${scripts.join(', ')}${cw ? `; ${cw.count} names share “${cw.word}”` : ''}.`),
+      ...pats.map((x) => ui.h('li', null, `${x.text}: ${x.hit.slice(0, 3).join(', ')}`)),
+      ui.h('li', null, `This junction is about ${fmtKm(haversineKm({ lat: ans.junction[0], lng: ans.junction[1] }, ans))} from the center of ${ans.city}, where ${ans.streets.length} streets meet.`),
     ]);
     let mapEl = null;
     try {
@@ -147,13 +147,13 @@ export default {
     } catch (e) { ctx.log.warn('map failed', String(e)); }
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.kv([
-        ['答案', `${ans.zh}（${ans.city}），${ans.country}`],
-        ['路口坐标', `${ans.junction[0]}, ${ans.junction[1]}`],
-        ['地图', ui.h('a', { href: `https://www.openstreetmap.org/?mlat=${ans.junction[0]}&mlon=${ans.junction[1]}#map=18/${ans.junction[0]}/${ans.junction[1]}`, target: '_blank', rel: 'noopener' }, '在 OpenStreetMap 上查看')],
-        ['线索在哪', why],
+        ['Answer', `${ans.city}, ${ans.country}`],
+        ['Junction', `${ans.junction[0]}, ${ans.junction[1]}`],
+        ['Map', ui.h('a', { href: `https://www.openstreetmap.org/?mlat=${ans.junction[0]}&mlon=${ans.junction[1]}#map=18/${ans.junction[0]}/${ans.junction[1]}`, target: '_blank', rel: 'noopener' }, 'View on OpenStreetMap')],
+        ['What gave it away', why],
       ]),
       mapEl,
-      ui.table({ columns: [{ key: 'n', label: '街道名（原文）' }, { key: 'en', label: '英文名（OSM name:en）' }], rows: ans.streets.map((s) => ({ n: s.n, en: s.en || '—' })) }));
+      ui.table({ columns: [{ key: 'n', label: 'Street name (original)' }, { key: 'en', label: 'English name (OSM name:en)' }], rows: ans.streets.map((s) => ({ n: s.n, en: s.en || '—' })) }));
     return res;
   },
 };
