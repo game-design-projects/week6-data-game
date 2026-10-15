@@ -17,18 +17,18 @@ export default {
     num: 81,
     slug: 'stack-trace',
     title: 'Stack Trace',
-    tagline: 'GitHub issue 里贴出的真实报错堆栈：猜它是什么语言，又踩在哪个框架或库上。',
+    tagline: 'Real error stacks pasted into GitHub issues: guess the language, and which framework or library it tripped over.',
     category: 'tech',
     data: 'snapshot',
     howTo: [
-      '每天 3 段从真实 GitHub issue 里摘出来的报错堆栈（长堆栈已折叠中间部分，横向可滚动）。',
-      '每段回答两题：这是哪种语言？堆栈里出现的是哪个框架 / 库？库的选项里只有一个真的出现在这段堆栈里。',
-      '线索全在帧的写法里：路径分隔符、文件后缀、包名前缀、方法命名风格。',
-      '每答对一题得 1 分，共 6 分；全凭瞎蒙平均只有约 1.5 分。',
+      'Each day brings 3 error stacks lifted from real GitHub issues (long stacks have their middle folded away, and scroll sideways).',
+      'Each one asks two questions: which language is this, and which framework or library appears in the stack? Only one of the library options really shows up in the trace.',
+      'The clues are all in how the frames are written: path separators, file extensions, package prefixes and method naming style.',
+      'Each correct answer is 1 point, 6 in all. Pure guessing averages only about 1.5.',
     ],
-    scoring: '答对 1 题 1 分，满分 6。',
-    sources: [{ name: 'GitHub Search API（issues）', url: 'https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests' }],
-    dataNote: '堆栈取自公开 GitHub issue 的代码块（2026-10-14 抓取的快照，约 120 段，9 种语言）。语言与库由堆栈本身的特征（文件后缀、包名、site-packages / node_modules 路径等）规则判定，不是 issue 作者的标注；超过 18 行的堆栈折叠了中间帧。未做成实时：GitHub 搜索 API 虽然允许跨域，但未登录时每分钟只有 10 次请求，结果还会随索引更新而变，没法保证所有玩家拿到同一道题，所以用快照。',
+    scoring: '1 point per correct answer, 6 at most.',
+    sources: [{ name: 'GitHub Search API (issues)', url: 'https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests' }],
+    dataNote: 'Stacks come from code blocks in public GitHub issues (a snapshot taken 2026-10-14, about 120 stacks across 9 languages). Language and library are decided by rules from features of the stack itself (file extensions, package names, site-packages / node_modules paths and so on), not by the issue author\'s labels, and stacks longer than 18 lines have their middle frames folded. It is not live: the GitHub search API allows cross-origin calls, but unauthenticated it allows only 10 requests a minute and its results shift as the index updates, so it cannot guarantee that every player gets the same puzzle. Two issues written in Chinese have their title or log line translated.',
   },
 
   puzzle({ data, rng, pick }) {
@@ -48,32 +48,32 @@ export default {
     rs.forEach((r, i) => {
       const body = ui.code(r.t.trace);
       body.style.maxHeight = '22em'; body.style.overflowY = 'auto';
-      const again = ui.h('details', { class: 'small' }, ui.h('summary', { style: { cursor: 'pointer', padding: '6px 0' } }, `再看一眼第 ${i + 1} 段堆栈`), ui.code(r.t.trace));
+      const again = ui.h('details', { class: 'small' }, ui.h('summary', { style: { cursor: 'pointer', padding: '6px 0' } }, `Look at stack ${i + 1} again`), ui.code(r.t.trace));
       again.lastChild.style.maxHeight = '16em'; again.lastChild.style.overflowY = 'auto';
       rounds.push({
-        prompt: `第 ${i + 1} 段：这是哪种语言的堆栈？`,
+        prompt: `Stack ${i + 1}: which language is this?`,
         body,
         options: r.lopts.map((l) => ({ label: data.langNames[l] })),
         correct: r.lopts.indexOf(r.t.lang),
-        explain: `${data.langNames[r.t.lang]}。线索：${r.t.langHint}`,
+        explain: `${data.langNames[r.t.lang]}. Clue: ${r.t.langHint}`,
       });
       rounds.push({
-        prompt: `第 ${i + 1} 段：下面哪个框架 / 库出现在这段堆栈里？`,
+        prompt: `Stack ${i + 1}: which framework or library appears in this stack?`,
         body: again,
         options: r.bopts.map((l) => ({ label: l })),
         correct: r.bopts.indexOf(r.lib),
-        explain: `${r.lib}。线索：${r.t.libHint}` + (r.t.libs.length > 1 ? `（本段还出现：${r.t.libs.slice(1).join('、')}）` : ''),
+        explain: `${r.lib}. Clue: ${r.t.libHint}` + (r.t.libs.length > 1 ? ` (also in this stack: ${r.t.libs.slice(1).join(', ')})` : ''),
       });
     });
-    const res = await ctx.rounds({ rounds, title: '读堆栈，认出它的出处', minWidth: 150 });
+    const res = await ctx.rounds({ rounds, title: 'Read the stack, name its source', minWidth: 150 });
     res.detail = ui.h('div', { class: 'ds-stack' },
       ...rs.map((r, i) => ui.h('div', { class: 'small' },
-        ui.h('div', ui.h('b', `第 ${i + 1} 段 · ${data.langNames[r.t.lang]} · ${r.lib}`), ' — ',
+        ui.h('div', ui.h('b', `Stack ${i + 1} · ${data.langNames[r.t.lang]} · ${r.lib}`), ' — ',
           ui.h('a', { href: `https://github.com/${r.t.repo}/issues/${r.t.n}`, target: '_blank', rel: 'noopener' }, `${r.t.repo}#${r.t.n}`)),
         ui.h('div', { class: 'muted' }, r.t.title),
-        ui.h('div', ui.h('span', { class: 'muted' }, '语言线索：'), ui.h('code', r.t.langHint)),
-        ui.h('div', ui.h('span', { class: 'muted' }, '库线索：'), ui.h('code', r.t.libHint)))),
-      ui.callout('通用口诀：Python 的 File "…", line N；Java / Kotlin 的 at 包名.类(File.java:N / .kt:N)；JS 的 node_modules 路径；Go 的 goroutine；PHP 的 #0 开头；Ruby 的 in `方法`；C# 的 .cs:line N；Rust 的 panicked at …rs。', 'good'));
+        ui.h('div', ui.h('span', { class: 'muted' }, 'Language clue: '), ui.h('code', r.t.langHint)),
+        ui.h('div', ui.h('span', { class: 'muted' }, 'Library clue: '), ui.h('code', r.t.libHint)))),
+      ui.callout('Rules of thumb: Python has File "…", line N; Java / Kotlin have at package.Class(File.java:N / .kt:N); JS has node_modules paths; Go has goroutine; PHP lines start with #0; Ruby has in `method`; C# has .cs:line N; Rust has panicked at …rs.', 'good'));
     return res;
   },
 };
