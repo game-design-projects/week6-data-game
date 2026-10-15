@@ -10,10 +10,10 @@ export function dir(guess, answer, tol = 0) {
 
 /** Short description of the shape of a pyramid from its summary stats. */
 export function shapeOf(c) {
-  if (c.med < 20) return '底部极宽、顶部很尖的“真金字塔”：几乎一半人口是孩子，高出生率、人均寿命较短。';
-  if (c.med < 30) return '底部仍然偏宽的年轻型结构：出生率较高，但已经开始放缓。';
-  if (c.med < 40) return '接近柱形的成熟型结构：出生率下降，劳动年龄人口占大头。';
-  return '“倒置”的老龄型结构：底部收窄、顶部变胖，少子老龄化明显。';
+  if (c.med < 20) return 'A true pyramid, very wide at the base and sharp at the top: nearly half the population are children, with high birth rates and shorter lives.';
+  if (c.med < 30) return 'A still-young, bottom-heavy structure: birth rates are fairly high but starting to slow.';
+  if (c.med < 40) return 'A maturing, column-like structure: falling birth rates and a large working-age majority.';
+  return 'An inverted, aging structure: a narrowing base and a fattening top, with few children and many elders.';
 }
 
 const band = (c, i) => c.f[i] + c.m[i];
@@ -29,24 +29,24 @@ export function shapeDist(a, b) {
 export function patterns(c, ages) {
   const out = [];
   const base = band(c, 0), mid = band(c, 5);
-  out.push(`0–4 岁占 ${base.toFixed(1)}%，25–29 岁占 ${mid.toFixed(1)}%：底部是腰部的 ${(base / mid).toFixed(2)} 倍${base / mid > 1.25 ? '（还在高速扩张）' : base / mid < 0.8 ? '（新生儿比青年少，生育率低于更替水平）' : '（出生数大致稳定）'}。`);
+  out.push(`Ages 0–4 make up ${base.toFixed(1)}% and ages 25–29 make up ${mid.toFixed(1)}%: the base is ${(base / mid).toFixed(2)}x the waist${base / mid > 1.25 ? ' (still expanding fast)' : base / mid < 0.8 ? ' (fewer newborns than young adults, so fertility is below replacement)' : ' (births are roughly stable)'}.`);
   const mw = c.m.slice(4, 11).reduce((a, b) => a + b, 0), fw = c.f.slice(4, 11).reduce((a, b) => a + b, 0);
-  if (mw / fw > 1.12) out.push(`20–54 岁男女比约 ${(mw / fw).toFixed(2)}：男性明显偏多，通常是外来劳工大量流入。`);
-  else if (mw / fw < 0.95) out.push(`20–54 岁男女比仅 ${(mw / fw).toFixed(2)}：女性偏多，常见于男性外出务工或早逝较多的国家。`);
+  if (mw / fw > 1.12) out.push(`The male-to-female ratio at ages 20–54 is about ${(mw / fw).toFixed(2)}: clearly more men, usually a sign of large-scale migrant labor.`);
+  else if (mw / fw < 0.95) out.push(`The male-to-female ratio at ages 20–54 is only ${(mw / fw).toFixed(2)}: more women, common where men work abroad or die earlier.`);
   const old = c.f[16] + c.m[16];
-  if (old >= 3.5) out.push(`80 岁以上占 ${old.toFixed(1)}%，顶端明显偏胖，长寿 + 少子的老龄化社会。`);
-  else if (old <= 0.5) out.push(`80 岁以上不到 ${Math.max(old, 0.1).toFixed(1)}%，顶端几乎消失，说明预期寿命较短、人口很年轻。`);
+  if (old >= 3.5) out.push(`Ages 80+ make up ${old.toFixed(1)}%, a clearly fat top: a long-lived, low-birth, aging society.`);
+  else if (old <= 0.5) out.push(`Ages 80+ are under ${Math.max(old, 0.1).toFixed(1)}%, so the top nearly vanishes: shorter life expectancy and a very young population.`);
   let peak = 0;
   for (let i = 1; i < 17; i++) if (band(c, i) > band(c, peak)) peak = i;
-  if (peak >= 3) out.push(`最宽的一档是 ${ages[peak]} 岁（${band(c, peak).toFixed(1)}%），比最年轻的一档还宽：人口红利/“婴儿潮”世代正在这个年龄段。`);
+  if (peak >= 3) out.push(`The widest band is ages ${ages[peak]} (${band(c, peak).toFixed(1)}%), wider than the youngest band: a baby-boom generation sits at this age.`);
   let worst = null;
   for (let i = 1; i < 14; i++) {
     const r = band(c, i) / ((band(c, i - 1) + band(c, i + 1)) / 2);
     if (r < 0.85 && (!worst || r < worst.r)) worst = { i, r };
   }
-  if (worst) out.push(`${ages[worst.i]} 岁这一档明显凹下去（只有相邻两档均值的 ${Math.round(worst.r * 100)}%）：出生低谷或人口外流留下的“缺口”。`);
+  if (worst) out.push(`Ages ${ages[worst.i]} dip sharply (only ${Math.round(worst.r * 100)}% of the average of the neighboring bands): a gap left by a birth slump or emigration.`);
   const dep = ((c.u15 + c.o65) / (100 - c.u15 - c.o65)) * 100;
-  out.push(`抚养比（15 岁以下 + 65 岁以上 对 15–64 岁）约 ${Math.round(dep)}%，其中少儿 ${c.u15}%、老人 ${c.o65}%。`);
+  out.push(`Dependency ratio (under 15 plus 65+, relative to ages 15–64) is about ${Math.round(dep)}%, with children at ${c.u15}% and elders at ${c.o65}%.`);
   return out;
 }
 
@@ -55,21 +55,21 @@ export default {
     num: 67,
     slug: 'pyramid',
     title: 'Pyramid',
-    tagline: '一张人口金字塔，猜是哪个国家。',
+    tagline: 'Read the population pyramid. Name the country.',
     category: 'society',
     data: 'snapshot',
     howTo: [
-      '图里是某个国家 2024 年按年龄和性别划分的人口金字塔（左男右女，横轴为占总人口的百分比）。',
-      '从列表里选国家来猜，最多 6 次。每猜错一次多解锁一条线索。',
-      '每次猜测会告诉你：答案的中位年龄比你猜的高还是低、人口更多还是更少、是否同一地区、两国相距多远（点位为首都附近）。',
-      '提示：底部宽 = 年轻、高生育；腰身细 = 人口外流或历史创伤；顶部胖 = 老龄化；男多女少的中段往往是外来劳工。',
+      'The chart is one country\'s 2024 population pyramid by age and sex (men on the left, women on the right, as a percentage of the total population).',
+      'Pick countries from the list, up to 6 guesses. Each wrong guess unlocks another clue.',
+      'Each guess tells you whether the answer\'s median age is higher or lower, whether its population is bigger or smaller, whether it is in the same region, and how far apart the two countries are (measured between capitals).',
+      'Tips: a wide base means young and high fertility; a thin waist means emigration or historical trauma; a fat top means aging; a male-heavy middle often means migrant workers.',
     ],
-    scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分，6 次都没猜中 0 分。',
+    scoring: '100 points for a correct first guess, about 17 fewer for each extra guess, and 0 if all 6 miss.',
     sources: [
-      { name: 'World Bank Open Data（SP.POP.*.FE/MA，来自 UN World Population Prospects）', url: 'https://data.worldbank.org/indicator/SP.POP.TOTL' },
+      { name: 'World Bank Open Data (SP.POP.*.FE/MA, from UN World Population Prospects)', url: 'https://data.worldbank.org/indicator/SP.POP.TOTL' },
       { name: 'UN World Population Prospects', url: 'https://population.un.org/wpp/' },
     ],
-    dataNote: '联合国 WPP 官网为大文件下载，这里使用世界银行 API 镜像的同一套 WPP 年龄/性别人口数据（2024 年估计，5 岁一组，80+ 合并），中位年龄由 5 岁分组线性插值得出（80+ 按 80–90 岁计）。收录人口超过 100 万的国家和地区（含中国香港、波多黎各），共 159 个。世界银行 API 无需密钥但未开放 CORS 保证，因此以快照形式提供。',
+    dataNote: 'The UN WPP site only offers large file downloads, so this uses the same WPP age/sex population data mirrored by the World Bank API (2024 estimates, 5-year bands, 80+ merged). Median age is linearly interpolated from the 5-year bands (80+ counted as 80–90). Includes 159 countries and territories with over 1 million people (including Hong Kong and Puerto Rico). The World Bank API needs no key but makes no CORS guarantee, so the data ships as a snapshot.',
   },
 
   puzzle({ data, pick }) {
@@ -86,7 +86,7 @@ export default {
     const c0 = ui.colors();
     const bars = [];
     ages.forEach((a, i) => {
-      bars.push({ age: a, sex: '男', v: -ans.m[i] }, { age: a, sex: '女', v: ans.f[i] });
+      bars.push({ age: a, sex: 'Men', v: -ans.m[i] }, { age: a, sex: 'Women', v: ans.f[i] });
     });
     const maxV = Math.ceil(Math.max(...ans.f, ...ans.m) * 1.1);
     const lum = (hex) => { const m = /^#?([0-9a-f]{6})/i.exec(String(hex).trim()); return m ? parseInt(m[1].slice(0, 2), 16) * 0.3 + parseInt(m[1].slice(2, 4), 16) * 0.6 + parseInt(m[1].slice(4), 16) * 0.1 : 0; };
@@ -94,37 +94,37 @@ export default {
     const pyramid = await ui.plot((Plot, c) => ({
       height: 340,
       marginLeft: 44,
-      x: { label: '占总人口 %', domain: [-maxV, maxV], tickFormat: (d) => Math.abs(d) },
+      x: { label: '% of total population', domain: [-maxV, maxV], tickFormat: (d) => Math.abs(d) },
       y: { label: null, domain: ages, reverse: false },
       marks: [
-        Plot.barX(bars, { x: 'v', y: 'age', fill: (d) => (d.sex === '男' ? maleColor : c.accent), title: (d) => `${d.age} 岁 ${d.sex} ${Math.abs(d.v)}%` }),
+        Plot.barX(bars, { x: 'v', y: 'age', fill: (d) => (d.sex === 'Men' ? maleColor : c.accent), title: (d) => `Ages ${d.age}, ${d.sex}: ${Math.abs(d.v)}%` }),
         Plot.ruleX([0], { stroke: c.ink }),
       ],
     }));
 
     const legend = ui.h('div', { class: 'ds-row small mono ink2', style: { gap: '14px', marginTop: '6px' } },
-      ui.h('span', ui.h('span', { style: { color: maleColor } }, '■'), ' 男（左）'),
-      ui.h('span', ui.h('span', { style: { color: 'var(--accent)' } }, '■'), ' 女（右）'));
+      ui.h('span', ui.h('span', { style: { color: maleColor } }, '■'), ' Men (left)'),
+      ui.h('span', ui.h('span', { style: { color: 'var(--accent)' } }, '■'), ' Women (right)'));
 
     const clues = [
       ui.h('div', pyramid, legend),
-      `0–14 岁占 ${ans.u15}%，65 岁以上占 ${ans.o65}%，女性占 ${ans.fshare}%。`,
-      `中位年龄约 ${ans.med} 岁。${shapeOf(ans)}`,
-      `世界银行的收入分组：${ans.income}。`,
-      `所在地区：${ans.region}。总人口约 ${fmtCompact(ans.pop)}。`,
-      `英文国名以 “${ans.name[0]}” 开头。`,
+      `Ages 0–14 make up ${ans.u15}%, ages 65+ make up ${ans.o65}%, and women ${ans.fshare}%.`,
+      `Median age is about ${ans.med}. ${shapeOf(ans)}`,
+      `World Bank income group: ${ans.income}.`,
+      `Region: ${ans.region}. Total population is about ${fmtCompact(ans.pop)}.`,
+      `The country name starts with “${ans.name[0]}”.`,
     ];
 
-    const options = ctx.data.countries.map((c) => ({ id: c.id, label: c.zh, hint: c.name, aliases: [c.name, c.cc, c.id] }));
+    const options = ctx.data.countries.map((c) => ({ id: c.id, label: c.name, aliases: [c.cc, c.id] }));
     const res = await ctx.guess({
       options,
       answer: ans.id,
       maxGuesses: 6,
-      title: '这是哪个国家？',
-      placeholder: '输入国家名（中文或英文）…',
+      title: 'Which country is this?',
+      placeholder: 'Type a country, e.g. Kenya or KEN…',
       clues,
-      cluesTitle: '人口金字塔和线索',
-      columns: ['中位年龄', '人口', '地区', '相距'],
+      cluesTitle: 'Pyramid and clues',
+      columns: ['Median age', 'Pop.', 'Same region', 'Distance'],
       near: (g, a) => haversineKm(byId.get(g.id), byId.get(a.id)) < 1500,
       feedback: (g) => {
         const gc = byId.get(g.id);
@@ -135,7 +135,7 @@ export default {
         return [
           { text: `${gc.med} ${dm}`, num: true, state: hit || dm === '✓' ? 'hit' : undefined },
           { text: `${fmtCompact(gc.pop)} ${dp}`, num: true, state: hit || dp === '✓' ? 'hit' : undefined },
-          { text: gc.region === ans.region ? '同区' : '不同', state: gc.region === ans.region ? 'hit' : undefined },
+          { text: gc.region === ans.region ? 'Yes' : 'No', state: gc.region === ans.region ? 'hit' : undefined },
           { text: hit ? '0 km' : fmtKm(km), num: true, state: km < 1500 ? 'near' : undefined },
         ];
       },
@@ -144,16 +144,16 @@ export default {
 
     const peers = ctx.data.countries.filter((c) => c.id !== ans.id).sort((a, b) => shapeDist(a, ans) - shapeDist(b, ans)).slice(0, 3);
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.h('div', { class: 'ink2' }, `答案：${ans.zh}（${ans.name}），${ctx.data.year} 年。`),
+      ui.h('div', { class: 'ink2' }, `Answer: ${ans.name}, ${ctx.data.year}.`),
       ui.kv([
-        ['人口', fmtCompact(ans.pop)],
-        ['中位年龄', `${ans.med} 岁`],
+        ['Population', fmtCompact(ans.pop)],
+        ['Median age', `${ans.med}`],
         ['0–14 / 65+', `${ans.u15}% / ${ans.o65}%`],
-        ['地区 · 收入', `${ans.region} · ${ans.income}`],
-        ['形状最相近的国家', peers.map((c) => c.zh).join('、')],
+        ['Region · income', `${ans.region} · ${ans.income}`],
+        ['Most similar shapes', peers.map((c) => c.name).join(', ')],
       ]),
       ui.h('div', { class: 'small ink2' }, shapeOf(ans)),
-      ui.h('div', { class: 'ds-stack small' }, ui.h('b', '这张金字塔的识别特征'), ...patterns(ans, ages).map((t) => ui.h('div', { class: 'ink2' }, '· ' + t))));
+      ui.h('div', { class: 'ds-stack small' }, ui.h('b', 'What gives this pyramid away'), ...patterns(ans, ages).map((t) => ui.h('div', { class: 'ink2' }, '· ' + t))));
     return res;
   },
 };

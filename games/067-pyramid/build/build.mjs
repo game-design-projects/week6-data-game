@@ -16,10 +16,10 @@ for (const sex of ['FE', 'MA']) for (const a of AGES) {
   const j = await get(`${YEAR}.${a}.${sex}.json`, `https://api.worldbank.org/v2/country/all/indicator/SP.POP.${a}.${sex}?date=${YEAR}&format=json&per_page=400`);
   for (const r of j[1]) { const c = C.get(r.countryiso3code); if (c) (sex === 'FE' ? c.f : c.m).push(r.value); }
 }
-const REG = { 'East Asia & Pacific': '东亚与太平洋', 'Europe & Central Asia': '欧洲与中亚', 'Latin America & Caribbean': '拉美与加勒比', 'Middle East & North Africa': '中东北非', 'Middle East, North Africa, Afghanistan & Pakistan': '中东北非（含阿巴）', 'North America': '北美', 'South Asia': '南亚', 'Sub-Saharan Africa': '撒哈拉以南非洲' };
-const INC = { LIC: '低收入', LMC: '中等偏下收入', UMC: '中等偏上收入', HIC: '高收入' };
+const REG = { 'East Asia & Pacific': 'East Asia & Pacific', 'Europe & Central Asia': 'Europe & Central Asia', 'Latin America & Caribbean': 'Latin America & Caribbean', 'Middle East & North Africa': 'Middle East & North Africa', 'Middle East, North Africa, Afghanistan & Pakistan': 'MENA, Afghanistan & Pakistan', 'North America': 'North America', 'South Asia': 'South Asia', 'Sub-Saharan Africa': 'Sub-Saharan Africa' };
+const INC = { LIC: 'Low income', LMC: 'Lower-middle income', UMC: 'Upper-middle income', HIC: 'High income' };
 const out = [];
-const EN = new Intl.DisplayNames(['en'], { type: 'region' }), ZH = new Intl.DisplayNames(['zh-Hans'], { type: 'region' });
+const EN = new Intl.DisplayNames(['en'], { type: 'region' });
 for (const [id, c] of C) {
   if (c.f.length !== 17 || c.m.length !== 17 || [...c.f, ...c.m].some((v) => !v)) continue;
   const tot = [...c.f, ...c.m].reduce((a, b) => a + b, 0);
@@ -29,7 +29,7 @@ for (const [id, c] of C) {
   for (let i = 0; i < 17; i++) { if (acc + both[i] >= tot / 2) { med = i * 5 + ((tot / 2 - acc) / both[i]) * (i === 16 ? 10 : 5); break; } acc += both[i]; }
   const p = (v) => +((v / tot) * 100).toFixed(2);
   const under15 = both.slice(0, 3).reduce((a, b) => a + b, 0), over65 = both.slice(13).reduce((a, b) => a + b, 0);
-  out.push({ id, cc: c.iso2, name: EN.of(c.iso2) ?? c.name, zh: ZH.of(c.iso2) ?? c.name, region: REG[c.region], income: INC[c.income], lat: c.lat, lng: c.lng, pop: Math.round(tot), med: +med.toFixed(1), u15: +((under15 / tot) * 100).toFixed(1), o65: +((over65 / tot) * 100).toFixed(1), fshare: +((c.f.reduce((a, b) => a + b, 0) / tot) * 100).toFixed(1), f: c.f.map(p), m: c.m.map(p) });
+  out.push({ id, cc: c.iso2, name: EN.of(c.iso2) ?? c.name, region: REG[c.region], income: INC[c.income], lat: c.lat, lng: c.lng, pop: Math.round(tot), med: +med.toFixed(1), u15: +((under15 / tot) * 100).toFixed(1), o65: +((over65 / tot) * 100).toFixed(1), fshare: +((c.f.reduce((a, b) => a + b, 0) / tot) * 100).toFixed(1), f: c.f.map(p), m: c.m.map(p) });
 }
 fs.writeFileSync(path.join(import.meta.dirname, '..', 'data.json'), JSON.stringify({ year: YEAR, ages: AGES, countries: out }));
 console.log(out.length, 'countries');
