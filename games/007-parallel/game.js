@@ -2,7 +2,7 @@
 export function northOf(ref, cands) {
   return cands.map((c, i) => (c.lat > ref.lat ? i : -1)).filter((i) => i >= 0);
 }
-export const latLabel = (v) => `${v >= 0 ? '北纬' : '南纬'}${Math.abs(v).toFixed(1)}°`;
+export const latLabel = (v) => `${Math.abs(v).toFixed(1)}°${v >= 0 ? 'N' : 'S'}`;
 const gap = (a, b) => Math.abs(a.lat - b.lat);
 
 // The closest call of a round: the candidate whose latitude is nearest to the reference.
@@ -12,10 +12,10 @@ export function closestCall(ref, cands) {
 // Teaching sentence for one round, specific to its data.
 export function lesson(ref, cands) {
   const c = closestCall(ref, cands);
-  const dir = c.lat > ref.lat ? '更靠北' : '更靠南';
+  const dir = c.lat > ref.lat ? 'farther north' : 'farther south';
   const d = gap(c, ref).toFixed(1);
   const far = Math.abs(c.lng - ref.lng) > 40;
-  return `最险的一对：${c.name}（${c.country}，${latLabel(c.lat)}）比 ${ref.name}（${latLabel(ref.lat)}）${dir}，只差 ${d}°${far ? '——两地相隔大半个地球，气候和直觉都帮不上忙，只能靠纬度本身' : ''}。`;
+  return `Closest call: ${c.name} (${c.country}, ${latLabel(c.lat)}) is ${dir} than ${ref.name} (${latLabel(ref.lat)}), by just ${d}°${far ? ' - and they sit half a world apart, so climate and gut feeling are no help; only the latitude itself is' : ''}.`;
 }
 
 export default {
@@ -23,21 +23,21 @@ export default {
     num: 7,
     slug: 'parallel',
     title: 'Parallel',
-    tagline: '五个城市，点出比今天这座城市更靠北的那几个。罗马可比纽约更靠北哦。',
+    tagline: 'Five cities, one reference. Tap every one that lies farther north. Yes, Rome is north of New York.',
     category: 'geo',
     data: 'snapshot',
     howTo: [
-      '每局三轮，难度递增。每轮给出一座参照城市和五座候选城市（来自不同国家）。',
-      '选出所有纬度比参照城市更高（更靠北）的候选城市，可能是 1 到 4 个，然后提交。南半球的城市看“偏北”：南纬 12° 比南纬 34° 更靠北。',
-      '别被气候骗了：冷不等于北。暖流让欧洲比同纬度的北美暖得多，罗马（北纬 41.9°）就比纽约（40.7°）更靠北。',
-      '提交后会显示每座城市的确切纬度，以及这一轮最险的一对。',
+      'Three rounds, each harder than the last. Every round gives you one reference city and five candidates, all from different countries.',
+      'Select every candidate whose latitude is higher (farther north) than the reference city, anywhere from 1 to 4 of them, then submit. In the Southern Hemisphere, "farther north" still wins: 12°S is farther north than 34°S.',
+      'Do not trust the weather: cold does not mean north. Warm ocean currents keep Europe far milder than North America at the same latitude, and Rome (41.9°N) is actually north of New York (40.7°N).',
+      'After you submit, you see every city\'s exact latitude and the closest call of the round.',
     ],
-    scoring: '每轮按选对的重合度（Jaccard：选对的个数 ÷ 选中或应选的个数）计分，三轮满分 3 分。全选或乱点只能拿到零碎的分，漏选和多选都会扣分。',
+    scoring: 'Each round is scored by overlap with the right answer (Jaccard: correct picks divided by everything you picked or should have picked), so three rounds are worth 3 points. Selecting everything or tapping at random earns only scraps; misses and extra picks both cost you.',
     sources: [
-      { name: 'GeoNames cities15000', url: 'https://download.geonames.org/export/dump/', note: '城市坐标与人口（人口 150 万以上）' },
-      { name: 'Wikidata', url: 'https://www.wikidata.org/', note: '城市的简体中文名（通过 GeoNames ID 匹配）' },
+      { name: 'GeoNames cities15000', url: 'https://download.geonames.org/export/dump/', note: 'City coordinates and population (cities over 1.5 million people)' },
+      { name: 'Wikidata', url: 'https://www.wikidata.org/', note: 'Used to pick well-known cities (matched by GeoNames ID)' },
     ],
-    dataNote: '数据是快照：GeoNames 的城市坐标几乎不变，没有每日更新的版本，因此未做实时加载。仅收录有简体中文名、人口 150 万以上的城市。纬度取城市中心点。每天的三轮由固定题库抽出，难度依次为：纬度差 ≥3°、≥1.2°、≥0.4°。',
+    dataNote: 'Snapshot data: GeoNames city coordinates barely change and there is no daily feed, so nothing is loaded live. Only well-known cities over 1.5 million people are included. Latitude is taken at the city center. Each day\'s three rounds come from a fixed pool; the closest candidate is at least 3°, 1.2° and 0.4° from the reference city, respectively.',
   },
 
   puzzle({ data, pick }) {
@@ -51,16 +51,16 @@ export default {
       const rows = cands.slice().sort((a, b) => b.lat - a.lat)
         .map((c) => `${c.name} ${latLabel(c.lat)}${c.lat > ref.lat ? ' ↑' : ' ↓'}`).join(' · ');
       return {
-        prompt: `哪些比 ${ref.name}（${ref.country}）更靠北？`,
+        prompt: `Which are farther north than ${ref.name} (${ref.country})?`,
         options: cands.map((c) => ({ label: c.name, sub: c.country })),
         correct,
-        explain: `${ref.name} ${latLabel(ref.lat)}。${rows}`,
+        explain: `${ref.name} ${latLabel(ref.lat)}. ${rows}`,
       };
     });
-    const res = await ctx.rounds({ rounds, multi: true, title: '比参照城市更靠北的有哪些？' });
+    const res = await ctx.rounds({ rounds, multi: true, title: 'Which cities lie north of the reference?' });
     res.detail = ctx.ui.stack(
-      ...p.rounds.map(({ ref, cands }, i) => ctx.ui.callout(`第 ${i + 1} 轮：${lesson(ref, cands)}`, 'good')),
-      ctx.ui.quote('规律：看纬度，别看气候。暖流（如北大西洋暖流）让欧洲的冬天比同纬度的北美温和，所以“更冷”的城市不一定更靠北。'),
+      ...p.rounds.map(({ ref, cands }, i) => ctx.ui.callout(`Round ${i + 1}: ${lesson(ref, cands)}`, 'good')),
+      ctx.ui.quote('Rule of thumb: go by latitude, not climate. Warm currents like the North Atlantic Drift make European winters milder than North America at the same latitude, so a colder city is not necessarily the more northern one.'),
     );
     return res;
   },

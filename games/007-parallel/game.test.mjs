@@ -13,12 +13,12 @@ test('northOf', () => {
 });
 
 test('lesson names the closest call', () => {
-  const ref = { name: '纽约', lat: 40.7, lng: -74 };
-  const c = [{ name: '罗马', country: '意大利', lat: 41.9, lng: 12.5 }, { name: '开罗', country: '埃及', lat: 30, lng: 31 }];
-  assert.equal(closestCall(ref, c).name, '罗马');
+  const ref = { name: 'New York', lat: 40.7, lng: -74 };
+  const c = [{ name: 'Rome', country: 'Italy', lat: 41.9, lng: 12.5 }, { name: 'Cairo', country: 'Egypt', lat: 30, lng: 31 }];
+  assert.equal(closestCall(ref, c).name, 'Rome');
   const s = lesson(ref, c);
-  assert.match(s, /罗马/); assert.match(s, /更靠北/); assert.match(s, /1\.2°/);
-  assert.equal(latLabel(-12.04), '南纬12.0°');
+  assert.match(s, /Rome/); assert.match(s, /farther north/); assert.match(s, /1\.2°/);
+  assert.equal(latLabel(-12.04), '12.0°S');
 });
 
 test('pool validity, days 1-120', () => {
@@ -31,8 +31,8 @@ test('pool validity, days 1-120', () => {
       assert.equal(cands.length, 5);
       const all = [ref, ...cands];
       for (const c of all) {
-        assert.ok(c.name && /^[一-鿿·]+$/.test(c.name), `zh name ${c.name}`);
-        assert.ok(c.country && !/^[A-Z]{2}$/.test(c.country), `country ${c.country}`);
+        assert.ok(c.name && /^[A-Za-z .'-]+$/.test(c.name), `English name ${c.name}`);
+        assert.ok(c.country && /^[\p{L} .'’()-]+$/u.test(c.country) && !/^[A-Z]{2}$/.test(c.country), `country ${c.country}`);
         assert.ok(/^[A-Z]{2}$/.test(c.cc));
         assert.ok(Number.isFinite(c.lat) && Math.abs(c.lat) < 66 && Number.isFinite(c.lng) && Math.abs(c.lng) <= 180);
         assert.ok(!names.has(c.name), `duplicate city ${c.name} on day ${day}`);
