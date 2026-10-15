@@ -1,5 +1,6 @@
 // raw/geom.json (WMO/GRDC basins) -> ../data.json : one entry per named river basin (sub-basins merged by family).
 import fs from 'node:fs';
+import { FACTS } from './facts.mjs';
 const fc = JSON.parse(fs.readFileSync('raw/geom.json', 'utf8'));
 // key = WMOBB_BASI in the source; name/zh are display labels.
 const L = [
@@ -85,14 +86,10 @@ const L = [
   ['NEMAN (also NEMUNAS, also NYOMAN)', 'Neman', '涅曼河', ['Nemunas']],
   ['GAMBIA', 'Gambia', '冈比亚河'],
   ['FLY RIVER', 'Fly River', '弗莱河'],
-  ['OMO (also OMO WENZ)', 'Omo', '奥莫河'],
   ['ESSEQUIBO, AMACURO (also AMAKURA) and BARIMA', 'Essequibo', '埃塞奎博河'],
   ['YALU RIVER', 'Yalu', '鸭绿江'],
-  ['WEBI SHABEELLE (also SHEBELE WENZ)', 'Shabelle', '谢贝利河', ['Shebelle', 'Shebele']],
   ['COURANTYNE', 'Courantyne', '科兰太因河'],
   ['MARONI', 'Maroni', '马罗尼河'],
-  ['IGUAZU', 'Iguazú', '伊瓜苏河', ['Iguazu', 'Iguaçu']],
-  ['TIETE', 'Tietê', '蒂特河', ['Tiete']],
 ];
 const byKey = new Map();
 for (const f of fc.features) {
@@ -100,7 +97,7 @@ for (const f of fc.features) {
   if (!byKey.has(k)) byKey.set(k, []);
   byKey.get(k).push(f);
 }
-const r1 = (n) => Math.round(n * 20) / 20; // 0.05° grid
+const r1 = (n) => Math.round(n * 100) / 100; // 0.01° grid
 const ringArea = (r) => { let a = 0; for (let i = 0; i < r.length - 1; i++) a += r[i][0] * r[i + 1][1] - r[i + 1][0] * r[i][1]; return a / 2; };
 const out = [];
 for (const [key, name, zh, aliases = []] of L) {
@@ -129,15 +126,17 @@ for (const [key, name, zh, aliases = []] of L) {
   }
   const region = fs_[0].properties.REGNAME;
   out.push({
-    id: name.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '') || key,
+    id: name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '') || key,
     name, zh, aliases, region,
     area: Math.round(area), subs,
+    mouth: FACTS[name][0], note: FACTS[name][1],
     lat: +(cy / ca).toFixed(2), lng: +(cx / ca).toFixed(2),
     bbox: [minx, miny, maxx, maxy].map((v) => +v.toFixed(2)),
     rings,
   });
 }
 // If a centroid falls outside (multi-ring noise) it's still fine for distance feedback.
+for (const n of Object.keys(FACTS)) if (!out.some((r) => r.name === n)) throw new Error('facts without basin: ' + n);
 const data = { source: 'WMO Basins and Sub-basins 3rd ed. (GRDC 2020)', rivers: out };
 fs.writeFileSync('../data.json', JSON.stringify(data));
 console.log(out.length, 'rivers', (fs.statSync('../data.json').size / 1e6).toFixed(2), 'MB');
