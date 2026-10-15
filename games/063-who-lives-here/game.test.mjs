@@ -8,7 +8,7 @@ const PCT = ['transit', 'walk', 'home', 'drive', 'noCar', 'bach', 'owner', 'whit
 const KEYS = ['pop', 'inc', 'rent', 'val', 'age', 'yr', ...PCT];
 const runDay = (day) => game.puzzle({ data, day, date: '2026-10-01', slug: 'who-lives-here', rng: makeRng(`w:${day}`), pick: (arr) => arr[dailyIndex('who-lives-here', day, arr.length)] });
 
-test('vague buckets', () => { assert.match(vague(0.2), /几乎没有/); assert.match(vague(50), /一半/); assert.match(vague(95), /几乎都是/); });
+test('vague buckets', () => { assert.match(vague(0.2), /almost none/); assert.match(vague(50), /half/); assert.match(vague(95), /nearly all/); });
 test('every question answers every tract with no NaN', () => {
   for (const t of data.tracts) for (const q of QUESTIONS) { const s = q.say(t); assert.ok(s.length > 5); assert.ok(!/NaN|undefined|null/.test(s), `${t.id} ${q.id}: ${s}`); }
 });
@@ -57,7 +57,7 @@ test('pinScore extremes', () => {
   assert.ok(sum / n < 25, `random mean ${sum / n}`);
 });
 test('typed question routing', () => {
-  const cases = { '房租贵不贵？': 'housing', '你们家一年挣多少': 'money', '怎么去上班': 'commute', '家里有车吗': 'cars', '邻居是什么人': 'neighbors', '大家多大年纪': 'age', '读过大学吗': 'school', '住的是什么房子': 'homes', '今天天气怎么样': null, '': null };
+  const cases = { 'Is rent expensive?': 'housing', 'How much do you earn?': 'money', 'How do you commute?': 'commute', 'Do you have a car?': 'cars', 'Who lives next door, what are the neighbors like?': 'neighbors', 'How old are people?': 'age', 'Do people have degrees?': 'school', 'What kind of house is it?': 'homes', 'What is the weather today?': null, '': null };
   for (const [q, id] of Object.entries(cases)) assert.equal(route(q), id, q);
   for (const q of QUESTIONS) assert.equal(route(q.label), q.id, q.label);
 });
@@ -67,4 +67,13 @@ test('learnability text exists for every tract', () => {
     assert.equal(s.length, 3); assert.ok(r.length >= 1);
     for (const x of [...s, ...r]) assert.ok(!/NaN|undefined/.test(x), `${t.id}: ${x}`);
   }
+});
+
+test('answers and copy are English and name no place', () => {
+  const cjk = /[\u3000-\u303f\u3400-\u9fff\uff00-\uffef]/;
+  for (const t of data.tracts) for (const q of QUESTIONS) {
+    assert.ok(!cjk.test(q.say(t)));
+    assert.ok(!q.say(t).toLowerCase().includes(t.county.toLowerCase()), `${t.id} ${q.id} names the county`);
+  }
+  assert.ok(!cjk.test(JSON.stringify(game.meta)));
 });
