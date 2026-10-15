@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
-const STRONG = 2; // >= 2 GloBI records = counted edge; 1 record = "存疑" (neutral in scoring)
+const STRONG = 2; // >= 2 GloBI records = counted edge; 1 record = "uncertain" (neutral in scoring)
 const norm = (n) => n.split(' ').slice(0, 2).join(' ');
 const load = (n, t) => { const f = path.join(here, 'raw', `${n.replace(' ', '_')}.${t}.json`); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : []; };
 const cnt = {};
@@ -20,7 +20,7 @@ const n_ = (a, b) => cnt[a]?.[b] || 0;
 const ecos = [], puzzles = [];
 for (const [eco, sp] of Object.entries(ECO)) {
   const L = sp.map((s) => s[0]);
-  ecos.push({ name: eco, species: sp.map(([latin, zh, en]) => ({ latin, zh, en, kind: KIND[latin] })) });
+  ecos.push({ name: eco, species: sp.map(([latin, en]) => ({ latin, en, kind: KIND[latin] })) });
   let got = 0;
   for (const c of shuffle(combos(L, 6))) {
     if (got >= 14) break;

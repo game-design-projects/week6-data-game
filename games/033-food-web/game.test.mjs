@@ -47,10 +47,10 @@ test('puzzle keeps species and edges', () => {
 });
 
 test('webInsight describes top / base / middle', () => {
-  const L = webInsight([['w', 'f'], ['f', 'm'], ['f', 'g']], (x) => x, () => '类', ['w', 'f', 'm', 'g', 'z']);
-  assert.ok(L.some((l) => l.startsWith('顶端：w')));
-  assert.ok(L.some((l) => l.includes('底端：m') || l.includes('底端：g')));
-  assert.ok(L.some((l) => l.startsWith('中层：f')));
+  const L = webInsight([['w', 'f'], ['f', 'm'], ['f', 'g']], (x) => x, () => 'Fish', ['w', 'f', 'm', 'g', 'z']);
+  assert.ok(L.some((l) => l.startsWith('Top: w')));
+  assert.ok(L.some((l) => l.includes('Bottom: m') || l.includes('Bottom: g')));
+  assert.ok(L.some((l) => l.startsWith('Middle: f')));
   assert.ok(L.some((l) => l.includes('z')));
 });
 
@@ -73,7 +73,10 @@ test('pool of days 1-120 is valid', () => {
     for (const s of p.sp) {
       const sp = info.get(s);
       assert.ok(sp, `missing info ${s}`);
-      for (const f of ['zh', 'en', 'kind']) assert.ok(sp[f] && !/undefined|NaN/.test(sp[f]), `${s}.${f}`);
+      for (const f of ['en', 'kind']) {
+        assert.ok(sp[f] && !/undefined|NaN/.test(sp[f]), `${s}.${f}`);
+        assert.ok(/^[\x20-\x7e]+$/.test(sp[f]), `${s}.${f} English`);
+      }
     }
     assert.ok(p.e.length >= 4 && p.e.length <= 9, 'edge count');
     assert.ok(p.w.length <= 2);
