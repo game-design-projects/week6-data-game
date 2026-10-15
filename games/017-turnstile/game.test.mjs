@@ -20,11 +20,11 @@ test('profile classifies commuter patterns', () => {
   const wk = Array(24).fill(100); wk[8] = 1000; wk[17] = 200;
   const p = profile({ wk, we: Array(24).fill(50) });
   assert.equal(p.peakWk, 8);
-  assert.match(p.kind, /居民区/);
+  assert.match(p.kind, /residential/);
   const q = profile({ wk: wk.map((_, i) => (i === 17 ? 1000 : 100)), we: Array(24).fill(50) });
-  assert.match(q.kind, /办公区/);
+  assert.match(q.kind, /office/);
   const t = profile({ wk, we: wk });
-  assert.match(t.kind, /游客/);
+  assert.match(t.kind, /tourist/);
 });
 
 test('data: unique labels, 24-hour arrays, pool size, sane numbers', () => {

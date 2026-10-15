@@ -3,6 +3,7 @@ import { haversineKm, bearingDeg, arrow } from '../../engine/core.js';
 
 const sum = (a, i = 0, j = a.length) => a.slice(i, j).reduce((x, y) => x + y, 0);
 const hh = (h) => `${String(h).padStart(2, '0')}:00`;
+const hc = (h) => `${String(h).padStart(2, '0')}h`;
 const peakHour = (a) => a.indexOf(Math.max(...a));
 
 /** Summarise a station's curves into the pattern features used for clues and teaching. */
@@ -12,10 +13,10 @@ export function profile(s) {
   const weekend = sum(s.we);
   const ratio = weekend / day;
   let kind;
-  if (ratio > 0.85) kind = '周末几乎和工作日一样忙：游客、购物或娱乐目的地';
-  else if (am > pm * 1.35) kind = '早高峰远高于晚高峰：居民区，人们在这里出发去上班';
-  else if (pm > am * 1.35) kind = '晚高峰远高于早高峰：办公区，人们在这里下班回家';
-  else kind = '早晚双峰接近：换乘枢纽或混合功能区';
+  if (ratio > 0.85) kind = 'Weekends nearly as busy as weekdays: a tourist, shopping or entertainment destination';
+  else if (am > pm * 1.35) kind = 'Morning rush far above the evening rush: a residential area where people start their commute';
+  else if (pm > am * 1.35) kind = 'Evening rush far above the morning rush: an office district where people leave for home';
+  else kind = 'Morning and evening peaks about equal: a transfer hub or mixed-use area';
   return { day, am, pm, night, weekend, ratio, peakWk: peakHour(s.wk), peakWe: peakHour(s.we), nightShare: night / day, kind };
 }
 
@@ -40,22 +41,22 @@ export default {
     num: 17,
     slug: 'turnstile',
     title: 'Turnstile',
-    tagline: '某个纽约地铁站一天 24 小时的进站人数曲线，工作日 vs 周末。读懂人流的节奏，猜出是哪一站，误差按相隔站数计。',
+    tagline: 'A New York subway station\'s 24-hour entry curve, weekday vs. weekend. Read the rhythm of the crowd and name the station; misses are measured in stops.',
     category: 'nyc',
     data: 'snapshot',
     howTo: [
-      '图里是某个地铁站 2025 年 9 月平均每小时的进站人数：实线是工作日，虚线是周末。',
-      '早高峰高说明是居民区（人们从这里出发），晚高峰高说明是办公区；周末不降反升说明是游客或娱乐目的地；深夜不空说明在市中心或夜生活区。',
-      '从列表里选站名来猜，最多 6 次。每猜错一次多解锁一条线索（行政区、线路、客流排名、首字母）。',
-      '每次猜测会告诉你它和答案之间隔了几站（沿线路最少站数，站内换乘不计）、所在方向、客流是答案的几倍、高峰时刻是否一致。',
+      'The chart shows a station\'s average entries per hour in September 2025: the solid line is weekdays, the dashed line weekends.',
+      'A tall morning peak means a residential area (people start out here); a tall evening peak means an office district; weekends that rise instead of fall mean tourists or entertainment; a busy small hours points downtown or nightlife.',
+      'Pick a station from the list, up to 6 guesses. Every miss unlocks another clue (borough, lines, ridership rank, first letter).',
+      'Each guess tells you how many stops lie between it and the answer (fewest stops along the lines; transfers inside a station do not count), the direction, how many times busier the answer is, and whether the peak hour matches.',
     ],
-    scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分；6 次都没猜中时，按离答案最近的那次猜测给 0–15 分（相隔 0 站满分，12 站及以上 0 分）。',
+    scoring: '100 points for a first-try hit, about 17 fewer for each extra guess. If you miss all six, your closest guess earns 0\u201315 points (0 stops away is full, 12 or more is 0).',
     sources: [
-      { name: 'MTA Subway Hourly Ridership: Beginning 2025 (NY Open Data)', url: 'https://data.ny.gov/Transportation/MTA-Subway-Hourly-Ridership-Beginning-2025/5wq4-mkjj', note: '按站、按小时汇总 2025-09 的刷卡进站人数，工作日去掉劳动节' },
-      { name: 'MTA Subway Stations (NY Open Data)', url: 'https://data.ny.gov/Transportation/MTA-Subway-Stations/39hk-dx4f', note: '车站综合体与 GTFS 站点编号对照' },
-      { name: 'MTA static GTFS: subway', url: 'https://rrgtfsfeeds.s3.amazonaws.com/gtfs_subway.zip', note: '用列车停靠顺序算出站与站之间隔几站' },
+      { name: 'MTA Subway Hourly Ridership: Beginning 2025 (NY Open Data)', url: 'https://data.ny.gov/Transportation/MTA-Subway-Hourly-Ridership-Beginning-2025/5wq4-mkjj', note: 'Card-swipe entries by station and hour for Sept 2025; Labor Day excluded from weekdays' },
+      { name: 'MTA Subway Stations (NY Open Data)', url: 'https://data.ny.gov/Transportation/MTA-Subway-Stations/39hk-dx4f', note: 'Maps station complexes to GTFS stop IDs' },
+      { name: 'MTA static GTFS: subway', url: 'https://rrgtfsfeeds.s3.amazonaws.com/gtfs_subway.zip', note: 'Train stop order gives the number of stops between stations' },
     ],
-    dataNote: '数据是 2025 年 9 月（工作日 21 天、周末 8 天）的日均值，不是实时闸机计数；答案只从客流最大的 160 个车站综合体里抽取，但所有 424 个站都可以猜。“相隔站数”按 GTFS 列车停靠顺序取最少站数，站内换乘不计、步行换乘不计，且不区分快慢车。没有做实时抓取：题目要求每位玩家看到同一份数据，所以固定使用这个月度快照。',
+    dataNote: 'The data are daily averages for September 2025 (21 weekdays, 8 weekend days), not live turnstile counts. The answer is drawn only from the 160 busiest station complexes, but all 424 stations can be guessed. \u201cStops apart\u201d is the fewest stops along GTFS train stop order: transfers inside a station and walking transfers do not count, and express and local trains are not distinguished. Nothing is fetched live: every player must see the same data, so this monthly snapshot is used.',
   },
 
   puzzle({ data, pick }) {
@@ -78,19 +79,19 @@ export default {
 
     const rows = [];
     for (let h = 0; h < 24; h++) {
-      rows.push({ h, v: ans.wk[h], k: '工作日' });
-      rows.push({ h, v: ans.we[h], k: '周末' });
+      rows.push({ h, v: ans.wk[h], k: 'Weekday' });
+      rows.push({ h, v: ans.we[h], k: 'Weekend' });
     }
     const chart = await ui.plot((Plot, c) => ({
       height: 280,
       marginLeft: 52,
-      x: { label: null, domain: [0, 23], ticks: [0, 6, 12, 18], tickFormat: (h) => `${h}时` },
-      y: { label: '每小时进站人数', grid: true, tickFormat: (v) => core.fmtCompact(v) },
+      x: { label: null, domain: [0, 23], ticks: [0, 6, 12, 18], tickFormat: (h) => hh(h) },
+      y: { label: 'Entries per hour', grid: true, tickFormat: (v) => core.fmtCompact(v) },
       marks: [
-        Plot.lineY(rows.filter((r) => r.k === '工作日'), { x: 'h', y: 'v', stroke: c.accent, strokeWidth: 2.5, curve: 'monotone-x' }),
-        Plot.lineY(rows.filter((r) => r.k === '周末'), { x: 'h', y: 'v', stroke: c.ink, strokeWidth: 2, strokeDasharray: '5 4', curve: 'monotone-x' }),
+        Plot.lineY(rows.filter((r) => r.k === 'Weekday'), { x: 'h', y: 'v', stroke: c.accent, strokeWidth: 2.5, curve: 'monotone-x' }),
+        Plot.lineY(rows.filter((r) => r.k === 'Weekend'), { x: 'h', y: 'v', stroke: c.ink, strokeWidth: 2, strokeDasharray: '5 4', curve: 'monotone-x' }),
         Plot.ruleY([0]),
-        Plot.tip(rows, Plot.pointerX({ x: 'h', y: 'v', title: (d) => `${d.k} ${hh(d.h)}\n${core.fmtNum(d.v)} 人/小时` })),
+        Plot.tip(rows, Plot.pointerX({ x: 'h', y: 'v', title: (d) => `${d.k} ${hh(d.h)}\n${core.fmtNum(d.v)} entries/hour` })),
       ],
     }));
 
@@ -98,12 +99,12 @@ export default {
     const sn = shortName(ans.name);
     const clues = [
       ui.h('div', chart, ui.h('div', { class: 'ds-row small mono ink2', style: { gap: '16px', marginTop: '6px' } },
-        ui.h('span', ui.h('span', { style: { color: 'var(--accent)' } }, '━'), ' 工作日'),
-        ui.h('span', '┄ 周末'))),
-      fact(`所在行政区：${ans.borough}。`),
-      fact(`经过的线路：${lines(ans.name).split(',').join(' ')}`),
-      fact(`工作日客流在全部 ${all.length} 个站里排第 ${rank}。周末是工作日的 ${core.fmtNum(pf.ratio * 100)}%，周末高峰在 ${hh(pf.peakWe)}。`),
-      fact(`站名首字母：“${sn[0]}”，共 ${sn.length} 个字符。`),
+        ui.h('span', ui.h('span', { style: { color: 'var(--accent)' } }, '━'), ' Weekdays'),
+        ui.h('span', '\u2504 Weekends'))),
+      fact(`Borough: ${ans.borough}.`),
+      fact(`Lines serving it: ${lines(ans.name).split(',').join(' ')}`),
+      fact(`Weekday ridership ranks ${rank} of ${all.length} stations. Weekends are ${core.fmtNum(pf.ratio * 100)}% of weekdays, with the weekend peak at ${hh(pf.peakWe)}.`),
+      fact(`The station name starts with \u201c${sn[0]}\u201d and has ${sn.length} characters.`),
     ];
 
     const options = all.map((s) => ({ id: s.id, label: s.name, hint: s.borough, aliases: [shortName(s.name)] }));
@@ -113,44 +114,44 @@ export default {
       options,
       answer: ans.id,
       maxGuesses: MAX_GUESSES,
-      title: '这是哪一站？',
-      placeholder: '输入站名或线路…',
-      cluesTitle: '人流曲线和线索',
+      title: 'Which station is this?',
+      placeholder: 'Type a station or line\u2026',
+      cluesTitle: 'Ridership curve and clues',
       clues,
-      columns: ['站数', '方向', '客流', '高峰'],
+      columns: ['Stops', 'Dir.', 'Busy', 'Peak'],
       near: (g) => (hopsTo(g.id) ?? 99) <= 3,
       onGuess: (g) => { const k = hopsTo(g.id); if (k != null && (best == null || k < best)) best = k; ctx.log('guess', g.label, k, 'stops'); },
       scoring: (n, won) => scoreGuess(n, won, best),
       feedback: (g) => {
         const gs = byId.get(g.id);
         const gp = profs.get(gs.id);
-        if (gs.id === ans.id) return [{ text: '0 站', state: 'hit', num: true }, { text: '🎯', state: 'hit' }, { text: '1.0×', state: 'hit', num: true }, { text: hh(gp.peakWk), state: 'hit', num: true }];
+        if (gs.id === ans.id) return [{ text: '0', state: 'hit', num: true }, { text: '🎯', state: 'hit' }, { text: '1.0×', state: 'hit', num: true }, { text: hc(gp.peakWk), state: 'hit', num: true }];
         const k = hopsTo(gs.id);
         const q = pf.day / gp.day;
         return [
-          { text: k == null ? '—' : `${k} 站`, num: true, state: k != null && k <= 3 ? 'near' : undefined },
+          { text: k == null ? '—' : `${k}`, num: true, state: k != null && k <= 3 ? 'near' : undefined },
           { text: arrow(bearingDeg(gs, ans)) },
           { text: q >= 1 ? `×${q.toFixed(1)}` : `÷${(1 / q).toFixed(1)}`, num: true, state: q > 0.75 && q < 1.33 ? 'near' : undefined },
-          { text: hh(gp.peakWk), num: true, state: gp.peakWk === pf.peakWk ? 'hit' : Math.abs(gp.peakWk - pf.peakWk) <= 1 ? 'near' : undefined },
+          { text: hc(gp.peakWk), num: true, state: gp.peakWk === pf.peakWk ? 'hit' : Math.abs(gp.peakWk - pf.peakWk) <= 1 ? 'near' : undefined },
         ];
       },
     });
 
     const pm = pf.pm / pf.am;
     const tells = [
-      `早高峰（06–10 点）${core.fmtNum(pf.am)}，晚高峰（16–20 点）${core.fmtNum(pf.pm)}，晚/早 = ${pm.toFixed(2)}：${pm > 1.35 ? (pf.ratio > 0.85 ? '晚高峰更高，但周末同样热闹，不只是通勤' : '晚高峰明显更高，下班回家的人多，偏办公区') : pm < 1 / 1.35 ? (pf.ratio > 0.85 ? '早高峰更高，但周末同样热闹，不只是通勤' : '早高峰明显更高，出门上班的人多，偏居民区') : '早晚接近，没有明显的单向通勤'}。`,
-      `周末是工作日的 ${core.fmtNum(pf.ratio * 100)}%：${pf.ratio > 0.85 ? '几乎不掉，说明靠游客和休闲人流撑着' : pf.ratio < 0.5 ? '大幅下降，说明主要靠通勤' : '中等程度下降，通勤和休闲各占一部分'}。`,
-      `深夜（22–04 点）占全天 ${core.fmtNum(pf.nightShare * 100)}%：${pf.nightShare > 0.12 ? '夜里依然有人，多在市中心或夜生活区' : '夜里很安静，更像居住或办公区'}。`,
+      `Morning rush (06\u201310) ${core.fmtNum(pf.am)}, evening rush (16\u201320) ${core.fmtNum(pf.pm)}, evening/morning = ${pm.toFixed(2)}: ${pm > 1.35 ? (pf.ratio > 0.85 ? 'the evening rush is higher, but weekends are just as busy, so it is not only commuters' : 'the evening rush is clearly higher: many people heading home, so an office district') : pm < 1 / 1.35 ? (pf.ratio > 0.85 ? 'the morning rush is higher, but weekends are just as busy, so it is not only commuters' : 'the morning rush is clearly higher: many people leaving for work, so a residential area') : 'the two are close, with no clear one-way commute'}.`,
+      `Weekends are ${core.fmtNum(pf.ratio * 100)}% of weekdays: ${pf.ratio > 0.85 ? 'barely a drop, so tourists and leisure traffic hold it up' : pf.ratio < 0.5 ? 'a big drop, so it runs mainly on commuters' : 'a moderate drop, with commuting and leisure each playing a part'}.`,
+      `Late night (22\u201304) is ${core.fmtNum(pf.nightShare * 100)}% of the day: ${pf.nightShare > 0.12 ? 'still people about at night, mostly downtown or in nightlife areas' : 'very quiet at night, more of a residential or office area'}.`,
     ];
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.kv([
-        ['答案', ans.name],
-        ['行政区', ans.borough],
-        ['工作日客流', `${core.fmtNum(pf.day)} 人次/天（全市第 ${rank}）`],
-        ['高峰时刻', `工作日 ${hh(pf.peakWk)}，周末 ${hh(pf.peakWe)}`],
-        ['你的最近一猜', best == null ? '—' : best === 0 ? '命中' : `相隔 ${best} 站`],
+        ['Answer', ans.name],
+        ['Borough', ans.borough],
+        ['Weekday ridership', `${core.fmtNum(pf.day)} entries/day (rank ${rank})`],
+        ['Peak hour', `weekdays ${hh(pf.peakWk)}, weekends ${hh(pf.peakWe)}`],
+        ['Your closest guess', best == null ? '\u2014' : best === 0 ? 'hit' : `${best} stop${best === 1 ? '' : 's'} away`],
       ]),
-      ui.callout(`线索在曲线里：${pf.kind}。`, 'good'),
+      ui.callout(`The clue is in the curve: ${pf.kind}.`, 'good'),
       ui.h('ul', { class: 'small ink2' }, ...tells.map((t) => ui.h('li', t))));
     ctx.log('result', res.score);
     return res;
