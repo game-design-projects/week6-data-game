@@ -37,20 +37,20 @@ export default {
     num: 76,
     slug: 'tagged',
     title: 'Tagged',
-    tagline: '去掉标签的 Stack Overflow 高赞问题：只看标题，从 10 个候选里选出真实标签，按 Jaccard 重合度计分。',
+    tagline: 'Top-voted Stack Overflow questions with the tags removed. From the title alone, pick the real tags out of 10 candidates, scored by Jaccard overlap.',
     category: 'tech',
     data: 'snapshot',
     howTo: [
-      '每天 5 道真实的 Stack Overflow 高赞问题（2009–2022 年各年的高票问题），只给标题，标签被拿掉了。',
-      '每题给 10 个候选标签，其中 2–5 个是提问者真正打的标签。选出你认为对的全部，然后提交。',
-      '每题得分 = 你选的与真实标签的交集 ÷ 并集（Jaccard，0–1）。多选、漏选、选错都会扣分；5 题满分 5。',
-      '干扰项一半是常与真实标签一起出现的“近亲”标签（如 swift 与 swiftui），一半是按使用频率抽出的其他标签。',
+      'Each day brings 5 real, highly voted Stack Overflow questions (top questions from each year, 2009-2022). You only see the title; the tags are hidden.',
+      'Each question offers 10 candidate tags, 2-5 of which the asker really used. Select all the ones you think are right, then submit.',
+      'Each question scores your selection\'s intersection \u00f7 union with the real tags (Jaccard, 0-1). Over-picking, missing tags and wrong picks all cost points; 5 is a perfect score over 5 questions.',
+      'Half of the decoys are \u201cclose relatives\u201d that often appear with the real tags (such as swift and swiftui); the other half are other tags sampled by how often they are used.',
     ],
-    scoring: '每题得分 = |选中 ∩ 真实| ÷ |选中 ∪ 真实|，5 题相加，满分 5。全选 10 个只能拿到约 0.3 分/题。',
+    scoring: 'Each question scores |selected \u2229 real| \u00f7 |selected \u222a real|; the 5 questions add up to 5 max. Selecting all 10 only earns about 0.3 per question.',
     sources: [
-      { name: 'Stack Exchange API /questions（Stack Overflow）', url: 'https://api.stackexchange.com/docs/questions', note: '2009–2022 每年按票数排序的前 400 个问题；内容 CC BY-SA 4.0' },
+      { name: 'Stack Exchange API /questions (Stack Overflow)', url: 'https://api.stackexchange.com/docs/questions', note: 'Top 400 questions by votes for each year, 2009-2022; content is CC BY-SA 4.0' },
     ],
-    dataNote: '快照：每年票数最高的 400 个问题里，筛出带 2–5 个标签、标签都在常用词表里的，再按年份取前 38，共 532 题，组成 106 套每日题目（每套由易到难五个难度档各取一题）。只用标题：API 不返回正文，而正文会直接写出技术名。原创意是自由填写标签；为了让 Jaccard 计分公平且好玩，这里改为候选选择。Stack Exchange API 免 key 且支持 CORS，但本游戏不需要“今天”的数据，所以不实时拉取。',
+    dataNote: 'A snapshot: from each year\'s 400 most-voted questions, those with 2-5 tags that are all in the common tag list were kept, then the top 38 per year, 532 questions in all, arranged into 106 daily sets (each set takes one question from each of five difficulty tiers, easy to hard). Only titles are used: the API does not return bodies, and bodies would spell out the technology names. The original idea was free-text tags; to make Jaccard scoring fair and fun, this version uses candidate selection instead. The Stack Exchange API needs no key and supports CORS, but the game does not need \u201ctoday\u2019s\u201d data, so nothing is fetched live.',
   },
 
   puzzle({ data, rng, pick }) {
@@ -63,25 +63,25 @@ export default {
     ctx.log('puzzle', p.rounds.map((r) => r.id));
     const rounds = p.rounds.map((r) => ({
       prompt: r.title,
-      body: ui.h('div', { class: 'small muted' }, `${r.year} 年发布 · ${r.score} 赞 · 选出全部标签（2–5 个）`),
+      body: ui.h('div', { class: 'small muted' }, `Posted ${r.year} \u00b7 ${r.score.toLocaleString('en-US')} votes \u00b7 select all the tags (2-5)`),
       options: r.options.map((t) => ({ label: t })),
       correct: r.tags.map((t) => r.options.indexOf(t)),
-      explain: `真实标签：${r.tags.join('、')}`,
+      explain: `Real tags: ${r.tags.join(', ')}`,
     }));
-    const res = await ctx.rounds({ rounds, multi: true, minWidth: 110, title: '这个问题打了哪些标签？' });
+    const res = await ctx.rounds({ rounds, multi: true, minWidth: 110, title: 'Which tags does this question have?' });
     let seen = 0, total = 0;
     const rows = p.rounds.map((r) => {
       const hit = titleHits(r.title, r.tags), hid = r.tags.filter((t) => !hit.includes(t));
       seen += hit.length; total += r.tags.length;
-      const why = hit.length === r.tags.length ? `标题里直接点名了全部标签（${hit.join('、')}）。`
-        : hit.length ? `标题直接点名：${hit.join('、')}；其余（${hid.join('、')}）要靠上下文推断，例如框架决定语言、平台决定工具。`
-          : `标题没有直接点名任何标签；${hid.join('、')} 全靠上下文推断。`;
+      const why = hit.length === r.tags.length ? `The title names every tag directly (${hit.join(', ')}).`
+        : hit.length ? `The title names ${hit.join(', ')} directly; the rest (${hid.join(', ')}) has to be inferred from context, for example a framework implies its language and a platform implies its tools.`
+          : `The title names no tag directly; ${hid.join(', ')} all have to be inferred from context.`;
       return { q: ui.h('a', { href: `https://stackoverflow.com/q/${r.id}`, target: '_blank', rel: 'noopener' }, r.title), tags: r.tags.join(', '), why };
     });
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.h('div', { class: 'ink2' }, `今天 ${total} 个真实标签里，${seen} 个直接出现在标题里。规律：技术名写在标题里的基本都是标签；框架会带出语言（swiftui → swift, ios），“怎么做”类问题常带概念标签（sorting、regex、string）。`),
+      ui.h('div', { class: 'ink2' }, `Of today\'s ${total} real tags, ${seen} appear directly in the titles. The pattern: a technology named in the title is almost always a tag; frameworks bring their language along (swiftui \u2192 swift, ios), and \u201chow do I\u201d questions often carry concept tags (sorting, regex, string).`),
       ui.table({
-        columns: [{ key: 'q', label: '问题' }, { key: 'tags', label: '真实标签' }, { key: 'why', label: '线索' }],
+        columns: [{ key: 'q', label: 'Question' }, { key: 'tags', label: 'Real tags' }, { key: 'why', label: 'Clue' }],
         rows,
       }));
     return res;
