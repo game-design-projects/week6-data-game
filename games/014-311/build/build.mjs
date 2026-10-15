@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 const raw = (f) => JSON.parse(fs.readFileSync(new URL(`./raw/${f}`, import.meta.url)));
 const counts = raw('counts.json'), shapes = raw('zipshapes.geojson');
-const ZH = JSON.parse(fs.readFileSync(new URL('./zh.json', import.meta.url)));
+const LABELS = JSON.parse(fs.readFileSync(new URL('./labels.json', import.meta.url)));
 
 const byZip = {}; const city = {}; let cityTot = 0;
 for (const r of counts) {
@@ -71,8 +71,8 @@ for (const f of shapes.features) {
   lift.forEach(([t]) => need.add(t));
   out.push({ zip: p.label, lat: +g.lat.toFixed(4), lng: +g.lng.toFixed(4), pop: +p.pop_est || 0, total: tot, r: +rEq.toFixed(1), top, lift, poly: outline(f.geometry) });
 }
-const missing = [...need].filter((t) => !ZH[t]);
-if (missing.length) { console.log('MISSING zh:', JSON.stringify(missing)); }
-const zh = {}; for (const t of need) zh[t] = ZH[t] || t;
-fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ year: 2025, zh, zips: out }));
+const missing = [...need].filter((t) => !LABELS[t]);
+if (missing.length) { console.log('MISSING labels:', JSON.stringify(missing)); }
+const labels = {}; for (const t of need) labels[t] = LABELS[t] || t;
+fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ year: 2025, labels, zips: out }));
 console.log(out.length, 'zips', 'dropped', dropped.length, JSON.stringify(dropped.slice(0, 40)));

@@ -18,12 +18,12 @@ test('pool size and per-zip sanity', () => {
     assert.equal(z.top.length, 8);
     let prev = 101;
     for (const [t, pct, avg] of z.top) {
-      assert.ok(typeof t === 'string' && t && data.zh[t], `zh ${t}`);
+      assert.ok(typeof t === 'string' && t && data.labels[t], `label ${t}`);
       assert.ok(finite(pct) && pct > 0 && pct <= 100 && pct <= prev); prev = pct;
       assert.ok(finite(avg) && avg > 0 && avg <= 100, `${z.zip} ${t} avg`);
     }
     assert.equal(z.lift.length, 3);
-    z.lift.forEach(([t, x]) => { assert.ok(data.zh[t] && finite(x) && x > 0); });
+    z.lift.forEach(([t, x]) => { assert.ok(data.labels[t] && finite(x) && x > 0); });
     assert.ok(z.poly.length >= 1);
     for (const ring of z.poly) for (const [la, ln] of ring) assert.ok(finite(la) && finite(ln) && la > 40.4 && la < 41 && ln > -74.4 && ln < -73.6);
     // centroid lies near its outline
@@ -47,7 +47,7 @@ test('puzzle() valid for days 1-120', () => {
 
 test('no answer leaks in what is shown before the guess', () => {
   for (const z of data.zips) {
-    const shown = JSON.stringify(rowsFor(z, data.zh));
+    const shown = JSON.stringify(rowsFor(z, data.labels));
     assert.ok(!shown.includes(z.zip), z.zip);
     for (const w of ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten']) assert.ok(!new RegExp(w, 'i').test(shown), `${z.zip} ${w}`);
   }
@@ -55,14 +55,14 @@ test('no answer leaks in what is shown before the guess', () => {
 
 test('rowsFor lift and borough', () => {
   const z = data.zips[0];
-  const rows = rowsFor(z, data.zh);
+  const rows = rowsFor(z, data.labels);
   assert.equal(rows.length, 8);
   rows.forEach((r) => assert.ok(finite(r.lift) && r.name));
-  assert.equal(borough('10001'), '曼哈顿');
-  assert.equal(borough('11201'), '布鲁克林');
-  assert.equal(borough('10301'), '史坦顿岛');
-  assert.equal(borough('10451'), '布朗克斯');
-  assert.equal(borough('11375'), '皇后区');
+  assert.equal(borough('10001'), 'Manhattan');
+  assert.equal(borough('11201'), 'Brooklyn');
+  assert.equal(borough('10301'), 'Staten Island');
+  assert.equal(borough('10451'), 'The Bronx');
+  assert.equal(borough('11375'), 'Queens');
 });
 
 test('scoring extremes (100*exp(-km/4))', () => {
