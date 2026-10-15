@@ -1,14 +1,12 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import g, { GENERIC, revealCounts, distinctive, sharedCount, MAX_GUESSES } from './game.js';
+import g, { GENERIC, revealCounts, distinctive, sharedCount, brandWords, MAX_GUESSES } from './game.js';
 import { makeRng, dailyIndex } from '../../engine/core.js';
 
 const data = JSON.parse(fs.readFileSync(new URL('./data.json', import.meta.url)));
 const slug = g.meta.slug;
 const mk = (day) => g.puzzle({ data, day, date: String(day), slug, rng: makeRng(`${slug}:${day}`), pick: (a) => a[dailyIndex(slug, day, a.length)] });
 const byId = new Map(data.products.map((p) => [p.id, p]));
-// Chinese words that only name the kind of food (the category column gives that away anyway), not the brand.
-const DESCRIPTOR = /酱|奶酪|巧克力|饼干|薯片|燕麦|汽水|豆奶|酸奶|果酱|芥末|蚝油|冰淇淋|沙拉|蛋糕|软糖|棒|玉米片|可乐|橙汁|麦片|松露|爆米花|软糖|腌菜|华夫饼|午餐肉|焗豆|杯面|拉面|汽水/;
 
 test('revealCounts: strictly growing, ends at N, every wrong guess reveals something', () => {
   for (let n = 6; n <= 30; n++) {
@@ -46,20 +44,19 @@ test('every product is well-formed and teachable', () => {
     assert.ok(p.ing.filter((i) => !GENERIC.has(i)).length >= 4, `${p.name} too generic`);
     for (const id of p.ing) {
       const d = data.dict[id];
-      assert.ok(Array.isArray(d) && d.length === 2 && d.every((s) => typeof s === 'string' && s.trim() && !/undefined|NaN/.test(s)), `${p.name}: ${id} untranslated`);
-      assert.match(d[0], /[一-鿿]/, `${id} zh has no Chinese`);
+      assert.ok(typeof d === 'string' && d.trim() && !/undefined|NaN/.test(d), `${p.name}: ${id} has no English name`);
+      assert.match(d, /^[A-Za-z0-9]/, `${id} English name`);
+      assert.doesNotMatch(d, /[^\x00-\u024f\u2018-\u201d]/, `${id} has non-English characters`);
     }
   }
 });
 
 test('answer leaks: no ingredient name contains a product or brand word', () => {
   for (const p of data.products) {
-    const words = `${p.name.replace(/[^\x00-\x7f]+/g, ' ')} ${p.brand}`.split(/[^A-Za-z]+/).filter((w) => w.length > 3).map((w) => w.toLowerCase());
-    const cjk = (p.name.match(/[一-鿿]{3,}/g) || []).filter((w) => !DESCRIPTOR.test(w));
+    const words = brandWords(p.name, p.brand);
     for (const id of p.ing) {
-      const txt = `${id} ${data.dict[id].join(' ')}`.toLowerCase();
+      const txt = `${id} ${data.dict[id]}`.toLowerCase();
       for (const w of words) assert.ok(!txt.includes(w), `${p.name}: ingredient "${id}" contains "${w}"`);
-      for (const w of cjk) assert.ok(!txt.includes(w), `${p.name}: ingredient "${id}" contains "${w}"`);
     }
   }
 });
