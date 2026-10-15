@@ -156,8 +156,9 @@ function resultCard({ meta, slug, day, r, ctx, revisit = false }) {
 
 // ───────── boot ─────────
 export async function boot() {
-  store.applyTheme();
   const params = new URLSearchParams(location.search);
+  const themeParam = params.get('theme'); // ?theme=dark|light forces a theme for this page view (screenshots, sharing)
+  store.applyTheme(['light', 'dark'].includes(themeParam) ? themeParam : undefined);
   const dir = params.get('g');
   const today = core.todayISO();
   const reqDate = params.get('date');

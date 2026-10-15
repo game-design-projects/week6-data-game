@@ -220,6 +220,20 @@ module must import cleanly in Node).
    real is reachable, generate data with a documented model, set `meta.data: 'synthetic'` and explain in `dataNote`.
 5. `meta.data: 'live'` only if `load()` really fetches today's data from a CORS-enabled endpoint, anchored to
    the date (e.g. yesterday's values) so every player gets the same puzzle. Keep a snapshot fallback in data.json.
+   Check CORS first: `curl -sI -H 'Origin: http://localhost' '<url>' | grep -i access-control-allow-origin`.
+   Pick a lag at which the source is final for everyone all day (USGS: yesterday UTC; Wikimedia pageviews:
+   2 days; HN: yesterday). A forecast that changes during the day is acceptable only if the *choice* of
+   puzzle (cities, items) stays deterministic. Recipe:
+   ```js
+   meta: { data: 'live', … },
+   async load(ctx) {                                   // ctx.data is the snapshot here
+     const day = ctx.core.addDays(ctx.date, -1);      // anchor to the puzzle date, not "now"
+     const raw = await ctx.fetchJSON(`https://…&date=${day}`, { timeout: 8000 });
+     return { ...ctx.data, live: toPuzzle(raw, day) }; // throw / return null → snapshot is used
+   },
+   puzzle({ data, pick }) { return data.live ?? pick(data.puzzles); },
+   ```
+   Export `toPuzzle` and test it in `game.test.mjs` against a small committed fixture (e.g. `build/fixture.json`).
 6. Games that "need an LLM" have no runtime model: generate the text/descriptions/groupings **offline at build
    time** (you are the model — write them into data.json from the real data) or use templates/question menus.
    Explain the substitution in `dataNote`.
@@ -233,5 +247,6 @@ checks meta, data size, that `puzzle()` is deterministic and gives ≥ 7 distinc
 `game.test.mjs`, then loads the page in headless Chrome twice: `?smoke=1` (must reach `playing`) and
 `?autoplay=1` (presets auto-answer; must reach `done` — custom loops must honour `ctx.autoplay`). It writes
 screenshots to `.shots/NNN-slug-{start,done,start-mobile}.png` — **open and look at them** and fix layout problems.
-Play it yourself by serving `node scripts/serve.mjs 8787` and opening `http://localhost:8787/play.html?g=NNN-slug`
+`--date=YYYY-MM-DD` checks another puzzle day (shots tagged `@date`), `--dark` takes the screenshots in the dark
+theme (tagged `-dark`; `?theme=dark` works on any page). Play it yourself by serving `node scripts/serve.mjs 8787` and opening `http://localhost:8787/play.html?g=NNN-slug`
 (`&date=YYYY-MM-DD` for other days, `&practice=1` to replay, `&debug=1` for logs).

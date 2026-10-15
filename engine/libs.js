@@ -127,12 +127,15 @@ export async function createMap({ center = [20, 0], zoom = 2, bounds, labels = f
     if (!on && labelLayer) { map.removeLayer(labelLayer); labelLayer = null; }
   };
   setLabels(labels);
-  const ro = new ResizeObserver(() => map.invalidateSize());
+  // Leaflet measures the element once; a map created before it is attached (or while
+  // hidden) has size 0, so re-measure on every resize and fit `bounds` on the first real size.
+  let fitted = !bounds;
+  const ro = new ResizeObserver(() => {
+    if (!el.clientWidth || !el.clientHeight) return;
+    map.invalidateSize();
+    if (!fitted) { fitted = true; map.fitBounds(bounds, { padding: [12, 12] }); }
+  });
   ro.observe(el);
-  if (bounds) {
-    // fit once the element is in the DOM and has a size
-    requestAnimationFrame(() => { map.invalidateSize(); map.fitBounds(bounds, { padding: [12, 12] }); });
-  }
   /** Teardrop pin marker. kind: '' | 'answer' | 'accent' */
   const pin = (latlng, kind = '', tooltip) => {
     const m = L.marker(latlng, { icon: L.divIcon({ className: '', html: `<div class="ds-pin ${kind}"></div>`, iconSize: [22, 22], iconAnchor: [11, 27] }) }).addTo(map);

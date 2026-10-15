@@ -3,6 +3,8 @@
 //   node scripts/check.mjs 001-daylight            # one game: meta, data, puzzle, tests, browser smoke
 //   node scripts/check.mjs 001-daylight --shot     # + screenshots in .shots/<dir>-{start,done}{,-mobile}.png
 //   node scripts/check.mjs --all [--no-browser]    # every game
+//   --date=YYYY-MM-DD  smoke/screenshot another puzzle day (shots get an @date tag)
+//   --dark             screenshots in the dark theme (shots get a -dark tag)
 // Exit code 1 if any check fails.
 import { readdir, readFile, stat, mkdir, rm, mkdtemp } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -16,10 +18,12 @@ import { makeRng, dailyIndex, isoFromDay, dayNumber, todayISO } from '../engine/
 const CATS = ['geo', 'nyc', 'money', 'science', 'words', 'culture', 'society', 'tech', 'transit', 'levels', 'literacy', 'model'];
 const KINDS = ['live', 'snapshot', 'computed', 'synthetic'];
 const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const SMOKE_DATE = todayISO();
-
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((a) => a.startsWith('--')));
+const opt = (name) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
+const SMOKE_DATE = opt('date') ?? todayISO();
+const THEME = flags.has('--dark') ? '&theme=dark' : '';
+const TAG = `${opt('date') ? `@${SMOKE_DATE}` : ''}${THEME ? '-dark' : ''}`;
 const names = args.filter((a) => !a.startsWith('--'));
 const browser = !flags.has('--no-browser') && existsSync(CHROME);
 
@@ -148,13 +152,13 @@ async function checkOne(dir) {
       const shots = path.join(ROOT, '.shots');
       await mkdir(shots, { recursive: true });
       const pt = await port();
-      const u = (mode) => `http://127.0.0.1:${pt}/play.html?g=${dir}&date=${SMOKE_DATE}&${mode}=1`;
+      const u = (mode) => `http://127.0.0.1:${pt}/play.html?g=${dir}&date=${SMOKE_DATE}${THEME}&${mode}=1`;
       await Promise.all([
-        runChrome(u('smoke'), { shot: path.join(shots, `${dir}-start.png`), height: 1400 }),
-        runChrome(u('autoplay'), { shot: path.join(shots, `${dir}-done.png`), height: 1800 }),
-        runChrome(`http://127.0.0.1:${pt}/scripts/mobile.html#${encodeURIComponent(u('smoke'))}`, { shot: path.join(shots, `${dir}-start-mobile.png`), width: 390, height: 1400 }),
+        runChrome(u('smoke'), { shot: path.join(shots, `${dir}${TAG}-start.png`), height: 1400 }),
+        runChrome(u('autoplay'), { shot: path.join(shots, `${dir}${TAG}-done.png`), height: 1800 }),
+        runChrome(`http://127.0.0.1:${pt}/scripts/mobile.html#${encodeURIComponent(u('smoke'))}`, { shot: path.join(shots, `${dir}${TAG}-start-mobile.png`), width: 390, height: 1400 }),
       ]);
-      info.push(`screenshots → .shots/${dir}-{start,done,start-mobile}.png`);
+      info.push(`screenshots → .shots/${dir}${TAG}-{start,done,start-mobile}.png`);
     }
   } else if (!browser) warns.push('browser smoke skipped');
 
