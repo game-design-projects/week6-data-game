@@ -10,9 +10,9 @@ const hav = (a, b, c, d) => { const r = Math.PI / 180, x = Math.sin((c - a) * r 
 test('bearing', () => {
   assert.ok(Math.abs(bearing([0, 0], [1, 0]) - 0) < 1e-6);
   assert.ok(Math.abs(bearing([0, 0], [0, 1]) - 90) < 1e-6);
-  assert.equal(dirName(315), '西北');
+  assert.equal(dirName(315), 'northwest');
 });
-test('category', () => { assert.equal(cat(100), '3 级'); assert.equal(cat(40), '热带风暴'); });
+test('category', () => { assert.equal(cat(100), 'Category 3'); assert.equal(cat(40), 'Tropical storm'); });
 test('speed', () => {
   const h = (a, b, c, d) => Math.hypot(c - a, d - b) * 100;
   assert.equal(speedKmh([[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0]], 3, h), 300 / 18);
