@@ -22,9 +22,10 @@ for (const f of fs.readdirSync(raw).filter((x) => /^cr_\d+\.json$/.test(x))) {
       fbT: e('B05002', 1), fb: e('B05002', 13), povT: e('B17001', 1), pov: e('B17001', 2),
       un: e('B25024', 1), un1: e('B25024', 2), u20: e('B25024', 9), u50: e('B25024', 10),
     };
-    if (c.st === 'PR') continue; // keep the pin map continental/Alaska/Hawaii
+    if (c.st === 'PR' || c.st === 'AK' || c.st === 'HI') continue; // the pin map shows the lower 48 only
     if (Object.values(o).some((v) => v == null || v < 0)) continue;
     if (o.pop < 1500 || o.wk < 400 || o.hh < 500 || o.un < 300) continue;
+    if (c.lat < 24 || c.lat > 50 || c.lng < -125 || c.lng > -66) continue;
     tracts.push({
       id, state: c.st, county, tract: tr.replace('Census Tract ', ''), lat: +c.lat.toFixed(4), lng: +c.lng.toFixed(4),
       pop: o.pop, inc: o.inc, rent: o.rent, val: o.val, age: o.age, yr: o.yr,
