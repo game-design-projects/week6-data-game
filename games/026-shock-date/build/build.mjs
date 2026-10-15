@@ -6,19 +6,19 @@ import { EVENTS } from './events.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 export const N = 50;
 const SER = {
-  SPX: { name: '标普 500', kind: 'pct', yahoo: '^GSPC' },
-  IXIC: { name: '纳斯达克综合指数', kind: 'pct', yahoo: '^IXIC' },
-  VIXCLS: { name: 'VIX 恐慌指数', kind: 'pct', fred: 'VIXCLS' },
-  DGS10: { name: '10 年期美债收益率', kind: 'diff', fred: 'DGS10' },
-  DGS2: { name: '2 年期美债收益率', kind: 'diff', fred: 'DGS2' },
-  DGS3MO: { name: '3 个月美债收益率', kind: 'diff', fred: 'DGS3MO' },
-  DCOILWTICO: { name: 'WTI 原油', kind: 'pct', fred: 'DCOILWTICO' },
-  GOLD: { name: '黄金期货', kind: 'pct', yahoo: 'GC=F' },
-  DEXUSEU: { name: '欧元/美元', kind: 'pct', fred: 'DEXUSEU' },
-  DEXJPUS: { name: '美元/日元', kind: 'pct', fred: 'DEXJPUS' },
-  DEXUSUK: { name: '英镑/美元', kind: 'pct', fred: 'DEXUSUK' },
-  DEXSZUS: { name: '美元/瑞郎', kind: 'pct', fred: 'DEXSZUS' },
-  DEXCHUS: { name: '美元/人民币', kind: 'pct', fred: 'DEXCHUS' },
+  SPX: { name: 'S&P 500', kind: 'pct', yahoo: '^GSPC' },
+  IXIC: { name: 'Nasdaq Composite', kind: 'pct', yahoo: '^IXIC' },
+  VIXCLS: { name: 'VIX volatility index', kind: 'pct', fred: 'VIXCLS' },
+  DGS10: { name: '10-year Treasury yield', kind: 'diff', fred: 'DGS10' },
+  DGS2: { name: '2-year Treasury yield', kind: 'diff', fred: 'DGS2' },
+  DGS3MO: { name: '3-month Treasury yield', kind: 'diff', fred: 'DGS3MO' },
+  DCOILWTICO: { name: 'WTI crude oil', kind: 'pct', fred: 'DCOILWTICO' },
+  GOLD: { name: 'Gold futures', kind: 'pct', yahoo: 'GC=F' },
+  DEXUSEU: { name: 'EUR/USD', kind: 'pct', fred: 'DEXUSEU' },
+  DEXJPUS: { name: 'USD/JPY', kind: 'pct', fred: 'DEXJPUS' },
+  DEXUSUK: { name: 'GBP/USD', kind: 'pct', fred: 'DEXUSUK' },
+  DEXSZUS: { name: 'USD/CHF', kind: 'pct', fred: 'DEXSZUS' },
+  DEXCHUS: { name: 'USD/CNY', kind: 'pct', fred: 'DEXCHUS' },
 };
 const KEYS = Object.keys(SER);
 const SD_FLOOR = { pct: 0.0015, diff: 0.02 }; // avoid divide-by-almost-zero in flat regimes (pegs, zero-rate yields)

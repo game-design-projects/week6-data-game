@@ -51,7 +51,7 @@ test('every puzzle for days 1-120 is valid and leak free', () => {
       assert.ok(!dateRe.test(s.name) && !s.name.includes(ev.label));
     }
     // the answer day really is a jump: max |day-to-day move| of the strongest series sits on the answer day or next to it
-    assert.ok(explain(pz).includes(`第 ${pz.ans} 天`));
+    assert.ok(explain(pz).includes(`Day ${pz.ans}`));
   }
 });
 
