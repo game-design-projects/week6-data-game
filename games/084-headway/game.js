@@ -37,7 +37,7 @@ export function grade(times, taps) {
 const clock = (s) => { const t = Math.floor(s) % 86400; return `${String(Math.floor(t / 3600)).padStart(2, '0')}:${String(Math.floor((t % 3600) / 60)).padStart(2, '0')}`; };
 
 /** Rhythm difficulty from the coefficient of variation of the gaps. */
-export function difficulty(cv) { return cv < 0.35 ? '简单' : cv < 0.45 ? '中等' : '困难'; }
+export function difficulty(cv) { return cv < 0.35 ? 'Easy' : cv < 0.45 ? 'Medium' : 'Hard'; }
 
 /** Gaps between consecutive notes, in real minutes. */
 export const gapsOf = (p) => p.notes.slice(1).map((n, i) => (n[0] - p.notes[i][0]) / 60);
@@ -51,10 +51,10 @@ export function explain(p) {
   const chords = p.notes.filter((n) => n[1].includes(' ')).length;
   const f = (v) => v.toFixed(1);
   let s = routes.length === 1
-    ? `这个站台只有 ${routes[0]} 线停靠，但间隔仍不均匀（${f(Math.min(...gaps))}–${f(Math.max(...gaps))} 分钟）：这是该线在这个钟点的发车间隔自身的波动。`
-    : `${routes.join('、')} 共 ${routes.length} 条线各自按自己的间隔发车，叠加到同一站台后节奏就乱了：最挤的是第 ${mi + 1} 与第 ${mi + 2} 趟之间只隔 ${f(gaps[mi])} 分钟，最空的是第 ${ma + 1} 与第 ${ma + 2} 趟之间隔 ${f(gaps[ma])} 分钟。`;
-  if (chords) s += ` 有 ${chords} 个和弦音符，是几条线在 30 秒内先后进站、被合并成了一拍。`;
-  s += ' 听出重复的"长—短"组合，就能在音符落下前预判下一拍。';
+    ? `Only the ${routes[0]} stops at this platform, yet the gaps are still uneven (${f(Math.min(...gaps))}\u2013${f(Math.max(...gaps))} minutes): that is the line\u2019s own variation in departures at this hour.`
+    : `The ${routes.join(', ')} (${routes.length} lines) each run on their own spacing, and stacked onto one platform the rhythm gets ragged: the tightest pair is trains ${mi + 1} and ${mi + 2}, only ${f(gaps[mi])} minutes apart, and the widest is trains ${ma + 1} and ${ma + 2}, ${f(gaps[ma])} minutes apart.`;
+  if (chords) s += ` ${chords === 1 ? '1 chord note is' : `${chords} chord notes are`} several lines arriving within 30 seconds of each other, merged into one beat.`;
+  s += ' Spot the repeating long-short pattern and you can anticipate the next beat before the note drops.';
   return s;
 }
 
@@ -79,20 +79,20 @@ export default {
     num: 84,
     slug: 'headway',
     title: 'Headway',
-    tagline: '节奏游戏：鼓点就是纽约某个地铁站台的真实列车到站时间。',
+    tagline: 'A rhythm game whose beats are the real scheduled arrival times at one New York subway platform.',
     category: 'transit',
     data: 'snapshot',
     howTo: [
-      '今天给你一个真实站台的一段列车时刻表：15 分钟被压缩成约 22 秒，每趟车是一颗下落的音符，几条线同时进站会合并成一拍。',
-      '点击开始后有 2 秒预备。音符落到底部的线上时点击屏幕（或按空格）；有声音时每个音符落线都会"嘀"一声，你的点击是更高的"嘟"。',
-      '时刻表不是均匀的：高峰密集、线路交汇处忽长忽短，记住"长—短"的规律就能提前预判。',
-      '误差 80 毫秒内 100 分，150 毫秒内 70 分，250 毫秒内 40 分；漏掉的音符 0 分；没有音符时乱点每次扣 4 分。',
+      'You get a stretch of real timetable from one platform: 15 minutes squeezed into about 22 seconds. Each train is a falling note, and lines arriving together merge into one beat.',
+      'Tap to start, with a 2-second lead-in. Tap the screen (or press Space) as each note lands on the bottom line. With sound on, every note lands with a \u201cblip\u201d and your tap is a higher \u201cbeep\u201d.',
+      'The timetable is uneven: dense at rush hour, long and short gaps where lines meet. Learn the long-short pattern and you can anticipate it.',
+      'Within 80 ms is 100 points, within 150 ms 70, within 250 ms 40. Missed notes score 0, and each stray tap with no note nearby costs 4.',
     ],
-    scoring: '总分 = 每个音符得分的平均值 − 乱点惩罚（最低 0）。每个音符的得分按误差取 100 / 70 / 40 / 0。',
+    scoring: 'Total = average points per note \u2212 stray-tap penalty (minimum 0). Each note scores 100 / 70 / 40 / 0 by timing error.',
     sources: [
-      { name: 'MTA NYC Subway static GTFS', url: 'https://rrgtfsfeeds.s3.amazonaws.com/gtfs_subway.zip', note: 'stop_times.txt 的计划到站时刻' },
+      { name: 'MTA NYC Subway static GTFS', url: 'https://rrgtfsfeeds.s3.amazonaws.com/gtfs_subway.zip', note: 'scheduled arrival times from stop_times.txt' },
     ],
-    dataNote: '用的是 MTA 公布的计划时刻表（GTFS static），不是当天的实时到站：MTA 的 GTFS-Realtime 只提供"当前与未来"的 protobuf 预测、没有历史，每位玩家看到的会不一样，无法做成每天同一题，所以保留快照。同一站台 30 秒内到达的多条线合并为一个音符；节奏过于均匀（如固定 2 分钟一班）的时段已被剔除。',
+    dataNote: 'This uses the MTA\u2019s published schedule (static GTFS), not live arrivals: GTFS-Realtime only offers protobuf predictions for now and later, with no history, so every player would see something different and there could be no shared daily puzzle. Hence a snapshot. Trains at the same platform within 30 seconds are merged into one note, and windows that are too regular (say, a train every 2 minutes) were filtered out.',
   },
 
   puzzle({ data, pick }) {
@@ -108,11 +108,11 @@ export default {
     const routes = [...new Set(p.notes.flatMap((n) => n[1].split(' ')))];
 
     ctx.stage.append(ui.panel(
-      { kicker: `${p.service} · ${clock(p.startSec)} 起的 15 分钟`, title: `${p.station} · ${p.dir}（开往 ${p.head}）` },
+      { kicker: `${p.service} \u00b7 15 minutes from ${clock(p.startSec)}`, title: `${p.station} \u00b7 ${p.dir} (to ${p.head})` },
       ui.h('div', { class: 'ds-grid', style: { '--min': '110px' } },
-        ui.stat({ label: '列车', value: String(N), sub: '个音符' }),
-        ui.stat({ label: '节奏难度', value: difficulty(p.cv), sub: '间隔越不齐越难' }),
-        ui.stat({ label: '线路', value: `${routes.length} 条`, sub: routes.join(' · ') }))),
+        ui.stat({ label: 'Trains', value: String(N), sub: N === 1 ? 'note' : 'notes' }),
+        ui.stat({ label: 'Rhythm', value: difficulty(p.cv), sub: 'uneven = harder' }),
+        ui.stat({ label: 'Lines', value: String(routes.length), sub: routes.join(' · ') }))),
     );
 
     const taps = [];
@@ -146,7 +146,7 @@ export default {
           times.forEach((nt, i) => { const d = Math.abs(now - nt); if (!matched.has(i) && d < bd) { bd = d; best = i; } });
           const pts = best >= 0 ? judge(bd) : 0;
           if (pts) matched.add(best);
-          pops.push({ t: now, txt: pts === 100 ? '完美' : pts === 70 ? '不错' : pts === 40 ? '勉强' : '×', ok: pts > 0, dir: best >= 0 && now < times[best] ? '早' : '晚' });
+          pops.push({ t: now, txt: pts === 100 ? 'Perfect' : pts === 70 ? 'Good' : pts === 40 ? 'OK' : '×', ok: pts > 0, dir: best >= 0 && now < times[best] ? 'early' : 'late' });
           if (au.ac && sound) au.blip(au.ac.currentTime + 0.001, 1100, 0.09, 0.2);
           ctx.log(`tap ${now.toFixed(3)} ${pts ? 'note ' + best + ' ' + pts : 'stray'}`);
         };
@@ -189,12 +189,12 @@ export default {
               g.globalAlpha = 1;
             }
             const real = p.startSec + (Math.max(0, now) / SPEED) * 60;
-            st.hud.textContent = started ? `${clock(real)}  ·  ${taps.length} 次点击` : '';
+            st.hud.textContent = started ? `${clock(real)}  ·  ${taps.length} ${taps.length === 1 ? 'tap' : 'taps'}` : '';
             if (!started) {
               g.fillStyle = c.ink; g.font = '700 20px system-ui, sans-serif';
-              g.fillText('点击屏幕或按空格开始', x, st.h * 0.4);
+              g.fillText('Tap or press Space to start', x, st.h * 0.4);
               g.font = '14px system-ui, sans-serif'; g.fillStyle = c.muted;
-              g.fillText('音符落到线上时再点一下', x, st.h * 0.4 + 28);
+              g.fillText('Tap again as each note hits the line', x, st.h * 0.4 + 28);
             }
             if (started && now > times[N - 1] + 0.8) { st.stop(); resolve(); }
           },
@@ -202,7 +202,7 @@ export default {
           onKey(type, e) { if (type === 'down' && (e.code === 'Space' || e.key === ' ')) { e.preventDefault(); if (!e.repeat) doTap(); } },
         });
         if (au.ac) ctx.stage.append(ui.h('div', { class: 'ds-row' },
-          ui.chips(['声音：开', '声音：关'], { active: '声音：开', onClick: (v) => { sound = v === '声音：开'; } })));
+          ui.chips(['Sound: on', 'Sound: off'], { active: 'Sound: on', onClick: (v) => { sound = v === 'Sound: on'; } })));
         s.start();
       });
       au.close();
@@ -219,27 +219,27 @@ export default {
 
     const chart = await ui.plot((Plot, c) => ({
       height: 150, marginLeft: 40,
-      x: { label: '第几个间隔', tickFormat: (d) => String(d), ticks: gapsMin.length },
-      y: { label: '间隔（分钟）', grid: true },
+      x: { label: 'Gap no.', tickFormat: (d) => String(d), ticks: gapsMin.length },
+      y: { label: 'Gap (minutes)', grid: true },
       marks: [Plot.barY(gapsMin.map((v, i) => ({ i: i + 1, v })), { x: 'i', y: 'v', fill: c.accent }), Plot.ruleY([0])],
     }), { height: 150 });
     const hasErr = errs.length > 0;
     const errChart = hasErr ? await ui.plot((Plot, c) => ({
       height: 140, marginLeft: 40,
-      x: { label: '第几个音符', tickFormat: (d) => String(d), ticks: N },
-      y: { label: '误差（毫秒，+ 偏晚）', grid: true },
+      x: { label: 'Note no.', tickFormat: (d) => String(d), ticks: N },
+      y: { label: 'Error (ms, + = late)', grid: true },
       marks: [Plot.ruleY([0]), Plot.dot(g.res.map((r, i) => ({ i: i + 1, e: r.err == null ? null : Math.round(r.err * 1000) })).filter((d) => d.e != null), { x: 'i', y: 'e', fill: c.ink, r: 4 })],
     }), { height: 140 }) : null;
-    const bias = !hasErr ? '你一个音符都没点中' : Math.abs(avg) < 0.02 ? '你的节拍很准' : avg > 0 ? `你平均偏晚 ${Math.round(avg * 1000)} 毫秒` : `你平均偏早 ${Math.round(-avg * 1000)} 毫秒`;
+    const bias = !hasErr ? 'You hit no notes' : Math.abs(avg) < 0.02 ? 'Your timing was spot on' : avg > 0 ? `You were ${Math.round(avg * 1000)} ms late on average` : `You were ${Math.round(-avg * 1000)} ms early on average`;
     return {
       score: g.score, max: 100, win: g.score >= 70, emoji,
-      summary: `${p.station} ${p.dir} · ${perfect}/${N} 完美`,
+      summary: `${p.station} ${p.dir} \u00b7 ${perfect}/${N} perfect`,
       detail: ui.panel({ plain: true },
         ui.kv([
-          ['站台', `${p.station} · ${p.dir}（${p.service}，${clock(p.startSec)} 起）`],
-          ['最短 / 最长间隔', `${Math.min(...gapsMin).toFixed(1)} / ${Math.max(...gapsMin).toFixed(1)} 分钟`],
-          ['平均间隔 (headway)', `${(gapsMin.reduce((a, b) => a + b, 0) / gapsMin.length).toFixed(1)} 分钟`],
-          ['你的表现', `${bias}；漏掉 ${missed} 个，乱点 ${g.stray} 次`],
+          ['Platform', `${p.station} \u00b7 ${p.dir} (${p.service}, from ${clock(p.startSec)})`],
+          ['Shortest / longest gap', `${Math.min(...gapsMin).toFixed(1)} / ${Math.max(...gapsMin).toFixed(1)} min`],
+          ['Average gap (headway)', `${(gapsMin.reduce((a, b) => a + b, 0) / gapsMin.length).toFixed(1)} min`],
+          ['Your run', `${bias}; ${missed} missed, ${g.stray} stray ${g.stray === 1 ? 'tap' : 'taps'}`],
         ]),
         ui.h('div', { style: { marginTop: '12px' } }, chart),
         errChart ? ui.h('div', { style: { marginTop: '8px' } }, errChart) : null,

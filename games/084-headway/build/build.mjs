@@ -7,7 +7,7 @@ const rows = (f) => { const [h, ...r] = csv(f); return r.map((c) => Object.fromE
 
 const stops = new Map(rows('stops.txt').map((s) => [s.stop_id, s]));
 const trips = new Map(rows('trips.txt').map((t) => [t.trip_id, t]));
-const SERVICES = { Weekday: '工作日', Saturday: '周六', Sunday: '周日' };
+const SERVICES = { Weekday: 'Weekday', Saturday: 'Saturday', Sunday: 'Sunday' };
 const sec = (t) => { const [h, m, s] = t.split(':').map(Number); return h * 3600 + m * 60 + s; };
 
 const plat = new Map(); // stop_id|service -> {arr:[[sec,route]], heads:Map}
@@ -64,7 +64,7 @@ for (const c of cands) {
   const t0 = c.notes[0].s - 4; // window opens just before first train
   const g = gapsOf(c);
   out.push({
-    station: st.stop_name, dir: c.sid.slice(-1) === 'N' ? '北行' : '南行', head: c.head,
+    station: st.stop_name, dir: c.sid.slice(-1) === 'N' ? 'Northbound' : 'Southbound', head: c.head,
     service: SERVICES[c.service], startSec: t0, lat: +st.stop_lat, lng: +st.stop_lon,
     notes: c.notes.map((n) => [c.notes.length && n.s - t0, n.r.join(' ')]).map(([s, r]) => [s, r]),
     cv: +cv(g).toFixed(2),
