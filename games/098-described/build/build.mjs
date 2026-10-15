@@ -9,8 +9,8 @@ const puzzles = E.map((e) => {
   const x = pools[e.src][e.idx];
   if (!x) throw new Error(`no candidate ${e.src}/${e.idx}`);
   if (e.city && e.city !== x.city) throw new Error(`city mismatch ${e.src}/${e.idx}: ${e.city} vs ${x.city}`);
-  const o = { id: e.src * 1000 + e.idx, city: x.city, cityZh: e.cityZh, country: e.c, lat: +x.lat.toFixed(4), lng: +x.lng.toFixed(4),
-    desc: e.desc, signs: e.signs ?? null, why: e.why, img: x.thumb, page: x.page, title: x.title, artist: x.artist || '未知作者', lic: x.lic };
+  const o = { id: e.src * 1000 + e.idx, city: x.city, country: e.c, lat: +x.lat.toFixed(4), lng: +x.lng.toFixed(4),
+    desc: e.desc, signs: e.signs ?? null, why: e.why, img: x.thumb, page: x.page, title: x.title, artist: x.artist || 'Unknown author', lic: x.lic };
   return o;
 });
 const out = JSON.stringify({ built: '2026-10-15', puzzles });

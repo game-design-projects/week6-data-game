@@ -23,12 +23,12 @@ test('days 1-120: every puzzle resolves to a well-formed entry', () => {
     const p = byId.get(out.id);
     assert.ok(p, `day ${day}: unknown id ${out.id}`);
     seen.add(p.id);
-    for (const k of ['city', 'cityZh', 'country', 'desc', 'why', 'img', 'page', 'title', 'artist', 'lic']) {
+    for (const k of ['city', 'country', 'desc', 'why', 'img', 'page', 'title', 'artist', 'lic']) {
       assert.equal(typeof p[k], 'string', `${p.id}.${k}`);
       assert.ok(p[k].trim().length > 0 && !/undefined|NaN|null/.test(p[k]), `${p.id}.${k} = ${p[k]}`);
     }
     assert.ok(Number.isFinite(p.lat) && Number.isFinite(p.lng) && Math.abs(p.lat) <= 85 && Math.abs(p.lng) <= 180, `coords ${p.id}`);
-    assert.ok(p.desc.length >= 30 && p.desc.length <= 420, `desc length ${p.id}`);
+    assert.ok(p.desc.length >= 30 && p.desc.length <= 450, `desc length ${p.id}`);
     assert.ok(p.why.length >= 40, `why length ${p.id}`);
     assert.ok(p.signs === null || (typeof p.signs === 'string' && p.signs.length > 3), `signs ${p.id}`);
     assert.match(p.img, /^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/thumb\/[0-9a-f]\/[0-9a-f]{2}\/[^/]+\/500px-[^/]+$/, `img ${p.id}`);
@@ -43,9 +43,8 @@ test('the first two weeks never repeat a puzzle', () => {
 });
 
 // ---- answer leaks --------------------------------------------------------------------------
-const COUNTRY_SHORT = (c) => c.replace(/^中国(?=香港)/, '');
-const NAMES = [...new Set(data.puzzles.flatMap((p) => [p.city, p.cityZh, COUNTRY_SHORT(p.country)]))];
-const EXTRA = ['Fulton', 'Bronx', 'Dhaka', '布朗克斯', 'Edinburgh', 'Prague', 'Praha', 'Nahalat', 'Moskva', 'Москва', '苏格兰', '英格兰', '夏威夷', '加州'];
+const NAMES = [...new Set(data.puzzles.flatMap((p) => [p.city, p.country]))];
+const EXTRA = ['Fulton', 'Bronx', 'Dhaka', 'Edinburgh', 'Prague', 'Praha', 'Nahalat', 'Moskva', 'Москва', 'Scotland', 'England', 'Hawaii', 'California'];
 
 test('nothing visible before the guess names the answer', () => {
   for (const p of data.puzzles) {
@@ -65,7 +64,7 @@ test('the page title and map do not carry the answer (labels only on reveal)', (
 
 test('why differs per puzzle and names a concrete clue', () => {
   assert.equal(new Set(data.puzzles.map((p) => p.why)).size, data.puzzles.length);
-  for (const p of data.puzzles) assert.ok(/关键线索|描述(很)?泛|描述偏泛|描述很泛/.test(p.why), `why should flag the clue or admit it is vague: ${p.id}`);
+  for (const p of data.puzzles) assert.ok(/^(Key clue|Vague description):/.test(p.why), `why should flag the clue or admit it is vague: ${p.id}`);
 });
 
 test('coordinates are near the named city (Commons geotag within 12 km)', () => {
