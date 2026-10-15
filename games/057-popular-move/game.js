@@ -1,7 +1,7 @@
 // #57 Popular Move — a chess position; guess the move 1500-rated players play most, then the move 2500+ players play most.
 
 const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
-const PIECE_ZH = { K: '王', Q: '后', R: '车', B: '象', N: '马' };
+const PIECE_NAME = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight' };
 const N_POS = 4; // positions per day; each is asked twice (once per rating band)
 
 /** FEN placement -> 8 rows of 8 chars ('' for empty). Row 0 = rank 8. */
@@ -13,13 +13,13 @@ export function parseFen(fen) {
   });
 }
 
-/** Short Chinese description of a SAN move, e.g. "Nf3" -> "马 → f3". */
+/** Short description of a SAN move, e.g. "Nf3" -> "Knight \u2192 f3". */
 export function describe(san) {
-  if (san.startsWith('O-O-O')) return '长易位';
-  if (san.startsWith('O-O')) return '短易位';
+  if (san.startsWith('O-O-O')) return 'Castles long';
+  if (san.startsWith('O-O')) return 'Castles short';
   const sq = san.match(/[a-h][1-8](?!.*[a-h][1-8])/)?.[0] ?? '';
-  const piece = PIECE_ZH[san[0]] ?? '兵';
-  return `${piece}${san.includes('x') ? ' 吃 ' : ' → '}${sq}`;
+  const piece = PIECE_NAME[san[0]] ?? 'Pawn';
+  return `${piece}${san.includes('x') ? ' takes ' : ' \u2192 '}${sq}`;
 }
 
 export const pct = (n, total) => (total ? (100 * n) / total : 0);
@@ -56,7 +56,7 @@ export function boardSvg(fen, turn, arrows = []) {
     g += `<g opacity="0.88" fill="${a.color}" stroke="${a.color}"><line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" stroke-width="1.5" stroke-linecap="round"/>`
       + `<polygon stroke="none" points="${x2},${y2} ${bx - uy * 1.9},${by + ux * 1.9} ${bx + uy * 1.9},${by - ux * 1.9}"/></g>`;
   }
-  return `<svg viewBox="0 0 80 80" role="img" aria-label="国际象棋局面" style="display:block;width:100%;height:auto">${g}</svg>`;
+  return `<svg viewBox="0 0 80 80" role="img" aria-label="Chess position" style="display:block;width:100%;height:auto">${g}</svg>`;
 }
 
 /** The puzzle-specific teaching sentence for one position. Pure. */
@@ -65,11 +65,11 @@ export function insight(it) {
   const lt = topMove(it.opts, 'low'), ht = topMove(it.opts, 'high');
   const f = (n) => `${n.toFixed(0)}%`;
   if (lt === ht) {
-    return `两个分段都最常走 ${lt}（1500 分 ${f(share(it, o(lt), 'low'))}，2500+ ${f(share(it, o(lt), 'high'))}）：这步是各水平的共识，答案藏在局面本身。`;
+    return `Both bands play ${lt} most often (${f(share(it, o(lt), 'low'))} at 1500, ${f(share(it, o(lt), 'high'))} at 2500+): this move is a consensus at every level, so the answer is in the position itself.`;
   }
   const hiOfLt = share(it, o(lt), 'high'), loOfHt = share(it, o(ht), 'low');
-  const conc = share(it, o(ht), 'high') > share(it, o(lt), 'low') ? '高手更集中在这一步' : '高手的选择更分散';
-  return `1500 分偏爱 ${lt}（${f(share(it, o(lt), 'low'))}），2500+ 把它降到 ${f(hiOfLt)}，转而首选 ${ht}（${f(share(it, o(ht), 'high'))}，1500 分只有 ${f(loOfHt)}）；${conc}。`;
+  const conc = share(it, o(ht), 'high') > share(it, o(lt), 'low') ? 'strong players are more concentrated on this move' : 'strong players spread their choices more';
+  return `1500-rated players favor ${lt} (${f(share(it, o(lt), 'low'))}); at 2500+ it drops to ${f(hiOfLt)} and ${ht} becomes the top choice (${f(share(it, o(ht), 'high'))}, versus only ${f(loOfHt)} at 1500). Also, ${conc}.`;
 }
 
 export default {
@@ -77,22 +77,22 @@ export default {
     num: 57,
     slug: 'popular-move',
     title: 'Popular Move',
-    tagline: '同一个棋局，1500 分的人和 2500 分以上的人最常走的一步，往往不一样。你能分辨吗？',
+    tagline: 'In the same chess position, the move 1500-rated players play most often is often not the one 2500+ players play most. Can you tell them apart?',
     category: 'culture',
     data: 'snapshot',
     howTo: [
-      `每天 ${N_POS} 个真实对局中出现过的局面，走子方永远在棋盘下方。`,
-      '每个局面问两次：1500 分的玩家最常走哪一步？2500 分以上的玩家最常走哪一步？选项都是真实走过的着法。',
-      '问的是“最常走”，不是“最好”。高手常走的并不总是你以为的那步，业余玩家也有自己的偏好。',
-      '着法用代数记谱：N=马 B=象 R=车 Q=后 K=王，无字母为兵，x=吃子，O-O=短易位。答完后棋盘上会画出两个分段的首选着法。',
+      `Each day brings ${N_POS} positions from real games, with the side to move always at the bottom of the board.`,
+      'Each position is asked twice: which move do 1500-rated players play most often? Which do 2500+ players play most often? All options are moves that were really played.',
+      'The question is \u201cmost often played\u201d, not \u201cbest\u201d. What strong players play is not always what you expect, and club players have their own favorites.',
+      'Moves use algebraic notation: N=knight B=bishop R=rook Q=queen K=king, no letter means a pawn, x=capture, O-O=castles short. After you answer, arrows on the board show each band\'s top move.',
     ],
-    scoring: `共 ${N_POS * 2} 问，答对一问 1 分，满分 ${N_POS * 2} 分。`,
+    scoring: `${N_POS * 2} questions, 1 point per correct answer, ${N_POS * 2} points max.`,
     sources: [
-      { name: 'Lichess open database（1500 分段：2014-01 标准对局）', url: 'https://database.lichess.org/' },
-      { name: 'Lichess Elite Database（2500+ 分段：2021-12、2022-01）', url: 'https://database.nikonoel.fr/' },
-      { name: 'lichess-org/chess-openings（开局名称）', url: 'https://github.com/lichess-org/chess-openings' },
+      { name: 'Lichess open database (1500 band: January 2014 standard games)', url: 'https://database.lichess.org/' },
+      { name: 'Lichess Elite Database (2500+ band: Dec 2021, Jan 2022)', url: 'https://database.nikonoel.fr/' },
+      { name: 'lichess-org/chess-openings (opening names)', url: 'https://github.com/lichess-org/chess-openings' },
     ],
-    dataNote: 'Lichess 开局浏览器 API（explorer.lichess.ovh / explorer.lichess.org）现在需要登录令牌，浏览器里无法免密钥调用，所以改为自己用官方公开对局库统计，是静态快照。统计口径按“走这一步的人”算：1500 分段 = 走子方评分 1400–1600（对手 1250–1750，非 Bullet）；2500+ 分段 = 走子方评分 ≥ 2500（Elite 库收录 2500+ 对 2300+ 的对局）。局面相同（含着法顺序不同）合并；每个分段样本都足够多，且各自第一名领先第二名至少 6 个百分点。两个对局库月份不同（2014 年与 2021–22 年），Lichess 评分在这些年里有整体漂移，所以“1500 分”是当年的 1500 分。',
+    dataNote: 'The Lichess opening explorer API (explorer.lichess.ovh / explorer.lichess.org) now needs a login token and cannot be called keylessly from a browser, so the counts come from the official public game databases instead, as a static snapshot. Stats are by the player making the move: 1500 band = mover rated 1400-1600 (opponent 1250-1750, non-Bullet); 2500+ band = mover rated 2500+ (the Elite database holds 2500+ vs 2300+ games). Identical positions (including move-order transpositions) are merged; every band has a large sample, and each band\'s top move leads the runner-up by at least 6 percentage points. The two databases come from different months (2014 versus 2021-22), and Lichess ratings drifted overall in between, so \u201c1500\u201d means the 1500 of its day.',
   },
 
   puzzle({ data, rng }) {
@@ -115,24 +115,24 @@ export default {
       el.innerHTML = svg;
       return el;
     };
-    const caption = (i, it) => ui.h('div', { class: 'small muted', style: { textAlign: 'center' } }, `局面 ${i + 1}/${N_POS} · 轮到${it.turn === 'w' ? '白' : '黑'}方走（${it.turn === 'w' ? '白' : '黑'}方在下方）`);
+    const caption = (i, it) => ui.h('div', { class: 'small muted', style: { textAlign: 'center' } }, `Position ${i + 1}/${N_POS} \u00b7 ${it.turn === 'w' ? 'White' : 'Black'} to move (${it.turn === 'w' ? 'White' : 'Black'} at the bottom)`);
 
     const rounds = [];
     p.items.forEach((it, i) => {
       for (const [band, bandLabel] of bands) {
         const top = topMove(it.opts, band), n = nOf(it, band);
         rounds.push({
-          prompt: `${bandLabel}的玩家在这里最常走哪一步？`,
+          prompt: `Which move do ${bandLabel} play most often here?`,
           body: ui.h('div', { class: 'ds-stack' }, boardNode(boardSvg(it.fen, it.turn)), caption(i, it)),
           options: it.opts.map((o) => ({ label: o.san, sub: describe(o.san) })),
           correct: it.opts.findIndex((o) => o.san === top),
-          explain: `${bandLabel}（${n} 次走子）：${it.opts.slice().sort((a, b) => b[band] - a[band]).map((o) => `${o.san} ${share(it, o, band).toFixed(0)}%`).join(' · ')}`,
+          explain: `${bandLabel} (${n} moves): ${it.opts.slice().sort((a, b) => b[band] - a[band]).map((o) => `${o.san} ${share(it, o, band).toFixed(0)}%`).join(' · ')}`,
         });
       }
       ctx.log('position', i + 1, it.fen, 'low top', topMove(it.opts, 'low'), 'high top', topMove(it.opts, 'high'));
     });
 
-    const res = await ctx.rounds({ rounds, title: '猜最常走的一步' });
+    const res = await ctx.rounds({ rounds, title: 'Guess the most-played move' });
 
     res.detail = ui.h('div', { class: 'ds-stack' }, ...p.items.map((it, i) => {
       const lt = topMove(it.opts, 'low'), ht = topMove(it.opts, 'high');
@@ -141,18 +141,18 @@ export default {
         ? [{ ...mv(lt), color: COLOR.both }]
         : [{ ...mv(lt), color: COLOR.low }, { ...mv(ht), color: COLOR.high }];
       const legend = lt === ht
-        ? [['两个分段首选', lt, COLOR.both]]
-        : [['1500 分首选', lt, COLOR.low], ['2500+ 首选', ht, COLOR.high]];
+        ? [['Top move, both bands', lt, COLOR.both]]
+        : [['1500 top move', lt, COLOR.low], ['2500+ top move', ht, COLOR.high]];
       return ui.h('div', { class: 'ds-stack' },
-        ui.h('div', { class: 'ink2' }, `局面 ${i + 1}${it.opening ? `：${it.opening.eco} ${it.opening.name}` : ''}（${it.turn === 'w' ? '白' : '黑'}方走）`),
+        ui.h('div', { class: 'ink2' }, `Position ${i + 1}${it.opening ? `: ${it.opening.eco} ${it.opening.name}` : ''} (${it.turn === 'w' ? 'White' : 'Black'} to move)`),
         boardNode(boardSvg(it.fen, it.turn, arrows)),
         ui.h('div', { class: 'small', style: { display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' } },
-          ...legend.map(([k, san, c]) => ui.h('span', {}, ui.h('span', { style: { color: c } }, '→ '), `${k} ${san}`))),
+          ...legend.map(([k, san, c]) => ui.h('span', {}, ui.h('span', { style: { color: c } }, '\u2192 '), `${k} ${san}`))),
         ui.table({
-          columns: [{ key: 'san', label: '着法' }, { key: 'l', label: '1500 分', num: true }, { key: 'h', label: '2500+', num: true }],
+          columns: [{ key: 'san', label: 'Move' }, { key: 'l', label: '1500', num: true }, { key: 'h', label: '2500+', num: true }],
           rows: it.opts.map((o) => ({ san: o.san, l: `${share(it, o, 'low').toFixed(1)}%`, h: `${share(it, o, 'high').toFixed(1)}%` })),
         }),
-        ui.h('div', { class: 'small muted' }, `${insight(it)}（样本：${it.nLow} / ${it.nHigh} 次走子）`));
+        ui.h('div', { class: 'small muted' }, `${insight(it)} (sample: ${it.nLow} / ${it.nHigh} moves)`));
     }));
     return res;
   },

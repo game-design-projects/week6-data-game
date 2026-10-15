@@ -68,8 +68,8 @@ const puzzles = chosen.map(({ diff, ...p }) => p);
 const st = (f) => JSON.parse(fs.readFileSync(f, 'utf8').trim().split('\n').pop());
 const sl = st('raw/057-low.log'), sh = st('raw/057-high.log');
 const meta = {
-  low: { label: '1500 分段', desc: 'Lichess 2014-01 标准对局（非 Bullet），走子方评分 1400–1600', games: sl.usedGames, moves: sl.moves },
-  high: { label: '2500+ 分段', desc: 'Lichess Elite Database 2021-12 与 2022-01，走子方评分 ≥ 2500', games: sh.usedGames, moves: sh.moves },
+  low: { label: '1500-rated players', desc: 'Lichess January 2014 standard games (non-Bullet), mover rated 1400-1600', games: sl.usedGames, moves: sl.moves },
+  high: { label: '2500+ rated players', desc: 'Lichess Elite Database Dec 2021 and Jan 2022, mover rated 2500+', games: sh.usedGames, moves: sh.moves },
 };
 fs.writeFileSync('../data.json', JSON.stringify({ ...meta, puzzles }));
 const topOf = (p, b) => p.opts.slice().sort((x, y) => y[b] - x[b])[0].san;

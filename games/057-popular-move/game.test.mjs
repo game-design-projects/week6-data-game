@@ -20,12 +20,12 @@ test('parseFen lays out the start position', () => {
 });
 
 test('describe names pieces and squares', () => {
-  assert.equal(describe('Nf3'), '马 → f3');
-  assert.equal(describe('e5'), '兵 → e5');
-  assert.equal(describe('Bxc6+'), '象 吃 c6');
-  assert.equal(describe('exd5'), '兵 吃 d5');
-  assert.equal(describe('O-O'), '短易位');
-  assert.equal(describe('e8=Q'), '兵 → e8');
+  assert.equal(describe('Nf3'), 'Knight \u2192 f3');
+  assert.equal(describe('e5'), 'Pawn \u2192 e5');
+  assert.equal(describe('Bxc6+'), 'Bishop takes c6');
+  assert.equal(describe('exd5'), 'Pawn takes d5');
+  assert.equal(describe('O-O'), 'Castles short');
+  assert.equal(describe('e8=Q'), 'Pawn \u2192 e8');
 });
 
 test('topMove / pct', () => {
@@ -48,9 +48,9 @@ test('boardSvg: 32 pieces at the start, flipped for black, arrows drawn, no NaN'
 test('insight is specific to the numbers of the position', () => {
   const it = { nLow: 100, nHigh: 200, opts: [{ san: 'd5', low: 60, high: 40 }, { san: 'c5', low: 10, high: 120 }, { san: 'e6', low: 20, high: 20 }, { san: 'c6', low: 10, high: 20 }] };
   const t = insight(it);
-  assert.match(t, /d5（60%）/); assert.match(t, /c5（60%/); assert.match(t, /20%/);
+  assert.match(t, /d5 \(60%\)/); assert.match(t, /c5 becomes the top choice \(60%/); assert.match(t, /20%/);
   const same = { nLow: 100, nHigh: 100, opts: [{ san: 'Nf3', low: 70, high: 60 }, { san: 'c4', low: 10, high: 30 }] };
-  assert.match(insight(same), /共识/);
+  assert.match(insight(same), /consensus/);
 });
 
 test('data: pool size, size, band metadata', () => {
