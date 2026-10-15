@@ -14,7 +14,7 @@ async function cached(name, url) {
 }
 const OV = { Oxford: 'Q34217', Chicago: 'Q1297', 'Buenos Aires': 'Q1486', Ottawa: 'Q1930', Riyadh: 'Q3692', Netherlands: 'Q55', Montenegro: 'Q236', Florence: 'Q2044', 'Puerto Rico': 'Q1183', Mesopotamia: 'Q11767', Kosovo: 'Q1246' };
 const out = []; const report = [];
-for (const [q, kw, name, orig, lang, zh, kind] of PLACES) {
+for (const [q, kw, name, orig, lang, meaning, kind] of PLACES) {
   const s = await cached('s_' + q, `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(q)}&language=en&limit=8&format=json`);
   const ids = OV[q] ? [OV[q]] : (s.search || []).map((x) => x.id);
   const e = await cached((OV[q] ? 'o_' : 'e_') + q, `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${ids.join('|')}&props=claims|sitelinks|descriptions|labels&sitefilter=enwiki&languages=en&format=json`);
@@ -27,7 +27,7 @@ for (const [q, kw, name, orig, lang, zh, kind] of PLACES) {
     pick = { id, lat: +c.latitude.toFixed(3), lng: +c.longitude.toFixed(3), wiki: en.sitelinks?.enwiki?.title, desc: en.descriptions?.en?.value }; break;
   }
   if (!pick) { report.push(`MISSING ${q}`); continue; }
-  out.push({ id: pick.id, name, orig, lang, zh, kind, lat: pick.lat, lng: pick.lng, wiki: pick.wiki });
+  out.push({ id: pick.id, name, orig, lang, meaning, kind, lat: pick.lat, lng: pick.lng, wiki: pick.wiki });
   report.push(`ok ${q} -> ${pick.id} ${pick.desc} ${pick.lat},${pick.lng}`);
 }
 console.log(report.join('\n'));

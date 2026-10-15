@@ -10,7 +10,7 @@ test('data well-formed and ids unique', () => {
   assert.ok(data.places.length >= 60);
   assert.equal(new Set(data.places.map((p) => p.id)).size, data.places.length);
   for (const p of data.places) {
-    assert.ok(p.zh && p.lang && p.orig && p.wiki);
+    assert.ok(p.meaning && p.lang && p.orig && p.wiki);
     assert.ok(Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180);
   }
 });
@@ -38,7 +38,7 @@ test('pool validity over days 1-120', () => {
     for (const id of p.ids) {
       const pl = byId.get(id);
       assert.ok(pl, `unknown id ${id}`);
-      for (const k of ['name', 'orig', 'lang', 'zh', 'kind', 'wiki']) assert.ok(typeof pl[k] === 'string' && pl[k].length && !/undefined|NaN/.test(pl[k]), `${id}.${k}`);
+      for (const k of ['name', 'orig', 'lang', 'meaning', 'kind', 'wiki']) assert.ok(typeof pl[k] === 'string' && pl[k].length && !/undefined|NaN/.test(pl[k]), `${id}.${k}`);
       assert.ok(Number.isFinite(pl.lat) && Number.isFinite(pl.lng));
       assert.ok(data.langNotes[pl.lang], `no langNote for ${pl.lang}`);
       assert.ok(new URL(`https://en.wikipedia.org/wiki/${encodeURIComponent(pl.wiki.replace(/ /g, '_'))}`));
@@ -48,16 +48,15 @@ test('pool validity over days 1-120', () => {
 
 test('clues do not leak the answer', () => {
   const seen = new Set();
+  const norm = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   for (const p of data.places) {
-    const cn = p.name.split(' ')[0];
-    const latin = p.name.slice(cn.length).trim().toLowerCase();
-    const clue = `${p.zh}${p.lang}${p.kind}`;
-    assert.ok(!clue.includes(cn), `${p.id} clue contains its Chinese name`);
-    for (let i = 0; i + 2 <= cn.length; i++) assert.ok(!p.zh.includes(cn.slice(i, i + 2)), `${p.id} zh shares a bigram with name ${cn}`);
-    assert.ok(!clue.toLowerCase().includes(latin), `${p.id} latin name in clue`);
-    assert.ok(!/[A-Za-z]/.test(p.zh), `${p.id} zh has latin letters`);
-    assert.ok(!seen.has(p.zh + p.lang), `ambiguous clue ${p.zh}/${p.lang}`);
-    seen.add(p.zh + p.lang);
+    const name = norm(p.name);
+    const clue = norm(`${p.meaning} ${p.lang} ${p.kind}`);
+    assert.ok(!clue.includes(name), `${p.id} clue contains its name`);
+    for (const w of name.split(/[^a-z]+/).filter((x) => x.length >= 4 && x !== 'city')) assert.ok(!clue.includes(w), `${p.id} clue contains name word "${w}"`);
+    assert.ok(!/[^\x00-\x7f\u2018\u2019]/.test(p.meaning), `${p.id} meaning is not plain English`);
+    assert.ok(!seen.has(p.meaning + p.lang), `ambiguous clue ${p.meaning}/${p.lang}`);
+    seen.add(p.meaning + p.lang);
   }
 });
 
