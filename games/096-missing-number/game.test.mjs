@@ -10,8 +10,8 @@ const fixture = JSON.parse(fs.readFileSync(new URL('./build/fixture.json', impor
 const inRange = (k, v) => Number.isFinite(v) && v >= FACTS[k].min && v <= FACTS[k].max;
 
 test('formatters', () => {
-  assert.equal(fmtPop(333996304), '3.34 亿人');
-  assert.equal(fmtPop(5200000), '520 万人');
+  assert.equal(fmtPop(333996304), '334 million');
+  assert.equal(fmtPop(5200000), '5.2 million');
   assert.equal(fmtSigned(-2.34), '−2.3%');
   assert.equal(FACTS.qmag.fmt(6.15), 'M6.2');
 });
