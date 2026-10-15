@@ -1,4 +1,4 @@
-// Fetch NOAA CO-OPS harmonic tide predictions for ~90 reference stations (3 days, hourly) -> ../data.json
+// Fetch NOAA CO-OPS harmonic tide predictions (snapshot fallback; the game fetches the puzzle date live) for ~110 reference stations (3 days, hourly) -> ../data.json
 import fs from 'node:fs';
 const RAW = new URL('./raw/', import.meta.url).pathname;
 const UA = { 'User-Agent': 'daily-data-games class project (contact: lishuyustevenli@gmail.com)' };
@@ -26,6 +26,7 @@ for (const s of chosen) {
   if (!j.predictions || j.predictions.length < 72) { console.log('skip', s.id, s.name); continue; }
   const v = j.predictions.slice(0, 72).map((p) => +(+p.v).toFixed(2));
   if (v.some((x) => !isFinite(x))) continue;
+  if (Math.max(...v) - Math.min(...v) < 0.05) { console.log('skip flat', s.id, s.name); continue; } // e.g. 8762483 (river floodway), no tide signal
   out.push({ id: s.id, name: s.name, state: s.state, lat: +s.lat.toFixed(3), lng: +s.lng.toFixed(3), tz: s.timezonecorr, v });
 }
 fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ begin: '2026-10-01', stations: out }));
