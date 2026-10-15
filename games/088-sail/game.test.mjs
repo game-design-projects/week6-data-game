@@ -91,7 +91,7 @@ test('explain() gives puzzle-specific text', () => {
   const p = pool[3], m = model(p), o = optimalRoute(m), d = routeHours(m, [m.A, m.B]);
   const t = explain(m, p, o, d, { pts: o.path, hours: o.hours });
   assert.ok(t.length >= 3 && t.every((s) => s && !/undefined|NaN/.test(s)));
-  assert.match(t[0], /直线航向 \d+°/);
+  assert.match(t[0], /straight-line heading is \d+°/);
 });
 
 test('toPuzzle shapes a live Open-Meteo response (fixture)', () => {

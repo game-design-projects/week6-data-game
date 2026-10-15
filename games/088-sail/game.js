@@ -158,8 +158,8 @@ export function optimalRoute(m) {
 }
 
 export const scoreFor = (opt, mine) => (mine == null ? 0 : Math.round(100 * Math.min(1, opt / mine) ** 3));
-const hm = (h) => { const t = Math.round(h * 60); return `${Math.floor(t / 60)} 小时 ${String(t % 60).padStart(2, '0')} 分`; };
-const COMPASS = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
+const hm = (h) => { const t = Math.round(h * 60); return `${Math.floor(t / 60)} h ${String(t % 60).padStart(2, '0')} min`; };
+const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 const compass = (deg) => COMPASS[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
 
 /** Region-mean wind speed (kn) over the grid and all frames. */
@@ -215,21 +215,21 @@ export function explain(m, p, opt, direct, mine) {
   let off = 0, side = '';
   for (const q of opt.path.slice(1, -1)) {
     const cross = (dxy[0] * (q[1] - A[1]) - dxy[1] * (q[0] - A[0])) / dist;
-    if (Math.abs(cross) > Math.abs(off)) { off = cross; side = cross > 0 ? '左' : '右'; }
+    if (Math.abs(cross) > Math.abs(off)) { off = cross; side = cross > 0 ? 'left' : 'right'; }
   }
   const seaMean = (t) => { let s = 0, n = 0; for (let i = 0; i < p.n; i++) for (let j = 0; j < p.n; j++) { const x = (m.W * j) / (p.n - 1), y = m.H - (m.H * i) / (p.n - 1); if (m.land(x, y)) continue; const [u, v] = m.wind(x, y, t); s += Math.hypot(u, v); n++; } return n ? s / n : 0; };
   const w0 = seaMean(0), w1 = seaMean(Math.min(opt.hours, 23));
-  const type = twa < 50 ? '几乎正迎风：帆船无法直接逆风，只能以约 45° 之字形换舷，实际前进速度被大幅压低，所以最优路线会先绕向侧风的方向。'
-    : twa > 140 ? '接近正顺风：这是帆船的慢档，侧后方来风的船速反而更高，所以略微偏离航向、改吃侧后风通常更划算。'
-      : '风向与航向呈侧风：直线本身已经不差，胜负取决于能否避开弱风区、蹭上强风带。';
-  const parts = [`直线航向 ${Math.round(brg)}°，途中平均是${compass(wfrom)}风（风从 ${Math.round(wfrom)}° 吹来）${wspd.toFixed(0)} 节，与航向夹角约 ${twa}°。${type}`];
-  if (direct == null) parts.push('直线航线被陆地挡住，必须先绕过岛屿或海岬。');
-  else if (opt.path.length > 2) parts.push(`最优路线偏离直线最多 ${Math.abs(off).toFixed(0)} km（偏向前进方向的${side}侧），平均船速 ${speedKn(opt.path, opt.hours).toFixed(1)} 节；直线只有 ${speedKn([A, B], direct).toFixed(1)} 节。`);
-  else parts.push('这一天直线几乎就是最优：风场没有把更好的路线送到航线旁边。');
+  const type = twa < 50 ? 'Almost dead upwind: a sailboat cannot sail straight into the wind and has to tack at about 45°, which cuts its real progress sharply, so the best route bends toward a beam wind first.'
+    : twa > 140 ? 'Nearly dead downwind: this is a slow gear for a sailboat, which goes faster with the wind on the quarter, so veering slightly off course to catch it usually pays.'
+      : 'The wind is on the beam: the straight line is already decent, and the win comes from avoiding light-air zones and catching stronger bands.';
+  const parts = [`The straight-line heading is ${Math.round(brg)}°, with an average ${compass(wfrom)} wind (blowing from ${Math.round(wfrom)}°) of ${wspd.toFixed(0)} kn along the way, about ${twa}° off the course. ${type}`];
+  if (direct == null) parts.push('The straight line is blocked by land, so you must go around an island or headland first.');
+  else if (opt.path.length > 2) parts.push(`The best route strays up to ${Math.abs(off).toFixed(0)} km from the straight line (to the ${side} of the direction of travel) and averages ${speedKn(opt.path, opt.hours).toFixed(1)} kn, against only ${speedKn([A, B], direct).toFixed(1)} kn on the straight line.`);
+  else parts.push('Today the straight line is almost optimal: the wind field offers no better route beside it.');
   const dw = w1 - w0;
-  if (Math.abs(dw) >= 1.5) parts.push(`风力随时间${dw > 0 ? '增强' : '减弱'}：海面平均风速从 00:00 UTC 的 ${w0.toFixed(0)} 节变为航行结束时的 ${w1.toFixed(0)} 节，${dw > 0 ? '后半程的风更值得等待' : '前半程的风更值得抢'}。`);
-  else parts.push(`风力随时间变化不大（海面平均 ${w0.toFixed(0)} → ${w1.toFixed(0)} 节），关键在空间上的强弱分布。`);
-  if (mine != null && mine.pts) parts.push(`你的路线平均船速 ${speedKn(mine.pts, mine.hours).toFixed(1)} 节（${mine.pts.length - 2} 个航点）。`);
+  if (Math.abs(dw) >= 1.5) parts.push(`The wind ${dw > 0 ? 'builds' : 'eases'} over time: mean wind over the sea goes from ${w0.toFixed(0)} kn at 00:00 UTC to ${w1.toFixed(0)} kn when the crossing ends, so ${dw > 0 ? 'the later wind is worth waiting for' : 'the early wind is worth grabbing'}.`);
+  else parts.push(`The wind barely changes over time (sea average ${w0.toFixed(0)} → ${w1.toFixed(0)} kn), so what matters is where it is strong or weak.`);
+  if (mine != null && mine.pts) parts.push(`Your route averaged ${speedKn(mine.pts, mine.hours).toFixed(1)} kn (${mine.pts.length - 2} ${mine.pts.length - 2 === 1 ? 'waypoint' : 'waypoints'}).`);
   return parts;
 }
 
@@ -238,22 +238,22 @@ export default {
     num: 88,
     slug: 'sail',
     title: 'Sail',
-    tagline: '看着真实的海上风场，布下最多 5 个航点，让帆船最快横渡海峡。',
+    tagline: 'Study a real wind field over the sea and set up to 5 waypoints to sail across the strait as fast as you can.',
     category: 'transit',
     data: 'live',
     howTo: [
-      '地图上的箭头是昨天的真实海面风：箭头指向风吹去的方向，越大越粗风越强（蓝色弱、橙色中、红色强）。灰色块是陆地，不能穿越。风会随时间变化，拖动「风场时刻」滑块可以看到 00:00–23:00 UTC 的风怎么变；帆船在 00:00 UTC 出发。',
-      '点击海面添加航点（最多 5 个），船依次驶过。帆船不能正对着风走，只能之字形迎风换舷，很慢；侧后方来风最快；风越强越快，但约 12 节后船会收帆、不再加速。',
-      '点「出发」后用同一套船速模型和同一个风场，计算你的总用时，并与算法找到的最优路线（绿色虚线）比较。',
-      '计分：100 × (最优用时 ÷ 你的用时)³，封顶 100。慢一倍只有 12 分，慢 10% 约 75 分。',
+      'The arrows on the map are yesterday\'s real wind over the sea: each points the way the wind blows, and bigger, bolder arrows mean stronger wind (blue light, orange moderate, red strong). Gray blocks are land and cannot be crossed. The wind changes through the day: drag the wind-time slider to see 00:00 to 23:00 UTC. The boat leaves at 00:00 UTC.',
+      'Click the water to add waypoints (up to 5); the boat sails through them in order. A sailboat cannot sail straight into the wind and has to zigzag, which is slow; wind from behind the beam is fastest; more wind means more speed, but above about 12 kn the boat reefs and stops speeding up.',
+      'Press Set sail and the same boat model and wind field work out your total time, compared with the best route the algorithm found (green dashed line).',
+      'Scoring: 100 × (best time ÷ your time)³, capped at 100. Twice as slow is only 12 points, 10% slower is about 75.',
     ],
-    scoring: '100 × (最优用时 ÷ 你的用时)³，封顶 100；路线穿过陆地不能出发。',
+    scoring: '100 × (best time ÷ your time)³, capped at 100. A route that crosses land cannot set sail.',
     sources: [
-      { name: 'Open-Meteo Historical Forecast API（昨日风场，实时）', url: 'https://open-meteo.com/en/docs/historical-forecast-api', note: '10 米风速风向，9×9 网格，00/06/12/18/23 UTC' },
-      { name: 'Open-Meteo Historical Weather API（ERA5 再分析，快照备用）', url: 'https://open-meteo.com/en/docs/historical-weather-api' },
-      { name: 'Natural Earth 1:50m 陆地（world-atlas）', url: 'https://github.com/topojson/world-atlas', note: '生成陆地遮罩' },
+      { name: 'Open-Meteo Historical Forecast API (yesterday\'s wind, live)', url: 'https://open-meteo.com/en/docs/historical-forecast-api', note: '10 m wind speed and direction, 9×9 grid, 00/06/12/18/23 UTC' },
+      { name: 'Open-Meteo Historical Weather API (ERA5 reanalysis, snapshot fallback)', url: 'https://open-meteo.com/en/docs/historical-weather-api' },
+      { name: 'Natural Earth 1:50m land (world-atlas)', url: 'https://github.com/topojson/world-atlas', note: 'Used to build the land mask' },
     ],
-    dataNote: '每天从 Open-Meteo 历史预报存档读取「昨天」整天的 10 米风场（预报模型的存档运行，当天不再变动），取 9×9 网格、5 个时刻，帆船 00:00 UTC 出发，风随时间线性插值。海峡由当天序号固定，所有人拿到同一题；如果实时接口不可用、当天风太小太大或直线就是最优，会按固定顺序换下一个海峡，全部失败则改用 ERA5 再分析快照。陆地遮罩来自 Natural Earth 1:50m 海岸线（约 3 km 一格），港口取在港外开阔水域。船速为简化极坐标模型，不代表真实船型；风场分辨率约 25–40 km，岛屿背风、海陆风等局地效应没有体现。',
+    dataNote: 'Each day we read the whole of yesterday\'s 10 m wind field from the Open-Meteo historical forecast archive (an archived model run that no longer changes), on a 9×9 grid at 5 times of day. The boat leaves at 00:00 UTC and the wind is interpolated linearly in time. The strait is fixed by the day\'s number so everyone gets the same puzzle. If the live API is down, the wind is too light or too strong, or the straight line is already optimal, the next strait in a fixed order is tried, and if all fail the ERA5 reanalysis snapshot is used. The land mask comes from the Natural Earth 1:50m coastline (about 3 km per cell), and ports sit in open water just off the harbor. Boat speed is a simplified polar model, not a real hull, and the wind grid is about 25–40 km, so local effects such as island wind shadows and sea breezes are not captured.',
     wide: true,
   },
 
@@ -337,12 +337,12 @@ export default {
       dots.clearLayers();
       route.slice(1).forEach((q) => L.circleMarker(m.toLL(...q), { radius: 7, color: '#e0561b', fillOpacity: 1, fillColor: '#fff', interactive: false }).addTo(dots));
       const km = routeKm([...route, m.B]);
-      info.textContent = `航点 ${route.length - 1}/${MAX_WP} · 全程约 ${Math.round(km)} km · 区域平均风 ${p.mean} 节`;
+      info.textContent = `Waypoints ${route.length - 1}/${MAX_WP} · about ${Math.round(km)} km in all · mean wind ${p.mean} kn`;
     };
     redraw();
 
     const clock = ui.h('span', { class: 'mono' }, '00:00 UTC');
-    const slider = ui.h('input', { type: 'range', class: 'ds-range', min: 0, max: 23, step: 1, value: 0, 'aria-label': '风场时刻（UTC 小时）', style: { flex: '1 1 160px', minWidth: '140px' } });
+    const slider = ui.h('input', { type: 'range', class: 'ds-range', min: 0, max: 23, step: 1, value: 0, 'aria-label': 'Wind time (UTC hour)', style: { flex: '1 1 160px', minWidth: '140px' } });
     const sync = () => { const t = +slider.value; clock.textContent = `${String(t).padStart(2, '0')}:00 UTC`; slider.style.setProperty('--fill', `${(t / 23) * 100}%`); drawWind(t); };
     slider.addEventListener('input', sync);
     slider.style.setProperty('--fill', '0%');
@@ -362,33 +362,33 @@ export default {
         resolve({
           score, max: 100, win: score >= 80,
           emoji: `⛵ ${st.a.name}→${st.b.name}\n${'🟦'.repeat(bars)}${'⬜'.repeat(5 - bars)} ${score}`,
-          summary: `${hm(mine)} vs 最优 ${hm(opt.hours)}`,
+          summary: `${hm(mine)} vs best ${hm(opt.hours)}`,
           detail: ui.kv([
-            ['你的用时', hm(mine)],
-            ['最优用时', `${hm(opt.hours)}（绿色虚线，${opt.path.length - 2} 个转折点）`],
-            ['直线航行', direct == null ? '被陆地挡住' : `${hm(direct)}${saved > 0 ? `，最优路线快 ${saved}%` : ''}`],
-            ['风场', `${p.live ? '实时数据：昨天' : 'ERA5 再分析快照：'} ${p.when}（UTC，00:00 出发），区域平均 ${p.mean} 节`],
-            ['答案在哪', ui.h('div', { class: 'stack', style: { gap: '6px' } }, ...why.map((t) => ui.h('div', {}, t)))],
+            ['Your time', hm(mine)],
+            ['Best time', `${hm(opt.hours)} (green dashed line, ${opt.path.length - 2} ${opt.path.length - 2 === 1 ? 'turning point' : 'turning points'})`],
+            ['Straight line', direct == null ? 'Blocked by land' : `${hm(direct)}${saved > 0 ? `; the best route is ${saved}% faster` : ''}`],
+            ['Wind', `${p.live ? 'Live data, yesterday: ' : 'ERA5 reanalysis snapshot: '}${p.when} (UTC, leaving at 00:00), mean ${p.mean} kn`],
+            ['What decided it', ui.h('div', { class: 'stack', style: { gap: '6px' } }, ...why.map((t) => ui.h('div', {}, t)))],
           ]),
         });
       };
-      const go = ui.button('出发', { variant: 'accent', onClick: () => {
+      const go = ui.button('Set sail', { variant: 'accent', onClick: () => {
         const pts = [...route, m.B];
-        if (routeHours(m, pts) == null) return ui.toast('最后一段穿过了陆地，请再加一个航点');
+        if (routeHours(m, pts) == null) return ui.toast('The last leg crosses land. Add another waypoint.');
         finish(pts);
       } });
-      const undo = ui.button('撤销', { variant: 'ghost', small: true, onClick: () => { if (route.length > 1) { route.pop(); redraw(); } } });
-      const clear = ui.button('清除', { variant: 'ghost', small: true, onClick: () => { route.length = 1; redraw(); } });
-      const timeRow = ui.h('div', { class: 'ds-row small ink2', style: { gap: '10px', marginTop: '10px', alignItems: 'center', flexWrap: 'wrap' } }, '风场时刻', slider, clock);
-      ctx.stage.append(ui.panel({ kicker: `${st.name} · ${p.live ? '昨日实况 ' : '历史风场 '}${p.when}`, title: `从${st.a.name}驶向${st.b.name}`, aside: '点海面加航点' },
+      const undo = ui.button('Undo', { variant: 'ghost', small: true, onClick: () => { if (route.length > 1) { route.pop(); redraw(); } } });
+      const clear = ui.button('Clear', { variant: 'ghost', small: true, onClick: () => { route.length = 1; redraw(); } });
+      const timeRow = ui.h('div', { class: 'ds-row small ink2', style: { gap: '10px', marginTop: '10px', alignItems: 'center', flexWrap: 'wrap' } }, 'Wind time', slider, clock);
+      ctx.stage.append(ui.panel({ kicker: `${st.name} · ${p.live ? 'Yesterday\'s wind ' : 'Historical wind '}${p.when}`, title: `${st.a.name} to ${st.b.name}`, aside: 'Click the water to add waypoints' },
         mp.el, timeRow, info, ui.h('div', { class: 'ds-row', style: { gap: '8px', marginTop: '10px' } }, go, undo, clear)));
       const fit = () => { map.invalidateSize(); map.options.zoomSnap = 0; map.fitBounds([[st.box[0], st.box[1]], [st.box[2], st.box[3]]]); };
       setTimeout(fit, 50); setTimeout(fit, 400);
       map.on('click', (ev) => {
         if (finished) return;
-        if (route.length > MAX_WP) return ui.toast(`最多 ${MAX_WP} 个航点`);
+        if (route.length > MAX_WP) return ui.toast(`At most ${MAX_WP} waypoints`);
         const q = m.toXY(ev.latlng.lat, ev.latlng.lng);
-        if (m.leg(route[route.length - 1], q, 0) == null) return ui.toast('那里是陆地，或这一段穿过陆地');
+        if (m.leg(route[route.length - 1], q, 0) == null) return ui.toast('That is land, or this leg crosses land');
         route.push(q); redraw();
       });
       if (ctx.autoplay) setTimeout(() => finish(opt.path), 200);
