@@ -1,4 +1,4 @@
-// raw Gapminder CSVs -> data.json (countries with full 1800-2018 income + life expectancy)
+// raw Gapminder CSVs -> data.json (countries with full 1800-2015 income + life expectancy)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,12 +17,13 @@ for (const r of ent.slice(1)) {
   if (!L || !I || !cc) continue;
   const pts = [];
   let ok = true;
-  for (let y = 1800; y <= 2014; y += 2) {
+  const years = []; for (let y = 1800; y <= 2014; y += 2) years.push(y); years.push(2015);
+  for (const y of years) {
     if (!L.has(y) || !I.has(y)) { ok = false; break; }
     pts.push([y, Math.round(I.get(y)), Math.round(L.get(y) * 10) / 10]);
   }
   if (!ok) continue;
   out.push({ cc, name: r[col('name')], region: r[col('world_4region')], pts });
 }
-fs.writeFileSync(path.join(dir, '..', 'data.json'), JSON.stringify({ years: [1800, 2014], countries: out }));
+fs.writeFileSync(path.join(dir, '..', 'data.json'), JSON.stringify({ years: [1800, 2015], countries: out }));
 console.log(out.length, 'countries');

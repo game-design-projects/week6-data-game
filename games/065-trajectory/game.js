@@ -15,6 +15,24 @@ export const at = (pts, year) => pts.reduce((b, p) => (Math.abs(p[0] - year) < M
 /** Year life expectancy first passed `lex`, or null. */
 export function firstAbove(pts, lex) { const p = pts.find((q) => q[2] >= lex); return p ? p[0] : null; }
 
+/** Pattern summary used in the result card: takeoff year, life-expectancy gain, income growth. */
+export function pattern(pts) {
+  const a = pts[0], z = pts[pts.length - 1];
+  const up = pts.find((q) => q[1] >= a[1] * 2);
+  return { takeoff: up ? up[0] : null, incomeX: z[1] / a[1], lexGain: Math.round((z[2] - a[2]) * 10) / 10, dip: worstDip(pts), start: a, end: z };
+}
+
+/** Puzzle-specific explanation of what made this trajectory recognisable. */
+export function why(name, p) {
+  const x = p.incomeX >= 10 ? Math.round(p.incomeX) : p.incomeX.toFixed(1);
+  const parts = [`${name} 的 1800 年起点是 $${Math.round(p.start[1])}、${p.start[2]} 岁；到 2015 年收入涨到约 ${x} 倍，寿命增加 ${p.lexGain} 岁。`];
+  parts.push(p.takeoff && p.takeoff > 1800 ? `收入在 ${p.takeoff} 年前后翻了一倍。` : '收入没有翻倍的明确起飞点。');
+  if (p.dip.drop >= 3) parts.push(`${p.dip.year} 年前后一次骤降（−${p.dip.drop} 岁）是最醒目的特征，通常对应战争、饥荒或疫病。`);
+  else if (p.dip.drop >= 1) parts.push(`${p.dip.year} 年有一次小幅倒退（−${p.dip.drop} 岁）。`);
+  else parts.push('轨迹基本平滑，没有明显倒退。');
+  return parts.join('');
+}
+
 export default {
   meta: {
     num: 65,
@@ -24,9 +42,9 @@ export default {
     category: 'society',
     data: 'snapshot',
     howTo: [
-      '图上横轴是人均收入（对数，按购买力和通胀调整），纵轴是出生时预期寿命，线是某国 1800–2014 年的轨迹。',
+      '图上横轴是人均收入（对数，按购买力和通胀调整），纵轴是出生时预期寿命，线是某国 1800–2015 年的轨迹。',
       '从列表里选一个国家来猜，最多 6 次。每猜错一次解锁一条新线索。',
-      '每次猜测会显示它所在的大洲、2014 年收入比答案高还是低、预期寿命差几岁。',
+      '每次猜测会显示它所在的大洲、2015 年收入是答案的几倍、预期寿命差几岁。',
       '提示：战争、饥荒、内战会让轨迹向下“砸”出缺口；早早起飞的是工业化先行者。',
     ],
     scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分，6 次都没猜中 0 分。',
@@ -34,7 +52,7 @@ export default {
       { name: 'Gapminder World（GDP/人均 PPP，通胀调整）', url: 'https://github.com/open-numbers/ddf--gapminder--gapminder_world' },
       { name: 'Gapminder 预期寿命（life_expectancy_years）', url: 'https://www.gapminder.org/data/documentation/gd004/' },
     ],
-    dataNote: '数据为 Gapminder 的历史估算，1800 年前后的数值多为推算；每 2 年取一个点，仅保留 1800–2014 年数据完整的 184 个国家。',
+    dataNote: '数据为 Gapminder 的历史估算，1800 年前后的数值多为推算；每 2 年取一个点（另加 2015 年），仅保留 1800–2015 年数据完整的 184 个国家；Gapminder 的这两个序列只到 2015 年。Gapminder 较新的收入序列口径不同（2021 年美元），且没有对应的预期寿命，所以未混用。',
   },
 
   puzzle({ data, pick }) {
@@ -51,15 +69,15 @@ export default {
     ctx.log('answer', ans.cc, 'dip', dip);
 
     const marks = [];
-    for (const q of pts.filter((r) => r[0] % 10 === 0 || r[0] === 2014)) {
+    for (const q of pts.filter((r) => r[0] % 10 === 0 || r[0] === 2015)) {
       const m = marks[marks.length - 1];
-      if (!m || Math.hypot((Math.log10(q[1]) - Math.log10(m.i)) * 60, (q[2] - m.l) * 0.7) > 7 || q[0] === 2014) marks.push({ y: String(q[0]), i: q[1], l: q[2] });
+      if (!m || Math.hypot((Math.log10(q[1]) - Math.log10(m.i)) * 60, (q[2] - m.l) * 0.9) > 15 || q[0] === 2015) marks.push({ y: String(q[0]), i: q[1], l: q[2] });
     }
     const chart = await ui.plot((Plot, c) => ({
       height: 320,
       marginLeft: 40,
-      x: { type: 'log', label: '人均收入 $（对数）→', domain: [200, 80000], ticks: [300, 1000, 3000, 10000, 30000], tickFormat: (v) => (v >= 1000 ? `${v / 1000}k` : v) },
-      y: { label: '↑ 预期寿命（岁）', domain: [10, 90], grid: true },
+      x: { type: 'log', label: '人均收入 $（对数）→', domain: [100, 200000], ticks: [100, 300, 1000, 3000, 10000, 30000, 100000], tickFormat: (v) => (v >= 1000 ? `${v / 1000}k` : v) },
+      y: { label: '↑ 预期寿命（岁）', domain: [0, 90], grid: true },
       marks: [
         Plot.line(pts, { x: (q) => q[1], y: (q) => q[2], stroke: c.accent, strokeWidth: 2 }),
         Plot.dot(marks, { x: 'i', y: 'l', fill: c.ink, r: 3 }),
@@ -67,7 +85,7 @@ export default {
       ],
     }));
 
-    const keyYears = [1800, 1850, 1900, 1950, 2000, 2014];
+    const keyYears = [1800, 1850, 1900, 1950, 2000, 2015];
     const table = ui.table({
       columns: [{ key: 'y', label: '年份' }, { key: 'i', label: '人均收入 $', num: true }, { key: 'l', label: '预期寿命', num: true }],
       rows: keyYears.map((y) => { const q = at(pts, y); return { y, i: ctx.core.fmtNum(q[1]), l: q[2] }; }),
@@ -89,7 +107,7 @@ export default {
       placeholder: '输入国家名（中文或英文）…',
       clues,
       cluesTitle: '轨迹与线索',
-      columns: ['大洲', '2014 收入', '寿命差'],
+      columns: ['大洲', '收入比', '寿命差'],
       near: (g, a) => by.get(g.id).region === by.get(a.id).region,
       feedback: (g) => {
         const gc = by.get(g.id), gl = gc.pts[gc.pts.length - 1];
@@ -108,10 +126,11 @@ export default {
       ui.kv([
         ['答案', `${zh(ans.cc, ans.name)}（${ans.name}）`],
         ['1800 年', `$${ctx.core.fmtNum(pts[0][1])}，预期寿命 ${pts[0][2]} 岁`],
-        ['2014 年', `$${ctx.core.fmtNum(last[1])}，预期寿命 ${last[2]} 岁`],
+        ['2015 年', `$${ctx.core.fmtNum(last[1])}，预期寿命 ${last[2]} 岁`],
         ['预期寿命首次达到 70 岁', t70 ? `${t70} 年` : '至今未达到'],
         ['最大倒退', dip.drop >= 1 ? `${dip.year} 年 −${dip.drop} 岁` : '无明显倒退'],
       ]),
+      ui.callout(why(zh(ans.cc, ans.name), pattern(pts)), 'good'),
       ui.h('div', { class: 'small muted' }, '读图技巧：起点越靠右上，工业化越早；轨迹突然下坠通常对应战争、饥荒或疫病。'));
     return res;
   },
