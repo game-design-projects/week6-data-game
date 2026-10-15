@@ -4,7 +4,7 @@ import game, { hm, speed, initialGuess, explain, tier } from './game.js';
 import data from './data.json' with { type: 'json' };
 
 const finite = (n) => typeof n === 'number' && Number.isFinite(n);
-test('hm formats', () => { assert.equal(hm(45), '45 分'); assert.equal(hm(125), '2 小时 05 分'); });
+test('hm formats', () => { assert.equal(hm(45), '45 min'); assert.equal(hm(125), '2 h 05 min'); });
 test('speed', () => assert.equal(speed(100, 60), 100));
 test('meta', () => { assert.equal(game.meta.num, 86); for (const s of game.meta.sources) assert.match(s.url, /^https:\/\//); });
 
@@ -57,4 +57,8 @@ test('scoring: the free default guess is beatable but not hopeless', () => {
   assert.ok(close < 0.35, `default too good: ${close}`);
   assert.ok(far > 0.25, `default too uniform: ${far}`);
   assert.ok(tier(40) === 0 && tier(200) === 3);
+});
+
+test('data and copy are English (no CJK)', () => {
+  assert.ok(!/[\u3000-\u303f\u3400-\u9fff\uff00-\uffef]/.test(JSON.stringify(data) + JSON.stringify(game.meta)));
 });

@@ -9,10 +9,10 @@ const raw = path.join(dir, 'raw');
 fs.mkdirSync(raw, { recursive: true });
 
 const FEEDS = [
-  { id: 'am', op: 'Amtrak', cc: '美国', url: 'https://content.amtrak.com/content/gtfs/GTFS.zip', zip: 'amtrak.zip', quota: 40, cap: 8, major: 140, minKm: 90, tz: null },
-  { id: 'via', op: 'VIA Rail', cc: '加拿大', url: 'https://www.viarail.ca/sites/all/files/gtfs/viarail.zip', zip: 'via.zip', quota: 12, cap: 4, major: 999, minKm: 90, tz: null },
-  { id: 'db', op: 'DB 长途（德国及邻国）', cc: '德国', url: 'https://download.gtfs.de/germany/fv_free/latest.zip', zip: 'db.zip', quota: 40, cap: 3, major: 140, minKm: 90, tz: 'Europe/Berlin' },
-  { id: 'tgv', op: 'SNCF TGV', cc: '法国', url: 'https://eu.ftp.opendatasoft.com/sncf/plandata/export_gtfs_voyages.zip', zip: 'tgv.zip', quota: 22, cap: 3, major: 80, minKm: 90, tz: 'Europe/Paris' },
+  { id: 'am', op: 'Amtrak', cc: 'US', url: 'https://content.amtrak.com/content/gtfs/GTFS.zip', zip: 'amtrak.zip', quota: 40, cap: 8, major: 140, minKm: 90, tz: null },
+  { id: 'via', op: 'VIA Rail', cc: 'CA', url: 'https://www.viarail.ca/sites/all/files/gtfs/viarail.zip', zip: 'via.zip', quota: 12, cap: 4, major: 999, minKm: 90, tz: null },
+  { id: 'db', op: 'DB long-distance', cc: 'DE', url: 'https://download.gtfs.de/germany/fv_free/latest.zip', zip: 'db.zip', quota: 40, cap: 3, major: 140, minKm: 90, tz: 'Europe/Berlin' },
+  { id: 'tgv', op: 'SNCF TGV', cc: 'FR', url: 'https://eu.ftp.opendatasoft.com/sncf/plandata/export_gtfs_voyages.zip', zip: 'tgv.zip', quota: 22, cap: 3, major: 80, minKm: 90, tz: 'Europe/Paris' },
 ];
 
 const csvParse = (text) => {
@@ -83,7 +83,7 @@ function loadFeed(feed) {
     const last = utc[utc.length - 1].id;
     for (const s of utc) stationTrips[s.id] = (stationTrips[s.id] ?? 0) + 1;
     let trainName, no;
-    if (feed.id === 'db') { trainName = `${route.route_short_name} 开往 ${cleanName(feed, stopsRaw.get(last).stop_name)}`; no = ''; }
+    if (feed.id === 'db') { trainName = `${route.route_short_name} to ${cleanName(feed, stopsRaw.get(last).stop_name)}`; no = ''; }
     else if (feed.id === 'tgv') { trainName = route.route_long_name; no = trip.trip_headsign; }
     else { trainName = route.route_long_name; no = trip.trip_short_name; }
     for (let i = 0; i < utc.length; i++) for (let j = i + 1; j < utc.length; j++) {
