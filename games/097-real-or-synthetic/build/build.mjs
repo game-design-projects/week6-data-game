@@ -4,27 +4,27 @@ const raw = (n) => fs.readFileSync(new URL(`./raw/${n}`, import.meta.url), 'utf8
 const ym = (s) => s.slice(0, 7);
 const S = []; // {id,name,unit,log,src,pts:[[ym,val]]}
 const add = (id, name, desc, log, src, pts) => S.push({ id, name, desc, log, src, pts: pts.filter(([, v]) => Number.isFinite(v) && (!log || v > 0)) });
-add('brent', '布伦特原油价格', '美元/桶', true, 'EIA', raw('oil-prices_main_data_brent-monthly.csv').map((r) => [ym(r[0]), +r[1]]));
-add('wti', 'WTI 原油价格', '美元/桶', true, 'EIA', raw('oil-prices_main_data_wti-monthly.csv').map((r) => [ym(r[0]), +r[1]]));
+add('brent', 'Brent crude oil price', 'USD per barrel', true, 'EIA', raw('oil-prices_main_data_brent-monthly.csv').map((r) => [ym(r[0]), +r[1]]));
+add('wti', 'WTI crude oil price', 'USD per barrel', true, 'EIA', raw('oil-prices_main_data_wti-monthly.csv').map((r) => [ym(r[0]), +r[1]]));
 const sp = raw('s-and-p-500_main_data_data.csv');
-add('sp500', '标普 500 指数', '点', true, 'Shiller', sp.map((r) => [ym(r[0]), +r[1]]));
-add('spdiv', '标普 500 成分股分红', '指数点数折算', true, 'Shiller', sp.filter((r) => +r[2] > 0 && ym(r[0]) < '2023').map((r) => [ym(r[0]), +r[2]]));
-add('speps', '标普 500 成分股盈利', '指数点数折算', true, 'Shiller', sp.filter((r) => +r[3] > 0 && ym(r[0]) < '2023').map((r) => [ym(r[0]), +r[3]]));
-add('cpi', '美国消费者物价指数 CPI', '指数', true, 'BLS', raw('cpi-us_main_data_cpiai.csv').map((r) => [ym(r[0]), +r[1]]));
-add('gold', '黄金价格', '美元/盎司', true, 'LBMA/Officer', raw('gold-prices_main_data_monthly.csv').map((r) => [ym(r[0]), +r[1]]));
-add('co2', '莫纳罗亚大气 CO₂ 浓度', 'ppm', false, 'NOAA GML', raw('co2-ppm_main_data_co2-mm-mlo.csv').map((r) => [ym(r[0]), +r[3]]));
+add('sp500', 'S&P 500 index', 'points', true, 'Shiller', sp.map((r) => [ym(r[0]), +r[1]]));
+add('spdiv', 'S&P 500 dividends', 'index-point equivalent', true, 'Shiller', sp.filter((r) => +r[2] > 0 && ym(r[0]) < '2023').map((r) => [ym(r[0]), +r[2]]));
+add('speps', 'S&P 500 earnings', 'index-point equivalent', true, 'Shiller', sp.filter((r) => +r[3] > 0 && ym(r[0]) < '2023').map((r) => [ym(r[0]), +r[3]]));
+add('cpi', 'US Consumer Price Index (CPI)', 'index', true, 'BLS', raw('cpi-us_main_data_cpiai.csv').map((r) => [ym(r[0]), +r[1]]));
+add('gold', 'Gold price', 'USD per ounce', true, 'LBMA/Officer', raw('gold-prices_main_data_monthly.csv').map((r) => [ym(r[0]), +r[1]]));
+add('co2', 'Mauna Loa atmospheric CO₂', 'ppm', false, 'NOAA GML', raw('co2-ppm_main_data_co2-mm-mlo.csv').map((r) => [ym(r[0]), +r[3]]));
 const tp = raw('global-temp_main_data_monthly.csv');
-add('gcag', '全球月平均温度距平（NOAA）', '°C', false, 'NOAA', tp.filter((r) => r[0] === 'GCAG').map((r) => [r[1], +r[2]]));
-add('gistemp', '全球月平均温度距平（NASA）', '°C', false, 'NASA GISS', tp.filter((r) => r[0] === 'GISTEMP').map((r) => [r[1], +r[2]]));
-add('natgas', '美国天然气价格 (Henry Hub)', '美元/百万英热', true, 'EIA', raw('natural-gas_main_data_monthly.csv').map((r) => [ym(r[0]), +r[1]]));
-add('t10y', '美国 10 年期国债收益率', '%', false, 'Fed', raw('bond-yields-us-10y_main_data_monthly.csv').map((r) => [ym(r[0]), +r[1]]));
+add('gcag', 'Global monthly temperature anomaly (NOAA)', '°C', false, 'NOAA', tp.filter((r) => r[0] === 'GCAG').map((r) => [r[1], +r[2]]));
+add('gistemp', 'Global monthly temperature anomaly (NASA)', '°C', false, 'NASA GISS', tp.filter((r) => r[0] === 'GISTEMP').map((r) => [r[1], +r[2]]));
+add('natgas', 'US natural gas price (Henry Hub)', 'USD per MMBtu', true, 'EIA', raw('natural-gas_main_data_monthly.csv').map((r) => [ym(r[0]), +r[1]]));
+add('t10y', 'US 10-year Treasury yield', '%', false, 'Fed', raw('bond-yields-us-10y_main_data_monthly.csv').map((r) => [ym(r[0]), +r[1]]));
 // exchange rates: monthly mean per country
 const fx = new Map();
 for (const [d, c, v] of raw('exchange-rates_main_data_daily.csv')) { if (!+v) continue; const k = c + '|' + ym(d); (fx.get(k) || fx.set(k, []).get(k)).push(+v); }
 const byC = {};
 for (const [k, v] of fx) { const [c, m] = k.split('|'); (byC[c] ||= []).push([m, v.reduce((a, b) => a + b) / v.length]); }
-const ZH = { 'United Kingdom': '英镑', Switzerland: '瑞士法郎', Sweden: '瑞典克朗', Norway: '挪威克朗', Japan: '日元', Canada: '加元', Australia: '澳元', India: '印度卢比', 'South Africa': '南非兰特', Thailand: '泰铢', 'South Korea': '韩元', Mexico: '墨西哥比索', Brazil: '巴西雷亚尔', Denmark: '丹麦克朗' };
-for (const [c, z] of Object.entries(ZH)) add('fx' + c.replace(/\W/g, ''), `${z}兑美元汇率`, '当地货币/美元', true, 'Fed H.10', byC[c].sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+const NAMES = { 'United Kingdom': 'British pound', Switzerland: 'Swiss franc', Sweden: 'Swedish krona', Norway: 'Norwegian krone', Japan: 'Japanese yen', Canada: 'Canadian dollar', Australia: 'Australian dollar', India: 'Indian rupee', 'South Africa': 'South African rand', Thailand: 'Thai baht', 'South Korea': 'South Korean won', Mexico: 'Mexican peso', Brazil: 'Brazilian real', Denmark: 'Danish krone' };
+for (const [c, z] of Object.entries(NAMES)) add('fx' + c.replace(/\W/g, ''), `${z} to US dollar exchange rate`, 'local currency per USD', true, 'Fed H.10', byC[c].sort((a, b) => (a[0] < b[0] ? -1 : 1)));
 
 const W = 72, puzzles = [], r = mulberry(97);
 const keys = Object.keys(METHODS);

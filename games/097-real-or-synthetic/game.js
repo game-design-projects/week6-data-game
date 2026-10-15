@@ -1,9 +1,9 @@
 export const ROUNDS = 5;
 export const TELLS = {
-  ar1: '高斯模型的波动大小始终均匀，缺少真实数据里“一阵平静、一阵剧烈”的波动聚集。',
-  shuffle: '打乱后每月涨跌的分布与真实一样，但趋势和惯性被抹掉，曲线更像抖动的噪声。',
-  block: '分块重组保留了 6 个月内的惯性，但块与块的衔接处会出现不自然的拐折。',
-  phase: '随机相位保留了整体起伏的节奏，却把波动变成“完美正态”，极端的暴涨暴跌被磨平。',
+  ar1: 'A Gaussian model keeps the swings at an even size all the way through, with none of the “calm, then violent” clustering that real data shows.',
+  shuffle: 'Shuffling keeps the mix of monthly ups and downs the same as the real series, but wipes out trend and momentum, so the curve looks like jittery noise.',
+  block: 'Block bootstrapping keeps momentum within 6-month stretches, but the joins between blocks show unnatural kinks.',
+  phase: 'Random phase keeps the overall rhythm of the ups and downs but turns the swings into a “perfect bell curve”, smoothing away the extreme spikes and crashes.',
 };
 
 const mean = (a) => a.reduce((s, v) => s + v, 0) / a.length;
@@ -25,9 +25,9 @@ export function stats(v) {
   };
 }
 const FEATS = {
-  jump: { fmt: (x) => `${x.toFixed(1)}%`, up: '真实曲线里出现了更大的单月跳变，真实市场常有突然的暴涨暴跌，算法生成的起伏更温和', down: '真实曲线的单月跳变反而更小，伪造品里出现了更突兀的大跳', name: '最大单月变动（占全程）' },
-  mom: { fmt: (x) => x.toFixed(2), up: '真实曲线的涨跌更有惯性，涨了之后更可能继续涨，曲线呈连续的上升段与下降段，而伪造品来回抖动', down: '真实曲线的月度涨跌更“松散”，伪造品里反而出现了更连贯的趋势段', name: '涨跌惯性（相邻月变动的相关系数）' },
-  clust: { fmt: (x) => x.toFixed(2), up: '真实曲线的波动呈“聚集”：剧烈的月份往往扎堆出现，平静期与动荡期分明，伪造品的波动则起伏均匀', down: '这一题真实曲线的波动聚集并不明显，伪造品的波动反而更成团', name: '波动聚集度（相邻月变动幅度的相关系数）' },
+  jump: { fmt: (x) => `${x.toFixed(1)}%`, up: 'The real curve has a bigger one-month jump; real markets often spike or crash suddenly, while algorithm-made swings are gentler', down: 'The real curve\'s biggest one-month jump is actually smaller; the fakes contain more abrupt jumps', name: 'Biggest one-month move (share of the full range)' },
+  mom: { fmt: (x) => x.toFixed(2), up: 'The real curve has more momentum: after a rise it tends to keep rising, forming long runs up and down, while the fakes zigzag back and forth', down: 'The real curve\'s monthly moves are looser; the fakes actually show more continuous trend runs', name: 'Momentum (correlation between consecutive monthly moves)' },
+  clust: { fmt: (x) => x.toFixed(2), up: 'The real curve\'s volatility clusters: violent months bunch together, with distinct calm and turbulent periods, while the fakes swing evenly', down: 'In this puzzle the real curve shows little volatility clustering, and the fakes actually clump more', name: 'Volatility clustering (correlation between consecutive move sizes)' },
 };
 /** Which statistic separates the real curve from the decoys most, and a sentence about this particular puzzle. */
 export function giveaway(pz) {
@@ -41,7 +41,7 @@ export function giveaway(pz) {
   const f = FEATS[best.k];
   return {
     ...best,
-    text: `${f.name}：真实 ${f.fmt(best.real)}，三条伪造品分别为 ${best.fakes.map(f.fmt).join(' / ')}。${best.dev > 0 ? f.up : f.down}。`,
+    text: `${f.name}: real ${f.fmt(best.real)}, the three fakes ${best.fakes.map(f.fmt).join(' / ')}. ${best.dev > 0 ? f.up : f.down}.`,
   };
 }
 
@@ -58,28 +58,28 @@ export default {
     num: 97,
     slug: 'real-or-synthetic',
     title: 'Real or Synthetic',
-    tagline: '四条走势图，三条是算法按真实数据特征“伪造”的。找出真的那一条。',
+    tagline: 'Four trend lines, three forged by an algorithm from the real thing\'s statistics. Spot the genuine one.',
     category: 'literacy',
     data: 'computed',
     howTo: [
-      '每天 5 题。每题给出四条没有标注的 72 个月走势图（已缩放到同一高度范围），题目覆盖原油、股市、汇率、气温等不同领域。',
-      '其中一条是真实的经济或气候数据，另外三条由算法根据它的统计特征伪造：AR(1) 高斯模型、打乱涨跌顺序、分块重组、随机相位。',
-      '点选你认为真实的那条。可以留意真实数据常有的“波动聚集”“突然的大跳”和“持续的趋势”。',
-      '答完后会揭晓真实序列的名称与时间段、每条伪造品的方法，并用这道题的实际数字告诉你破绽在哪。',
+      '5 puzzles a day. Each shows four unlabeled 72-month trend lines, all scaled to the same height range, drawn from oil, stocks, currencies, temperature and more.',
+      'One is real economic or climate data. The other three are forged by an algorithm from its statistics: an AR(1) Gaussian model, shuffled steps, block bootstrapping or random phase.',
+      'Tap the one you think is real. Watch for what real data often has: volatility clustering, sudden big jumps and persistent trends.',
+      'After you answer you see the real series\' name and period, the method behind each fake, and, using this puzzle\'s actual numbers, where the giveaway was.',
     ],
-    scoring: '每题答对得 1 分，满分 5 分。纯靠乱猜平均只有 1.25 分，能稳定拿到 3 分以上说明你看得出真数据的“毛病”。',
+    scoring: '1 point for each correct answer, 5 in all. Pure guessing averages only 1.25, so scoring 3 or more regularly means you can spot the quirks of real data.',
     sources: [
-      { name: 'NOAA / NASA 全球月温度距平（datasets/global-temp）', url: 'https://github.com/datasets/global-temp' },
-      { name: 'NOAA GML 莫纳罗亚 CO₂（datasets/co2-ppm）', url: 'https://github.com/datasets/co2-ppm' },
-      { name: 'EIA 布伦特、WTI 原油价格（datasets/oil-prices）', url: 'https://github.com/datasets/oil-prices' },
-      { name: 'EIA 亨利港天然气价格（datasets/natural-gas）', url: 'https://github.com/datasets/natural-gas' },
-      { name: 'Shiller 标普 500 指数、分红、盈利（datasets/s-and-p-500）', url: 'https://github.com/datasets/s-and-p-500' },
-      { name: '美国 CPI（datasets/cpi-us）', url: 'https://github.com/datasets/cpi-us' },
-      { name: '黄金价格（datasets/gold-prices）', url: 'https://github.com/datasets/gold-prices' },
-      { name: '美国 10 年期国债收益率（datasets/bond-yields-us-10y）', url: 'https://github.com/datasets/bond-yields-us-10y' },
-      { name: '美联储 H.10 汇率（datasets/exchange-rates）', url: 'https://github.com/datasets/exchange-rates' },
+      { name: 'NOAA / NASA global monthly temperature anomaly (datasets/global-temp)', url: 'https://github.com/datasets/global-temp' },
+      { name: 'NOAA GML Mauna Loa CO₂ (datasets/co2-ppm)', url: 'https://github.com/datasets/co2-ppm' },
+      { name: 'EIA Brent and WTI crude oil prices (datasets/oil-prices)', url: 'https://github.com/datasets/oil-prices' },
+      { name: 'EIA Henry Hub natural gas price (datasets/natural-gas)', url: 'https://github.com/datasets/natural-gas' },
+      { name: 'Shiller S&P 500 index, dividends, earnings (datasets/s-and-p-500)', url: 'https://github.com/datasets/s-and-p-500' },
+      { name: 'US CPI (datasets/cpi-us)', url: 'https://github.com/datasets/cpi-us' },
+      { name: 'Gold prices (datasets/gold-prices)', url: 'https://github.com/datasets/gold-prices' },
+      { name: 'US 10-year Treasury yield (datasets/bond-yields-us-10y)', url: 'https://github.com/datasets/bond-yields-us-10y' },
+      { name: 'Federal Reserve H.10 exchange rates (datasets/exchange-rates)', url: 'https://github.com/datasets/exchange-rates' },
     ],
-    dataNote: '真实序列取自上述公开 GitHub 镜像（datasets 组织）里的 NOAA、NASA、EIA、Shiller、美联储等月度数据，每题取一个 72 个月窗口（价格类取对数后再处理）。伪造序列在 build/ 中离线生成：以真实窗口的月度变化为素材，用 AR(1)、打乱、分块重组、随机相位四种代理数据法重建走势，所以伪造品是“计算生成”的，不是真实数据。原题建议的 FRED 的 CSV 接口没有跨域许可，浏览器无法直接读取，且该题并不要求当日新数据，因此使用离线快照。选题时已剔除过于平滑、一眼就能认出的窗口（如部分 CPI、黄金）。',
+    dataNote: 'The real series come from the public GitHub mirrors above (the datasets organization): monthly NOAA, NASA, EIA, Shiller and Federal Reserve data. Each puzzle takes one 72-month window (price series are log-transformed first). The fakes are generated offline in build/: starting from the real window\'s monthly changes, four surrogate-data methods (AR(1), shuffle, block bootstrap, random phase) rebuild a trend, so the fakes are computed, not real data. The FRED CSV endpoint suggested in the original idea has no cross-origin permission and cannot be read from a browser, and this puzzle does not need same-day data, so an offline snapshot is used. Windows that were too smooth and easy to spot at a glance (parts of CPI and gold) were dropped.',
   },
 
   puzzle({ data, day }) {
@@ -107,11 +107,11 @@ export default {
         options.push({ label: 'ABCD'[k], body });
       }
       const letter = 'ABCD'[lay.correct];
-      const list = lay.order.map((o, k) => `${'ABCD'[k]} ${o.real ? '真实' : ctx.data.methods[o.m]}`).join(' · ');
+      const list = lay.order.map((o, k) => `${'ABCD'[k]} ${o.real ? 'real' : ctx.data.methods[o.m]}`).join(' · ');
       rounds.push({
-        prompt: `第 ${i + 1} 题：哪一条是真实数据？`,
+        prompt: 'Which line is the real data?',
         options, correct: lay.correct,
-        explain: ui.h('span', {}, `真实的是 ${letter}：${meta.name}，${pz.from} 至 ${pz.to}。`, ui.h('br'), list),
+        explain: ui.h('span', {}, `The real one is ${letter}: ${meta.name}, ${pz.from} to ${pz.to}.`, ui.h('br'), list),
       });
       ctx.log('round', i + 1, pz.s, pz.from, 'real =', letter);
     }
@@ -129,17 +129,17 @@ export default {
           Plot.lineY(pz.real, { stroke: c.accent, strokeWidth: 2.6 }),
         ],
       }));
-      blocks.push(ui.panel({ kicker: `第 ${i + 1} 题`, title: meta.name, plain: true },
+      blocks.push(ui.panel({ kicker: `Puzzle ${i + 1}`, title: meta.name, plain: true },
         ui.kv([
-          ['数据', `${pz.from} 至 ${pz.to} · ${meta.unit} · 来源 ${meta.src}`],
-          ['这题的破绽', g.text],
-          ['伪造方法', ms.map((m) => `${ctx.data.methods[m]}：${TELLS[m]}`).join('')],
+          ['Data', `${pz.from} to ${pz.to} · ${meta.unit} · source: ${meta.src}`],
+          ['The giveaway', g.text],
+          ['Forgery methods', ms.map((m) => `${ctx.data.methods[m]}: ${TELLS[m]}`).join(' ')],
         ]),
         chart,
-        ui.h('div', { class: 'ds-muted', style: { fontSize: '12px' } }, '粗线为真实数据，细线为三条伪造品（均缩放到 0–100）。')));
+        ui.h('div', { class: 'ds-muted', style: { fontSize: '12px' } }, 'Thick line is the real data; thin lines are the three fakes (all scaled to 0–100).')));
     }
     res.detail = ui.h('div', { class: 'ds-stack' }, ...blocks,
-      ui.callout('通用诀窍：真实数据常有“波动聚集”（平静期之后是剧烈期）、突然的大跳和持续的趋势；伪造品的起伏往往过于均匀，或过于抖动。', 'good'));
+      ui.callout('General tip: real data often has volatility clustering (calm spells followed by violent ones), sudden big jumps and persistent trends; fakes tend to swing too evenly or jitter too much.', 'good'));
     return res;
   },
 };

@@ -27,7 +27,7 @@ export function phase(d, r) {
   }
   return out;
 }
-export const METHODS = { ar1: ['AR(1) 高斯模型', ar1], shuffle: ['打乱涨跌顺序', shuffle], block: ['分块重组', block], phase: ['随机相位（保留频谱）', phase] };
+export const METHODS = { ar1: ['AR(1) Gaussian model', ar1], shuffle: ['Shuffled steps', shuffle], block: ['Block bootstrap', block], phase: ['Random phase (spectrum kept)', phase] };
 export function surrogate(method, x, r) {
   const d = diff(x), g = METHODS[method][1](d, r);
   return integrate(x[0], g);
