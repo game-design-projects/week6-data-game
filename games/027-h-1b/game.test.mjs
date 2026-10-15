@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import game, { where, explain, CITY_ZH } from './game.js';
+import game, { where, explain } from './game.js';
 import { makeRng, dailyIndex, expScore, pctError } from '../../engine/core.js';
 
 const data = JSON.parse(readFileSync(new URL('./data.json', import.meta.url)));
@@ -14,7 +14,7 @@ const score = (g, a) => expScore(pctError(g, a), 0.3);
 
 test('where buckets', () => {
   const c = { p25: 100, p75: 200 };
-  assert.match(where(50, c), /低于/); assert.match(where(150, c), /中间/); assert.match(where(300, c), /高于/);
+  assert.match(where(50, c), /below/); assert.match(where(150, c), /middle/); assert.match(where(300, c), /above/);
 });
 
 test('pool: >= 60 puzzles, unique ids, sane fields', () => {
@@ -24,7 +24,7 @@ test('pool: >= 60 puzzles, unique ids, sane fields', () => {
     assert.ok(Number.isFinite(x.sal) && x.sal >= 40000 && x.sal <= 400000, x.id);
     assert.match(x.id, /^I-20\d-\d{5}-\d+$/);
     assert.match(x.date, /^2024-\d\d-\d\d$/);
-    assert.ok(x.emp && x.title && CITY_ZH[x.city], x.id);
+    assert.ok(x.emp && x.title && x.city, x.id);
     assert.ok(data.cells[x.q][x.city], x.id);
     assert.ok(Number.isInteger(x.empN) && x.empN >= 0);
     assert.ok(x.empMed === null || (x.empN >= 2 && x.empMed > 0));
@@ -52,9 +52,9 @@ test('explain is puzzle-specific', () => {
   const cell = { med: 150000, p25: 120000, p75: 180000 };
   const refs = [{ city: 'A', med: 100000 }, { city: 'B', med: 110000 }];
   const hi = explain({ sal: 200000, emp: 'ACME INC', empN: 5, empMed: 190000 }, cell, refs);
-  assert.match(hi, /城市溢价/); assert.match(hi, /高 33%/); assert.match(hi, /Acme Inc/);
+  assert.match(hi, /city premium/); assert.match(hi, /33% above/); assert.match(hi, /Acme Inc/);
   const lo = explain({ sal: 100000, emp: 'X', empN: 0, empMed: null }, cell, refs);
-  assert.match(lo, /低 33%/); assert.match(lo, /没有足够/);
+  assert.match(lo, /33% below/); assert.match(lo, /not enough/);
 });
 
 test('scoring extremes and skill gap over the pool', () => {
