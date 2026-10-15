@@ -12,7 +12,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CJK = /[　-〿㐀-䶿一-鿿豈-﫿＀-￯]/u;
 const TEXT = /\.(js|mjs|json|html|css|svg|txt|csv)$/;
 // Files whose CJK text is the content itself (e.g. names in their own script), with the reason.
-const ALLOW = {};
+const ALLOW = {
+  'games/013-intersection/data.json': 'the puzzle is reading local street names in their own script (OSM originals); the result shows name:en',
+  'games/070-holiday/data.json': 'local holiday and country names for CN, HK and JP are clues, plus their redaction terms',
+  'games/021-year-built/data.json': 'CC BY-SA photographer credit must keep the exact username',
+  'games/098-described/data.json': 'CC BY-SA photographer credit must keep the exact username',
+  'games/101-spotter/data.json': 'CC BY-SA photographer credits must keep the exact names',
+  'games/102-trainspotter/data.json': 'CC BY-SA photographer credit must keep the exact username',
+};
 
 function shipped() {
   const out = ['index.html', 'play.html'];

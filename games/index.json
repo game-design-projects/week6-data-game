@@ -4,11 +4,11 @@
   "num": 1,
   "slug": "daylight",
   "title": "Daylight",
-  "tagline": "一座城市一整年的日出日落曲线。读出它的纬度、经度和夏令时，然后在地图上标出来。",
+  "tagline": "A city's sunrise and sunset curves for a whole year. Read its latitude, longitude and daylight saving time, then pin it on the map.",
   "category": "geo",
   "data": "computed",
   "sources": [
-   "GeoNames cities15000（CC BY 4.0）",
+   "GeoNames cities15000 (CC BY 4.0)",
    "Sunrise equation"
   ]
  },
@@ -17,7 +17,7 @@
   "num": 2,
   "slug": "profile",
   "title": "Profile",
-  "tagline": "沿一条隐藏直线切开大地：看海拔剖面图，猜这条线在哪、朝哪个方向。",
+  "tagline": "Slice the Earth along a hidden straight line. Read the elevation profile, then guess where the line is and which way it points.",
   "category": "geo",
   "data": "snapshot",
   "sources": [
@@ -31,15 +31,15 @@
   "num": 3,
   "slug": "sky-over",
   "title": "Sky Over",
-  "tagline": "一张从神秘城市仰望的星空图。北极星有多高，纬度就是多少；天赤道与子午线的交点，扣掉格林尼治恒星时，就是经度。",
+  "tagline": "A star chart from a mystery city. Polaris's height is the latitude; where the celestial equator crosses the meridian, minus Greenwich sidereal time, is the longitude.",
   "category": "geo",
   "data": "computed",
   "sources": [
-   "HYG Database v4（Hipparcos / Yale / Gliese 合并星表）",
-   "d3-celestial 星座连线",
+   "HYG Database v4 (merged Hipparcos / Yale / Gliese catalog)",
+   "d3-celestial constellation lines",
    "GeoNames cities15000",
-   "JPL 行星近似轨道根数（Standish）",
-   "Meeus《Astronomical Algorithms》第 47 章"
+   "JPL approximate planetary orbital elements (Standish)",
+   "Meeus, Astronomical Algorithms, chapter 47"
   ]
  },
  {
@@ -47,11 +47,11 @@
   "num": 5,
   "slug": "figure-ground",
   "title": "Figure-Ground",
-  "tagline": "一平方公里的街道，黑底白线，没有任何文字。凭街网的肌理，猜出这是哪座城市。",
+  "tagline": "One square kilometer of streets, white on black, with no labels. From the texture of the street net, name the city.",
   "category": "geo",
   "data": "snapshot",
   "sources": [
-   "OpenStreetMap（Overpass API）"
+   "OpenStreetMap (Overpass API)"
   ]
  },
  {
@@ -59,7 +59,7 @@
   "num": 6,
   "slug": "watershed",
   "title": "Watershed",
-  "tagline": "一条河的整个流域，只剩一块没有标注的轮廓。猜是哪条河。",
+  "tagline": "A river's whole drainage basin, reduced to an unlabeled outline. Name the river.",
   "category": "geo",
   "data": "snapshot",
   "sources": [
@@ -72,7 +72,7 @@
   "num": 7,
   "slug": "parallel",
   "title": "Parallel",
-  "tagline": "五个城市，点出比今天这座城市更靠北的那几个。罗马可比纽约更靠北哦。",
+  "tagline": "Five cities, one reference. Tap every one that lies farther north. Yes, Rome is north of New York.",
   "category": "geo",
   "data": "snapshot",
   "sources": [
@@ -85,7 +85,7 @@
   "num": 9,
   "slug": "great-circle",
   "title": "Great Circle",
-  "tagline": "在墨卡托地图上画出两座城市之间的最短航线。你的线和真正的大圆航线之间的面积越小，分数越高。",
+  "tagline": "Draw the shortest flight path between two cities on a Mercator map. The smaller the area between your line and the true great circle, the higher your score.",
   "category": "geo",
   "data": "computed",
   "sources": [
@@ -98,11 +98,11 @@
   "num": 10,
   "slug": "drift",
   "title": "Drift",
-  "tagline": "一枚真实海洋漂流浮标前 10 天的轨迹已经画好。顺着洋流往下推，标出它第 90 天的位置。",
+  "tagline": "The first 10 days of a real ocean drifter's track are drawn. Follow the current and mark where it will be on day 90.",
   "category": "geo",
   "data": "snapshot",
   "sources": [
-   "NOAA Global Drifter Program (AOML) — 6 小时质控轨迹",
+   "NOAA Global Drifter Program (AOML): 6-hour quality-controlled tracks",
    "Global Drifter Program"
   ]
  },
@@ -111,7 +111,7 @@
   "num": 11,
   "slug": "aftershock",
   "title": "Aftershock",
-  "tagline": "这一天全球的地震都在图上，唯独最大的那次被藏起来了。找出它的位置，再猜它有多大。",
+  "tagline": "Every earthquake in the world that day is on the map except the biggest one. Find where it struck, then guess how big it was.",
   "category": "geo",
   "data": "live",
   "sources": [
@@ -123,12 +123,12 @@
   "num": 12,
   "slug": "forecast-match",
   "title": "Forecast Match",
-  "tagline": "五座城市昨天的逐小时天气卡片，把气温曲线和日出日落一一配到城市上。",
+  "tagline": "Five cities, five weather cards from yesterday. Match each temperature curve and sunrise time to its city.",
   "category": "geo",
   "data": "live",
   "sources": [
-   "Open-Meteo Forecast API（昨日逐小时数据）",
-   "Open-Meteo Historical Weather API（ERA5，离线快照）"
+   "Open-Meteo Forecast API (yesterday's hourly data)",
+   "Open-Meteo Historical Weather API (ERA5, offline snapshot)"
   ]
  },
  {
@@ -136,11 +136,11 @@
   "num": 13,
   "slug": "intersection",
   "title": "Intersection",
-  "tagline": "几条街道在同一个路口交汇。只凭街道名，猜这是世界上哪座城市。",
+  "tagline": "Several streets meet at one junction. From the street names alone, name the city.",
   "category": "geo",
   "data": "snapshot",
   "sources": [
-   "OpenStreetMap（Overpass API）"
+   "OpenStreetMap (Overpass API)"
   ]
  },
  {
@@ -148,7 +148,7 @@
   "num": 14,
   "slug": "311",
   "title": "311",
-  "tagline": "给出纽约某个邮编区一整年的 311 投诉构成，在地图上标出这个街区。",
+  "tagline": "Here is a year of 311 complaints from one NYC ZIP code. Pin that neighborhood on the map.",
   "category": "nyc",
   "data": "snapshot",
   "sources": [
@@ -161,12 +161,12 @@
   "num": 15,
   "slug": "fare",
   "title": "Fare",
-  "tagline": "一趟真实的纽约黄色出租车行程：上车区、下车区和时段。猜计价器上的车费和行程时长。",
+  "tagline": "A real NYC yellow-cab trip: pickup zone, dropoff zone and time of day. Guess the metered fare and how long it took.",
   "category": "nyc",
   "data": "snapshot",
   "sources": [
-   "NYC TLC Yellow Taxi Trip Records 2023（NYC Open Data）",
-   "NYC Taxi Zones（边界与名称）"
+   "NYC TLC Yellow Taxi Trip Records 2023 (NYC Open Data)",
+   "NYC Taxi Zones (boundaries and names)"
   ]
  },
  {
@@ -174,7 +174,7 @@
   "num": 16,
   "slug": "grade",
   "title": "Grade",
-  "tagline": "一次纽约餐厅检查里的三条真实违规记录。猜它的总扣分，再猜门口贴的字母等级。",
+  "tagline": "Three real violations from one NYC restaurant inspection. Guess the total points, then the letter grade in the window.",
   "category": "nyc",
   "data": "snapshot",
   "sources": [
@@ -187,7 +187,7 @@
   "num": 17,
   "slug": "turnstile",
   "title": "Turnstile",
-  "tagline": "某个纽约地铁站一天 24 小时的进站人数曲线，工作日 vs 周末。读懂人流的节奏，猜出是哪一站，误差按相隔站数计。",
+  "tagline": "A New York subway station's 24-hour entry curve, weekday vs. weekend. Read the rhythm of the crowd and name the station; misses are measured in stops.",
   "category": "nyc",
   "data": "snapshot",
   "sources": [
@@ -201,7 +201,7 @@
   "num": 18,
   "slug": "bridge-count",
   "title": "Bridge Count",
-  "tagline": "看一天的天气，猜东河四座桥上过了多少骑车人：先给四座桥排名，再估总数。",
+  "tagline": "Given one day's weather, guess how many cyclists crossed the four East River bridges: rank the bridges, then estimate the total.",
   "category": "nyc",
   "data": "live",
   "sources": [
@@ -215,7 +215,7 @@
   "num": 19,
   "slug": "rat-race",
   "title": "Rat Race",
-  "tagline": "两个纽约邮编，谁这个月的鼠患检查不合格次数更多？",
+  "tagline": "Two New York ZIP codes: which one failed more rat inspections this month?",
   "category": "nyc",
   "data": "snapshot",
   "sources": [
@@ -227,7 +227,7 @@
   "num": 20,
   "slug": "cuisine-mix",
   "title": "Cuisine Mix",
-  "tagline": "某个邮编区的餐厅菜系构成长什么样？读出它的“口味指纹”，在纽约地图上标出这个街区。",
+  "tagline": "What does a ZIP code's restaurant mix look like? Read its flavor fingerprint, then pin the neighborhood on the NYC map.",
   "category": "nyc",
   "data": "snapshot",
   "sources": [
@@ -239,13 +239,13 @@
   "num": 21,
   "slug": "year-built",
   "title": "Year Built",
-  "tagline": "三张纽约建筑的照片，凭窗户、材料和装饰猜它们是哪一年建成的。",
+  "tagline": "Three photos of New York buildings. Read the windows, materials and ornament to guess the year each was built.",
   "category": "nyc",
   "data": "snapshot",
   "sources": [
-   "Wikidata SPARQL（建成年份 P571、坐标、照片 P18）",
-   "Wikimedia Commons（照片与授权）",
-   "NYC PLUTO 地块数据（NYC Open Data，用于核对年份、层数和用途）"
+   "Wikidata SPARQL (year built P571, coordinates, image P18)",
+   "Wikimedia Commons (photos and licenses)",
+   "NYC PLUTO tax-lot data (NYC Open Data; used to cross-check year, floors and use)"
   ]
  },
  {
@@ -253,7 +253,7 @@
   "num": 22,
   "slug": "isochrone",
   "title": "Isochrone",
-  "tagline": "从某个地铁站出发 30 分钟能到的站点连成一片“等时圈”。看形状，猜出发站在哪。",
+  "tagline": "Every station you can reach in 30 minutes from one subway stop forms an isochrone. Read its shape and pin where it starts.",
   "category": "nyc",
   "data": "computed",
   "sources": [
@@ -266,13 +266,13 @@
   "num": 23,
   "slug": "then-price",
   "title": "Then Price",
-  "tagline": "1983 年 3 月一打鸡蛋多少钱？穿越回某个月，猜三样日常商品当年的价格，按百分比误差计分。",
+  "tagline": "What did a dozen eggs cost in March 1983? Travel back to a past month and guess the price of three everyday items, scored by percent error.",
   "category": "money",
   "data": "snapshot",
   "sources": [
-   "BLS Average Price Data（经 FRED 镜像下载）",
-   "FRED 序列示例：鸡蛋",
-   "BLS 公共 API：CPI-U 全项目（CUUR0000SA0）"
+   "BLS Average Price Data (downloaded via FRED)",
+   "FRED series example: eggs",
+   "BLS public API: CPI-U all items (CUUR0000SA0)"
   ]
  },
  {
@@ -280,12 +280,12 @@
   "num": 24,
   "slug": "old-menu",
   "title": "Old Menu",
-  "tagline": "一张百年前的菜单：给你餐厅、年份和一道菜的价格，猜另外三道菜卖多少钱。",
+  "tagline": "A century-old menu: given the restaurant, the year and one dish's price, guess what three other dishes cost.",
   "category": "money",
   "data": "snapshot",
   "sources": [
-   "NYPL “What’s on the Menu?” 数据集",
-   "US CPI-U 月度指数（datasets/cpi-us，源自 BLS）"
+   "NYPL “What’s on the Menu?” dataset",
+   "US CPI-U monthly index (datasets/cpi-us, from BLS)"
   ]
  },
  {
@@ -293,12 +293,12 @@
   "num": 25,
   "slug": "unlabeled",
   "title": "Unlabeled",
-  "tagline": "去掉坐标轴的美国宏观曲线，只留下衰退期阴影。先说出是什么指标，再判断是哪个年代。",
+  "tagline": "A US macro curve with the axes removed and only the recessions shaded. Name the indicator, then date the decade.",
   "category": "money",
   "data": "snapshot",
   "sources": [
-   "FRED（圣路易斯联储）",
-   "NBER 衰退日期（FRED: USREC）"
+   "FRED (St. Louis Fed)",
+   "NBER recession dates (FRED: USREC)"
   ]
  },
  {
@@ -306,12 +306,12 @@
   "num": 26,
   "slug": "shock-date",
   "title": "Shock Date",
-  "tagline": "四条市场曲线围绕着一个隐藏的日期：哪一天冲击降临？",
+  "tagline": "Four market lines, one hidden date: which day did the shock hit?",
   "category": "money",
   "data": "snapshot",
   "sources": [
-   "FRED：VIX、美债收益率、WTI 原油、汇率",
-   "Yahoo Finance：标普 500、纳斯达克、黄金期货"
+   "FRED: VIX, Treasury yields, WTI crude, exchange rates",
+   "Yahoo Finance: S&P 500, Nasdaq, gold futures"
   ]
  },
  {
@@ -319,12 +319,12 @@
   "num": 27,
   "slug": "h-1b",
   "title": "H-1B",
-  "tagline": "一份真实的 H-1B 劳工条件申请（LCA）：给你职位、雇主和城市，猜它申报的年薪。",
+  "tagline": "A real H-1B Labor Condition Application (LCA): given the job, employer and city, guess the annual salary it reports.",
   "category": "money",
   "data": "snapshot",
   "sources": [
    "US DOL OFLC LCA Disclosure Data",
-   "h1bdata.info（LCA 公开数据镜像，2024 年提交的申请）"
+   "h1bdata.info (mirror of public LCA data, filings submitted in 2024)"
   ]
  },
  {
@@ -332,7 +332,7 @@
   "num": 28,
   "slug": "contract",
   "title": "Contract",
-  "tagline": "一份真实的美国联邦采购合同描述，猜它值多少钱——按对数刻度计分。",
+  "tagline": "A real US federal contract description. Guess its dollar value, scored on a log scale.",
   "category": "money",
   "data": "snapshot",
   "sources": [
@@ -344,7 +344,7 @@
   "num": 29,
   "slug": "duty-free",
   "title": "Duty Free",
-  "tagline": "美国关税表里一条离谱具体的商品，猜它的进口税率。",
+  "tagline": "An absurdly specific line from the US tariff schedule. Guess its import duty rate.",
   "category": "money",
   "data": "snapshot",
   "sources": [
@@ -356,12 +356,12 @@
   "num": 30,
   "slug": "concurrent",
   "title": "Concurrent",
-  "tagline": "五条 Steam 在线人数的 24 小时曲线，配给五款游戏。时区峰值与人气规模就是破绽。",
+  "tagline": "Five 24-hour Steam player curves, five games. Match them: time-zone peaks and popularity give them away.",
   "category": "tech",
   "data": "snapshot",
   "sources": [
-   "Steam Charts（steamcharts.com）",
-   "Steam Web API：GetNumberOfCurrentPlayers"
+   "Steam Charts (steamcharts.com)",
+   "Steam Web API: GetNumberOfCurrentPlayers"
   ]
  },
  {
@@ -369,11 +369,11 @@
   "num": 31,
   "slug": "rent-index",
   "title": "Rent Index",
-  "tagline": "猜一个美国县的两居室公平市场租金（HUD FMR），再比四组高低。",
+  "tagline": "Guess a US county’s 2-bedroom Fair Market Rent (HUD FMR), then settle four higher-or-lower duels.",
   "category": "money",
   "data": "snapshot",
   "sources": [
-   "HUD Fair Market Rents FY2026（县级）"
+   "HUD Fair Market Rents FY2026 (county level)"
   ]
  },
  {
@@ -381,7 +381,7 @@
   "num": 32,
   "slug": "basket",
   "title": "Basket",
-  "tagline": "给你一个年份和 $20，按那年的真实物价买菜，要求正好花完。带历史的背包问题。",
+  "tagline": "A year and $20. Shop at that year's real grocery prices and spend exactly all of it. A knapsack puzzle with history.",
   "category": "money",
   "data": "snapshot",
   "sources": [
@@ -393,7 +393,7 @@
   "num": 33,
   "slug": "food-web",
   "title": "Food Web",
-  "tagline": "六个物种、15 对组合，判断谁吃谁，画出食物网，按边的 F1 计分。",
+  "tagline": "Six species, 15 pairs. Decide who eats whom and draw the food web, scored by edge F1.",
   "category": "science",
   "data": "snapshot",
   "sources": [
@@ -405,11 +405,11 @@
   "num": 34,
   "slug": "phenology",
   "title": "Phenology",
-  "tagline": "某物种在某个国家一年里每周被观测到的曲线。先认出它是谁，再预测它在另一个国家什么时候最热闹。",
+  "tagline": "One species' weekly sightings across a year in one country. Name the species, then predict when it peaks in another country.",
   "category": "science",
   "data": "snapshot",
   "sources": [
-   "iNaturalist API · observations/histogram（research grade）",
+   "iNaturalist API · observations/histogram (research grade)",
    "iNaturalist API · observations/species_counts"
   ]
  },
@@ -418,11 +418,11 @@
   "num": 35,
   "slug": "ingredients",
   "title": "Ingredients",
-  "tagline": "配料表倒着揭示：先看含量最少的成分，猜这是哪款食品。",
+  "tagline": "The label read backwards: start with the tiniest ingredients and name the food.",
   "category": "science",
   "data": "snapshot",
   "sources": [
-   "Open Food Facts 产品 API",
+   "Open Food Facts product API",
    "Open Food Facts search-a-licious"
   ]
  },
@@ -431,11 +431,11 @@
   "num": 36,
   "slug": "genome-size",
   "title": "Genome Size",
-  "tagline": "猜一猜这个物种的基因组有多大。从病毒到肺鱼，跨度超过七个数量级，按对数刻度计分。",
+  "tagline": "Guess how big this species' genome is. From viruses to lungfish it spans more than seven orders of magnitude, scored on a log scale.",
   "category": "science",
   "data": "snapshot",
   "sources": [
-   "NCBI Genome Reports（真核生物 / 原核生物 / 病毒）"
+   "NCBI Genome Reports (eukaryotes / prokaryotes / viruses)"
   ]
  },
  {
@@ -443,11 +443,11 @@
   "num": 37,
   "slug": "aqi-rank",
   "title": "AQI Rank",
-  "tagline": "5 座城市，按昨天的 PM2.5 从高到低排序。线索只有此前两周的走势。",
+  "tagline": "Rank five cities by yesterday’s PM2.5, from dirtiest to cleanest. Your only clue is the two weeks before.",
   "category": "science",
   "data": "live",
   "sources": [
-   "Open-Meteo Air Quality API（Copernicus CAMS）"
+   "Open-Meteo Air Quality API (Copernicus CAMS)"
   ]
  },
  {
@@ -455,7 +455,7 @@
   "num": 38,
   "slug": "tide",
   "title": "Tide",
-  "tagline": "三天的潮汐曲线，猜是哪个港口。一天只有一次高潮，就该想到墨西哥湾。",
+  "tagline": "Three days of a harbor's tide curve. Guess the port. Only one high tide a day? Think Gulf of Mexico.",
   "category": "science",
   "data": "live",
   "sources": [
@@ -468,7 +468,7 @@
   "num": 39,
   "slug": "landfall",
   "title": "Landfall",
-  "tagline": "一场历史飓风登陆前一天多的路径。预测它会在哪里登陆，然后在地图上标出来。",
+  "tagline": "The track of a historic hurricane, ending more than a day before landfall. Predict where it comes ashore and pin it on the map.",
   "category": "science",
   "data": "snapshot",
   "sources": [
@@ -481,7 +481,7 @@
   "num": 40,
   "slug": "transit-dip",
   "title": "Transit Dip",
-  "tagline": "恒星亮度出现一道凹陷——行星从它面前经过了。读出凹陷深度，估算这颗行星有多大。",
+  "tagline": "A star's brightness dips because a planet passed in front of it. Read the depth of the dip and estimate how big the planet is.",
   "category": "science",
   "data": "snapshot",
   "sources": [
@@ -493,13 +493,13 @@
   "num": 41,
   "slug": "gravity-assist",
   "title": "Gravity Assist",
-  "tagline": "今天各大行星的真实位置摆在眼前：从地球出发，直飞还是借某颗行星的引力“弹”一下，哪条路线最省燃料？",
+  "tagline": "Today's real planet positions are laid out in front of you. Leaving Earth, is it cheaper to fly direct or to slingshot off another planet? Rank the routes by fuel.",
   "category": "science",
   "data": "computed",
   "sources": [
-   "NASA JPL「Approximate Positions of the Planets」（开普勒轨道根数，1800–2050 年）",
+   "NASA JPL “Approximate Positions of the Planets” (Keplerian elements, 1800-2050)",
    "NASA JPL Horizons System",
-   "Lambert 问题 + 圆锥曲线拼接"
+   "Lambert problem + patched conics"
   ]
  },
  {
@@ -507,11 +507,11 @@
   "num": 42,
   "slug": "ground-track",
   "title": "Ground Track",
-  "tagline": "一颗卫星 12 小时的星下点轨迹。认出它是 ISS / Starlink、极轨、GPS、Molniya 还是同步卫星。",
+  "tagline": "A satellite's ground track over 12 hours. Tell whether it is ISS / Starlink, polar, GPS, Molniya or geosynchronous.",
   "category": "science",
   "data": "live",
   "sources": [
-   "CelesTrak GP 轨道要素（JSON）"
+   "CelesTrak GP orbital elements (JSON)"
   ]
  },
  {
@@ -519,12 +519,12 @@
   "num": 43,
   "slug": "ngram",
   "title": "Ngram",
-  "tagline": "一个英文词在 1800–2019 年书籍里的词频曲线，猜出这个词。语义相似度会告诉你离答案多近。",
+  "tagline": "An English word's frequency curve in books from 1800 to 2019. Guess the word; semantic similarity tells you how close you are.",
   "category": "words",
   "data": "snapshot",
   "sources": [
    "Google Books Ngram Viewer (en-2019, smoothing 3)",
-   "GloVe 50d (wiki+gigaword) 词向量，经 fse/glove-wiki-gigaword-50"
+   "GloVe 50d (wiki+gigaword) word vectors, via fse/glove-wiki-gigaword-50"
   ]
  },
  {
@@ -532,11 +532,11 @@
   "num": 45,
   "slug": "cognates",
   "title": "Cognates",
-  "tagline": "同一个词在六种语言里的写法，从最远的语言开始揭示，猜英文。",
+  "tagline": "The same word in six languages, farthest from English first. Guess the English word.",
   "category": "words",
   "data": "snapshot",
   "sources": [
-   "Wikidata 多语言标签（wbgetentities API）"
+   "Wikidata multilingual labels (wbgetentities API)"
   ]
  },
  {
@@ -544,12 +544,12 @@
   "num": 46,
   "slug": "first-use",
   "title": "First Use",
-  "tagline": "给你一个英语单词和中文释义，猜它最早见于书面英语的年份。",
+  "tagline": "Here is an English word and its meaning. Guess the year it first appeared in written English.",
   "category": "words",
   "data": "snapshot",
   "sources": [
-   "Online Etymology Dictionary（etymonline.com）",
-   "yosevu/etymonline（GitHub 上的词条数据镜像）"
+   "Online Etymology Dictionary (etymonline.com)",
+   "yosevu/etymonline (GitHub mirror of the entries)"
   ]
  },
  {
@@ -557,12 +557,12 @@
   "num": 47,
   "slug": "spike",
   "title": "Spike",
-  "tagline": "两天前维基百科浏览量暴涨最猛的词条，只给你一条没有名字的曲线。猜错一次，揭示一篇同一天一起暴涨的词条。",
+  "tagline": "The Wikipedia article that surged hardest two days ago, shown only as a nameless pageview curve. Each wrong guess reveals another article that spiked the same day.",
   "category": "words",
   "data": "live",
   "sources": [
-   "Wikimedia Pageviews API：每日热门榜（top）",
-   "Wikimedia Pageviews API：单篇词条每日浏览（per-article）"
+   "Wikimedia Pageviews API: daily top list",
+   "Wikimedia Pageviews API: per-article daily views"
   ]
  },
  {
@@ -570,12 +570,12 @@
   "num": 48,
   "slug": "dialect-pin",
   "title": "Dialect Pin",
-  "tagline": "把方言测验倒过来玩：看一个人怎么回答 soda 还是 pop，猜他在美国哪个州长大。",
+  "tagline": "The dialect quiz played backwards: read how someone says soda or pop, and guess which US state they grew up in.",
   "category": "words",
   "data": "snapshot",
   "sources": [
-   "Harvard Dialect Survey（Bert Vaux & Scott Golder, 2003）",
-   "asucbi/BDSR2 上的各州结果文本镜像"
+   "Harvard Dialect Survey (Bert Vaux & Scott Golder, 2003)",
+   "State result text mirror at asucbi/BDSR2"
   ]
  },
  {
@@ -583,7 +583,7 @@
   "num": 49,
   "slug": "old-news",
   "title": "Old News",
-  "tagline": "一段真实的旧报纸 OCR 文字，没有日期、没有报头。读语言和时事，猜它出版于哪一年。",
+  "tagline": "A snippet of real old-newspaper OCR text with no date and no masthead. Read the language and the news, then guess the year it was printed.",
   "category": "words",
   "data": "snapshot",
   "sources": [
@@ -596,12 +596,12 @@
   "num": 50,
   "slug": "sitelinks",
   "title": "Sitelinks",
-  "tagline": "一个话题被多少种语言的维基百科收录？排 5 个话题，再估一个数字。",
+  "tagline": "How many languages of Wikipedia cover a topic? Rank 5 topics, then estimate one number.",
   "category": "words",
   "data": "snapshot",
   "sources": [
-   "Wikidata API（wbgetentities，sitelinks）",
-   "Wikidata Query Service（候选条目）"
+   "Wikidata API (wbgetentities, sitelinks)",
+   "Wikidata Query Service (candidate items)"
   ]
  },
  {
@@ -609,12 +609,12 @@
   "num": 51,
   "slug": "toponym",
   "title": "Toponym",
-  "tagline": "给你一个地名的字面意思——“黑色水塘”——在世界地图上找出这个地方。",
+  "tagline": "You get the literal meaning of a place name, such as “Black Pool”. Find the place on the world map.",
   "category": "words",
   "data": "snapshot",
   "sources": [
-   "Wikidata（坐标与条目）",
-   "Wikipedia 各地名条目的 Etymology 章节"
+   "Wikidata (coordinates and entries)",
+   "Etymology sections of Wikipedia place articles"
   ]
  },
  {
@@ -622,12 +622,12 @@
   "num": 52,
   "slug": "1828",
   "title": "1828",
-  "tagline": "韦伯斯特 1828 年词典里的释义，词本身被涂黑。猜这是哪个词。",
+  "tagline": "Definitions from Webster's 1828 dictionary with the word itself blacked out. Guess the word.",
   "category": "words",
   "data": "snapshot",
   "sources": [
-   "Webster's 1828 American Dictionary（CSV 转录，公有领域）",
-   "google-10000-english 常用词表（用于筛选常见词）"
+   "Webster's 1828 American Dictionary (CSV transcription, public domain)",
+   "google-10000-english word list (used to pick common words)"
   ]
  },
  {
@@ -635,7 +635,7 @@
   "num": 53,
   "slug": "heatmap",
   "title": "Heatmap",
-  "tagline": "一部剧每一集的 IMDb 评分，排成「季 × 集」热力图。看高低起伏，猜剧名。",
+  "tagline": "Every episode's IMDb rating of a TV show, laid out as a season × episode heatmap. Read the ups and downs and name the show.",
   "category": "culture",
   "data": "snapshot",
   "sources": [
@@ -647,11 +647,11 @@
   "num": 54,
   "slug": "chart-run",
   "title": "Chart Run",
-  "tagline": "一首歌在 Billboard Hot 100 上逐周的名次曲线。先猜年份，再猜歌名。",
+  "tagline": "A song's week-by-week rank curve on the Billboard Hot 100. Guess the year first, then the song.",
   "category": "culture",
   "data": "snapshot",
   "sources": [
-   "Billboard Hot 100 历史榜单（utdata/rwd-billboard-data 镜像）",
+   "Billboard Hot 100 historical charts (utdata/rwd-billboard-data mirror)",
    "Billboard Hot 100"
   ]
  },
@@ -660,12 +660,12 @@
   "num": 55,
   "slug": "palette",
   "title": "Palette",
-  "tagline": "一幅名画被压缩成五种主色。凭色彩猜它画于哪一年、属于哪个流派。",
+  "tagline": "A famous painting boiled down to five dominant colors. Guess the year it was painted and its movement.",
   "category": "culture",
   "data": "computed",
   "sources": [
-   "Art Institute of Chicago API（公有领域画作，CC0 元数据）",
-   "AIC IIIF 图像服务"
+   "Art Institute of Chicago API (public-domain paintings, CC0 metadata)",
+   "AIC IIIF image service"
   ]
  },
  {
@@ -673,12 +673,12 @@
   "num": 56,
   "slug": "lineage",
   "title": "Lineage",
-  "tagline": "一张所有名字都被涂黑的王室族谱，只剩生卒年和性别。说出这是哪个王朝。",
+  "tagline": "A royal family tree with every name blacked out, leaving only birth and death years and sex. Name the dynasty.",
   "category": "culture",
   "data": "snapshot",
   "sources": [
-   "Wikidata Query Service（家族 P53、父 P22、母 P25、头衔 P39/P97、国籍所在洲 P27/P30）",
-   "Wikidata 实体搜索 API（解析知名王朝）"
+   "Wikidata Query Service (family P53, father P22, mother P25, titles P39/P97, continents of citizenship P27/P30)",
+   "Wikidata entity search API (resolving well-known dynasties)"
   ]
  },
  {
@@ -686,13 +686,13 @@
   "num": 57,
   "slug": "popular-move",
   "title": "Popular Move",
-  "tagline": "同一个棋局，1500 分的人和 2500 分以上的人最常走的一步，往往不一样。你能分辨吗？",
+  "tagline": "In the same chess position, the move 1500-rated players play most often is often not the one 2500+ players play most. Can you tell them apart?",
   "category": "culture",
   "data": "snapshot",
   "sources": [
-   "Lichess open database（1500 分段：2014-01 标准对局）",
-   "Lichess Elite Database（2500+ 分段：2021-12、2022-01）",
-   "lichess-org/chess-openings（开局名称）"
+   "Lichess open database (1500 band: January 2014 standard games)",
+   "Lichess Elite Database (2500+ band: Dec 2021, Jan 2022)",
+   "lichess-org/chess-openings (opening names)"
   ]
  },
  {
@@ -700,7 +700,7 @@
   "num": 58,
   "slug": "world-record",
   "title": "World Record",
-  "tagline": "一款游戏速通世界纪录的演进曲线，只剩时间和年份。猜它是哪款游戏。",
+  "tagline": "The progression of one game’s speedrun world record, reduced to times and years. Guess the game.",
   "category": "culture",
   "data": "snapshot",
   "sources": [
@@ -712,7 +712,7 @@
   "num": 59,
   "slug": "tour-map",
   "title": "Tour Map",
-  "tagline": "一次巡演的全部站点画在地图上，没有名字、没有年份。先猜是谁的巡演，再猜哪一年。",
+  "tagline": "Every stop of a tour drawn on a map, with no names and no years. Name the artist first, then the year.",
   "category": "culture",
   "data": "snapshot",
   "sources": [
@@ -725,12 +725,12 @@
   "num": 60,
   "slug": "weight",
   "title": "Weight",
-  "tagline": "看桌游的简介、机制和时长，猜它在 BoardGameGeek 上的复杂度评分（1–5）。",
+  "tagline": "Read a board game's blurb, mechanics and play time, then guess its BoardGameGeek complexity rating (1–5).",
   "category": "culture",
   "data": "snapshot",
   "sources": [
-   "BoardGameGeek（complexity weight）",
-   "TidyTuesday 2022-01-25 · BGG 简介/机制/玩家数"
+   "BoardGameGeek (complexity weight)",
+   "TidyTuesday 2022-01-25 · BGG blurbs, mechanics and player counts"
   ]
  },
  {
@@ -738,11 +738,11 @@
   "num": 61,
   "slug": "funded",
   "title": "Funded",
-  "tagline": "一份 Kickstarter 众筹提案：目标金额、支持者人数、介绍文案都摆在这里。猜它最终筹到了目标的百分之多少。",
+  "tagline": "A Kickstarter pitch: goal, backer count and blurb are all laid out. Guess what percent of its goal it ended up raising.",
   "category": "culture",
   "data": "snapshot",
   "sources": [
-   "Kickstarter 数据集（Web Robots 每月抓取）"
+   "Kickstarter datasets (monthly Web Robots scrape)"
   ]
  },
  {
@@ -750,11 +750,11 @@
   "num": 62,
   "slug": "ratio",
   "title": "Ratio",
-  "tagline": "只给面粉 : 水 : 油脂 : 蛋的配比，说出这是哪道菜。",
+  "tagline": "You get only the flour : liquid : fat : egg ratio. Name the dish.",
   "category": "culture",
   "data": "snapshot",
   "sources": [
-   "TheMealDB 菜谱 API"
+   "TheMealDB recipe API"
   ]
  },
  {
@@ -762,13 +762,13 @@
   "num": 63,
   "slug": "who-lives-here",
   "title": "Who Lives Here",
-  "tagline": "一位居民只用人口普查数据回答你的问题。问五个，再在美国地图上标出他住的街区。",
+  "tagline": "A resident answers only with Census numbers. Ask five questions, then pin their neighborhood on the US map.",
   "category": "model",
   "data": "snapshot",
   "sources": [
-   "U.S. Census Bureau, ACS 5-year 2020–2024（表 B01002、B03002、B05002、B08301、B15003、B17001、B19013、B25003、B25024、B25035、B25044、B25064、B25077）",
+   "U.S. Census Bureau, ACS 5-year 2020–2024(tables B01002, B03002, B05002, B08301, B15003, B17001, B19013, B25003, B25024, B25035, B25044, B25064, B25077)",
    "Census Reporter API",
-   "Census Gazetteer（普查区中心点）"
+   "Census Gazetteer (tract centroids)"
   ]
  },
  {
@@ -776,12 +776,12 @@
   "num": 64,
   "slug": "time-use",
   "title": "Time Use",
-  "tagline": "美国某个人群平均每天花多少分钟在某件事上？看着睡眠和参与率估三件。",
+  "tagline": "How many minutes a day does a group of Americans spend on an activity? Estimate three, using their sleep and participation rate as clues.",
   "category": "society",
   "data": "snapshot",
   "sources": [
-   "BLS American Time Use Survey（ATUS）",
-   "BLS ATUS 时间序列文件（tu.series / tu.data）"
+   "BLS American Time Use Survey (ATUS)",
+   "BLS ATUS time series files (tu.series / tu.data)"
   ]
  },
  {
@@ -789,12 +789,12 @@
   "num": 65,
   "slug": "trajectory",
   "title": "Trajectory",
-  "tagline": "某国 200 年来在“收入 × 预期寿命”图上走过的轨迹。看路线，说出是哪个国家。",
+  "tagline": "A country's 200-year path across the income × life expectancy chart. Read the route and name the country.",
   "category": "society",
   "data": "snapshot",
   "sources": [
-   "Gapminder World（GDP/人均 PPP，通胀调整）",
-   "Gapminder 预期寿命（life_expectancy_years）"
+   "Gapminder World (GDP per capita, PPP, inflation-adjusted)",
+   "Gapminder life expectancy (life_expectancy_years)"
   ]
  },
  {
@@ -802,7 +802,7 @@
   "num": 66,
   "slug": "splits",
   "title": "Splits",
-  "tagline": "一位真实马拉松选手前 25 公里的分段成绩，预测他的完赛时间。看出谁会掉速，就是你的技巧。",
+  "tagline": "A real marathoner's splits for the first 25 km. Predict the finish time. Spotting who will fade is the skill.",
   "category": "society",
   "data": "snapshot",
   "sources": [
@@ -814,11 +814,11 @@
   "num": 67,
   "slug": "pyramid",
   "title": "Pyramid",
-  "tagline": "一张人口金字塔，猜是哪个国家。",
+  "tagline": "Read the population pyramid. Name the country.",
   "category": "society",
   "data": "snapshot",
   "sources": [
-   "World Bank Open Data（SP.POP.*.FE/MA，来自 UN World Population Prospects）",
+   "World Bank Open Data (SP.POP.*.FE/MA, from UN World Population Prospects)",
    "UN World Population Prospects"
   ]
  },
@@ -827,7 +827,7 @@
   "num": 68,
   "slug": "commute-mode",
   "title": "Commute Mode",
-  "tagline": "给你一个美国县，猜猜上班族里多少人坐公交、骑车、在家办公。",
+  "tagline": "Given a US county, guess how many commuters take transit, bike, or work from home.",
   "category": "society",
   "data": "snapshot",
   "sources": [
@@ -840,7 +840,7 @@
   "num": 69,
   "slug": "life-table",
   "title": "Life Table",
-  "tagline": "某国某年的 40 岁男性或女性，有多大概率活到 80 岁？看预期寿命等线索估这个百分比。",
+  "tagline": "What are the odds that a 40-year-old man or woman in a given country and year reaches 80? Use life expectancy and other clues to estimate the percentage.",
   "category": "society",
   "data": "snapshot",
   "sources": [
@@ -852,12 +852,12 @@
   "num": 70,
   "slug": "holiday",
   "title": "Holiday",
-  "tagline": "一整年的法定假日日历，名字全部藏起来。看日期猜国家。",
+  "tagline": "A full year of public holidays with every name hidden. Read the dates and guess the country.",
   "category": "society",
   "data": "snapshot",
   "sources": [
-   "Nager.Date Public Holiday API（2026 年，仅法定假日 Public 类）",
-   "GeoNames（首都坐标与名称）"
+   "Nager.Date Public Holiday API (2026, \"Public\" holidays only)",
+   "GeoNames (capital coordinates and names)"
   ]
  },
  {
@@ -865,11 +865,11 @@
   "num": 71,
   "slug": "grid-mix",
   "title": "Grid Mix",
-  "tagline": "某个美国电网区域一整天、每小时的发电结构。鸭子曲线、水电和核电基荷，都是暴露身份的破绽。",
+  "tagline": "One day of hourly generation by fuel for a US grid region. The duck curve, hydro and nuclear baseload all give it away.",
   "category": "society",
   "data": "snapshot",
   "sources": [
-   "EIA-930 Hourly Electric Grid Monitor（Balance 半年文件）"
+   "EIA-930 Hourly Electric Grid Monitor (Balance half-year files)"
   ]
  },
  {
@@ -877,12 +877,12 @@
   "num": 72,
   "slug": "garage",
   "title": "Garage",
-  "tagline": "纽约州某个县注册量前十的汽车品牌。看车库猜县。",
+  "tagline": "The ten most-registered car brands in one New York county. Read the garage, guess the county.",
   "category": "society",
   "data": "snapshot",
   "sources": [
-   "NY DMV Vehicle, Snowmobile, and Boat Registrations（data.ny.gov）",
-   "US Census Gazetteer 2023（县中心点）"
+   "NY DMV Vehicle, Snowmobile, and Boat Registrations (data.ny.gov)",
+   "US Census Gazetteer 2023 (county centroids)"
   ]
  },
  {
@@ -890,12 +890,12 @@
   "num": 73,
   "slug": "commit-log",
   "title": "Commit Log",
-  "tagline": "五条真实的 commit message，猜它们来自哪个开源仓库。",
+  "tagline": "Five real commit messages. Guess which open-source repository they came from.",
   "category": "tech",
   "data": "snapshot",
   "sources": [
-   "GitHub REST API：commits",
-   "GitHub REST API：repos"
+   "GitHub REST API: commits",
+   "GitHub REST API: repos"
   ]
  },
  {
@@ -903,12 +903,12 @@
   "num": 74,
   "slug": "star-history",
   "title": "Star History",
-  "tagline": "一条 GitHub 仓库的每周新增 star 曲线，看形状猜仓库。",
+  "tagline": "The weekly new-star curve of a GitHub repo. Guess the repo from its shape.",
   "category": "tech",
   "data": "snapshot",
   "sources": [
-   "GH Archive（WatchEvent），经 ClickHouse 公开 playground 的 github_events 表",
-   "GitHub REST API（仓库元数据：语言、创建时间、话题、总 star）"
+   "GH Archive (WatchEvent), via the github_events table on the public ClickHouse playground",
+   "GitHub REST API (repo metadata: language, creation date, topics, total stars)"
   ]
  },
  {
@@ -916,11 +916,11 @@
   "num": 75,
   "slug": "cvss",
   "title": "CVSS",
-  "tagline": "一条被涂掉厂商名和弱点名的真实漏洞描述：猜它的 CVSS 基础分，再猜它属于哪类弱点（CWE）。",
+  "tagline": "A real vulnerability description with the vendor and weakness names blacked out. Guess its CVSS base score, then its weakness type (CWE).",
   "category": "tech",
   "data": "snapshot",
   "sources": [
-   "NVD CVE API 2.0（NIST）"
+   "NVD CVE API 2.0 (NIST)"
   ]
  },
  {
@@ -928,11 +928,11 @@
   "num": 76,
   "slug": "tagged",
   "title": "Tagged",
-  "tagline": "去掉标签的 Stack Overflow 高赞问题：只看标题，从 10 个候选里选出真实标签，按 Jaccard 重合度计分。",
+  "tagline": "Top-voted Stack Overflow questions with the tags removed. From the title alone, pick the real tags out of 10 candidates, scored by Jaccard overlap.",
   "category": "tech",
   "data": "snapshot",
   "sources": [
-   "Stack Exchange API /questions（Stack Overflow）"
+   "Stack Exchange API /questions (Stack Overflow)"
   ]
  },
  {
@@ -940,12 +940,12 @@
   "num": 77,
   "slug": "wayback",
   "title": "Wayback",
-  "tagline": "互联网档案馆里的网站首页，品牌名和图片都被涂掉了。猜这是哪个网站，再猜是哪一年。",
+  "tagline": "A homepage from the Internet Archive with the brand and images scrubbed out. Name the site, then the year.",
   "category": "tech",
   "data": "snapshot",
   "sources": [
    "Internet Archive Wayback Machine CDX API",
-   "Wayback 原始快照（id_ 模式）"
+   "Wayback raw snapshots (id_ mode)"
   ]
  },
  {
@@ -953,7 +953,7 @@
   "num": 78,
   "slug": "pwned",
   "title": "Pwned",
-  "tagline": "两个常见密码，哪个在泄露数据库里出现得更多？",
+  "tagline": "Two common passwords. Which one shows up more often in data breaches?",
   "category": "tech",
   "data": "snapshot",
   "sources": [
@@ -966,7 +966,7 @@
   "num": 79,
   "slug": "front-page",
   "title": "Front Page",
-  "tagline": "一天里四条 Hacker News 帖子，只看标题、域名和评论数，猜它们各拿了多少分。",
+  "tagline": "Four Hacker News stories from one day. From the title, domain and comment count alone, guess how many points each earned.",
   "category": "tech",
   "data": "live",
   "sources": [
@@ -979,11 +979,11 @@
   "num": 80,
   "slug": "subdomain",
   "title": "Subdomain",
-  "tagline": "一家公司（名字隐藏）最近签发的 TLS 证书里出现的子域名：vpn-、sso-、jira-……猜是哪家公司。",
+  "tagline": "Subdomains from a hidden company's newest TLS certificates: vpn, sso, jira… Name the company.",
   "category": "tech",
   "data": "live",
   "sources": [
-   "crt.sh 证书透明度日志检索",
+   "crt.sh Certificate Transparency log search",
    "Certificate Transparency (RFC 9162)"
   ]
  },
@@ -992,11 +992,11 @@
   "num": 81,
   "slug": "stack-trace",
   "title": "Stack Trace",
-  "tagline": "GitHub issue 里贴出的真实报错堆栈：猜它是什么语言，又踩在哪个框架或库上。",
+  "tagline": "Real error stacks pasted into GitHub issues: guess the language, and which framework or library it tripped over.",
   "category": "tech",
   "data": "snapshot",
   "sources": [
-   "GitHub Search API（issues）"
+   "GitHub Search API (issues)"
   ]
  },
  {
@@ -1004,7 +1004,7 @@
   "num": 82,
   "slug": "changelog",
   "title": "Changelog",
-  "tagline": "一行被涂黑名字的开源软件更新日志：先猜它是哪个软件，再猜是哪一年发布的。",
+  "tagline": "One line from an open-source changelog with the name blacked out. Guess the software, then the year it shipped.",
   "category": "tech",
   "data": "snapshot",
   "sources": [
@@ -1017,7 +1017,7 @@
   "num": 83,
   "slug": "departures",
   "title": "Departures",
-  "tagline": "某个机场的全部直飞航点列表。从目的地的分布，猜出这是哪个机场。",
+  "tagline": "Every nonstop destination from one airport. Work out which airport it is from the pattern.",
   "category": "transit",
   "data": "snapshot",
   "sources": [
@@ -1030,7 +1030,7 @@
   "num": 84,
   "slug": "headway",
   "title": "Headway",
-  "tagline": "节奏游戏：鼓点就是纽约某个地铁站台的真实列车到站时间。",
+  "tagline": "A rhythm game whose beats are the real scheduled arrival times at one New York subway platform.",
   "category": "transit",
   "data": "snapshot",
   "sources": [
@@ -1042,7 +1042,7 @@
   "num": 85,
   "slug": "ship-lane",
   "title": "Ship Lane",
-  "tagline": "一小块欧洲海域的船舶密度热力图，认出这是哪个海峡、海域或港口。",
+  "tagline": "A crop of European shipping-density heat map. Name the strait, sea or port.",
   "category": "transit",
   "data": "snapshot",
   "sources": [
@@ -1056,15 +1056,15 @@
   "num": 86,
   "slug": "rail-time",
   "title": "Rail Time",
-  "tagline": "给你两个车站和直线距离，猜美、加、德、法的列车时刻表上最快一班要开多久。",
+  "tagline": "Two stations and the distance between them. How long does the fastest scheduled train take? US, Canada, Germany and France.",
   "category": "transit",
   "data": "snapshot",
   "sources": [
-   "Amtrak GTFS 时刻表",
-   "VIA Rail GTFS 时刻表",
-   "gtfs.de 德国长途列车 GTFS（DELFI）",
-   "SNCF TGV 时刻表 GTFS",
-   "GTFS 规范"
+   "Amtrak GTFS timetable",
+   "VIA Rail GTFS timetable",
+   "gtfs.de German long-distance GTFS (DELFI)",
+   "SNCF TGV GTFS timetable",
+   "GTFS specification"
   ]
  },
  {
@@ -1072,12 +1072,12 @@
   "num": 87,
   "slug": "snowplow",
   "title": "Snowplow",
-  "tagline": "一场真实的降雪，一片真实的街区路网。规划铲雪路线，把所有主干道清完，越快越好。",
+  "tagline": "A real snowstorm over a real street grid. Plan your plow route to clear every main road, as fast as you can.",
   "category": "transit",
   "data": "snapshot",
   "sources": [
-   "OpenStreetMap 路网（Overpass API）",
-   "NOAA GHCN-Daily 日降雪量（NCEI Access Data Service）"
+   "OpenStreetMap road network (Overpass API)",
+   "NOAA GHCN-Daily daily snowfall (NCEI Access Data Service)"
   ]
  },
  {
@@ -1085,13 +1085,13 @@
   "num": 88,
   "slug": "sail",
   "title": "Sail",
-  "tagline": "看着真实的海上风场，布下最多 5 个航点，让帆船最快横渡海峡。",
+  "tagline": "Study a real wind field over the sea and set up to 5 waypoints to sail across the strait as fast as you can.",
   "category": "transit",
   "data": "live",
   "sources": [
-   "Open-Meteo Historical Forecast API（昨日风场，实时）",
-   "Open-Meteo Historical Weather API（ERA5 再分析，快照备用）",
-   "Natural Earth 1:50m 陆地（world-atlas）"
+   "Open-Meteo Historical Forecast API (yesterday's wind, live)",
+   "Open-Meteo Historical Weather API (ERA5 reanalysis, snapshot fallback)",
+   "Natural Earth 1:50m land (world-atlas)"
   ]
  },
  {
@@ -1099,11 +1099,11 @@
   "num": 89,
   "slug": "ticker-runner",
   "title": "Ticker Runner",
-  "tagline": "横版跳跃，地形就是某个交易日美股指数的日内走势：吃涨幅金币，跳过暴跌尖刺。",
+  "tagline": "A side-scrolling runner whose terrain is one trading day of a US stock index: grab coins on the rallies, jump the spikes on the sell-offs.",
   "category": "levels",
   "data": "snapshot",
   "sources": [
-   "Yahoo Finance chart API（5 分钟 K 线）"
+   "Yahoo Finance chart API (5-minute bars)"
   ]
  },
  {
@@ -1111,13 +1111,13 @@
   "num": 90,
   "slug": "topo-golf",
   "title": "Topo Golf",
-  "tagline": "把地球上一块真实山地缩成一块推杆果岭：读坡、推球，再猜它到底在世界的哪里。",
+  "tagline": "A real patch of Earth's terrain shrunk to a putting green. Read the slopes, sink the putt, then guess where in the world it is.",
   "category": "levels",
   "data": "snapshot",
   "sources": [
    "AWS Terrain Tiles (Terrarium)",
-   "Mapzen terrain tile docs (Terrarium 编码)",
-   "Esri World Shaded Relief / Gray Canvas 底图"
+   "Mapzen terrain tile docs (Terrarium encoding)",
+   "Esri World Shaded Relief / Gray Canvas basemaps"
   ]
  },
  {
@@ -1125,7 +1125,7 @@
   "num": 91,
   "slug": "quake-defense",
   "title": "Quake Defense",
-  "tagline": "塔防：敌人就是昨天全球的真实地震，震级决定血量。在 10 格通道上布防，挡住地动山摇。",
+  "tagline": "Tower defense where the enemies are yesterday’s real earthquakes and magnitude sets HP. Build a 10-cell lane and hold the line.",
   "category": "levels",
   "data": "live",
   "sources": [
@@ -1137,14 +1137,14 @@
   "num": 92,
   "slug": "storm-run",
   "title": "Storm Run",
-  "tagline": "穿过真实的雷达回波去送快递：在昨天的美国天气雷达图上，画出最省\"风险\"的航线。",
+  "tagline": "Fly a courier through real radar echoes: draw the lowest-risk route across yesterday’s US weather radar.",
   "category": "levels",
   "data": "live",
   "sources": [
-   "Iowa Environmental Mesonet — NEXRAD N0R 全美雷达合成图存档",
-   "雷达图文件目录（示例月份）",
-   "NOAA MRMS（灵感来源）",
-   "us-atlas 州界"
+   "Iowa Environmental Mesonet: NEXRAD N0R US composite archive",
+   "Radar image file directory (sample month)",
+   "NOAA MRMS (inspiration)",
+   "us-atlas state borders"
   ]
  },
  {
@@ -1152,7 +1152,7 @@
   "num": 93,
   "slug": "levee",
   "title": "Levee",
-  "tagline": "暴雨落在一块真实的地形上。放三道堤坝，让尽可能多的真实建筑保持干燥。",
+  "tagline": "Storm rain falls on real terrain. Place three levees to keep as many real buildings dry as you can.",
   "category": "levels",
   "data": "snapshot",
   "sources": [
@@ -1165,7 +1165,7 @@
   "num": 94,
   "slug": "paint-a-million",
   "title": "Paint a Million",
-  "tagline": "在一张人口密度图上，用最小的面积涂出正好 100 万人。",
+  "tagline": "On a population-density map, paint the smallest area that holds exactly one million people.",
   "category": "levels",
   "data": "snapshot",
   "sources": [
@@ -1178,7 +1178,7 @@
   "num": 95,
   "slug": "interrogate",
   "title": "Interrogate",
-  "tagline": "二十个问题审问一个隐藏的国家：用自己的话提问，答案由世界银行数据算出。",
+  "tagline": "Twenty questions about a hidden country. Ask in your own words; answers are computed from World Bank data.",
   "category": "model",
   "data": "snapshot",
   "sources": [
@@ -1190,7 +1190,7 @@
   "num": 96,
   "slug": "missing-number",
   "title": "Missing Number",
-  "tagline": "一则数据快讯，三个数字被挖空了。读读剩下的数字，把空填回去。",
+  "tagline": "A data news brief with three numbers blanked out. Read the numbers that are left and fill in the gaps.",
   "category": "model",
   "data": "live",
   "sources": [
@@ -1203,19 +1203,19 @@
   "num": 97,
   "slug": "real-or-synthetic",
   "title": "Real or Synthetic",
-  "tagline": "四条走势图，三条是算法按真实数据特征“伪造”的。找出真的那一条。",
+  "tagline": "Four trend lines, three forged by an algorithm from the real thing's statistics. Spot the genuine one.",
   "category": "literacy",
   "data": "computed",
   "sources": [
-   "NOAA / NASA 全球月温度距平（datasets/global-temp）",
-   "NOAA GML 莫纳罗亚 CO₂（datasets/co2-ppm）",
-   "EIA 布伦特、WTI 原油价格（datasets/oil-prices）",
-   "EIA 亨利港天然气价格（datasets/natural-gas）",
-   "Shiller 标普 500 指数、分红、盈利（datasets/s-and-p-500）",
-   "美国 CPI（datasets/cpi-us）",
-   "黄金价格（datasets/gold-prices）",
-   "美国 10 年期国债收益率（datasets/bond-yields-us-10y）",
-   "美联储 H.10 汇率（datasets/exchange-rates）"
+   "NOAA / NASA global monthly temperature anomaly (datasets/global-temp)",
+   "NOAA GML Mauna Loa CO₂ (datasets/co2-ppm)",
+   "EIA Brent and WTI crude oil prices (datasets/oil-prices)",
+   "EIA Henry Hub natural gas price (datasets/natural-gas)",
+   "Shiller S&P 500 index, dividends, earnings (datasets/s-and-p-500)",
+   "US CPI (datasets/cpi-us)",
+   "Gold prices (datasets/gold-prices)",
+   "US 10-year Treasury yield (datasets/bond-yields-us-10y)",
+   "Federal Reserve H.10 exchange rates (datasets/exchange-rates)"
   ]
  },
  {
@@ -1223,11 +1223,11 @@
   "num": 98,
   "slug": "described",
   "title": "Described",
-  "tagline": "纯文字版 GeoGuessr：只读一段街景照片的描述，不看图，在世界地图上标点。",
+  "tagline": "A text-only GeoGuessr: read a description of a street photo, with no picture, and drop a pin on the world map.",
   "category": "model",
   "data": "snapshot",
   "sources": [
-   "Wikimedia Commons：带坐标的街景照片",
+   "Wikimedia Commons: geotagged street photos",
    "MediaWiki API: GeoData / geosearch"
   ]
  },
@@ -1236,7 +1236,7 @@
   "num": 99,
   "slug": "spurious",
   "title": "Spurious",
-  "tagline": "六条真实的年度曲线，只有一对相关系数 r > 0.9。把它们找出来。",
+  "tagline": "Six real yearly curves, and only one pair has a correlation above r = 0.9. Find it.",
   "category": "literacy",
   "data": "snapshot",
   "sources": [
@@ -1248,7 +1248,7 @@
   "num": 100,
   "slug": "data-connections",
   "title": "Data Connections",
-  "tagline": "16 个条目藏着 4 组关系，每一组共享一条真实的维基数据（Wikidata）陈述。找出它们。",
+  "tagline": "Sixteen items hide four groups, each sharing one real Wikidata statement. Find them.",
   "category": "model",
   "data": "snapshot",
   "sources": [
@@ -1261,11 +1261,11 @@
   "num": 101,
   "slug": "spotter",
   "title": "Spotter",
-  "tagline": "一张飞友拍的真实照片：先猜机场，再认航司、机型和拍摄月份。",
+  "tagline": "A real plane-spotter photo: name the airport first, then the airline, the aircraft type and the season.",
   "category": "transit",
   "data": "snapshot",
   "sources": [
-   "Wikimedia Commons（照片与分类）",
+   "Wikimedia Commons (photos and categories)",
    "Wikimedia Commons API"
   ]
  },
@@ -1274,12 +1274,12 @@
   "num": 102,
   "slug": "trainspotter",
   "title": "Trainspotter",
-  "tagline": "一张铁路照片：认出运营商和车型，再在地图上标出拍摄地。",
+  "tagline": "A railway photo: name the operator and the train type, then pin where it was taken.",
   "category": "transit",
   "data": "snapshot",
   "sources": [
-   "Wikimedia Commons 铁路车型分类（照片、拍摄坐标、作者、许可证）",
-   "OpenRailwayMap / OpenStreetMap（地图铁路线叠加层）"
+   "Wikimedia Commons train-type categories (photos, coordinates, authors, licenses)",
+   "OpenRailwayMap / OpenStreetMap (railway line map overlay)"
   ]
  }
 ]
