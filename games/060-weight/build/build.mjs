@@ -18,22 +18,7 @@ async function cached(file, url) {
   return t;
 }
 
-export function parseCSV(text) {
-  const rows = []; let row = [], f = '', q = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
-    else if (c === '"') q = true;
-    else if (c === ',') { row.push(f); f = ''; }
-    else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; }
-    else if (c !== '\r') f += c;
-  }
-  if (f || row.length) { row.push(f); rows.push(row); }
-  const [h, ...b] = rows;
-  return b.map((r) => Object.fromEntries(h.map((k, i) => [k, r[i]])));
-}
-const list = (s) => { try { return JSON.parse((s || '[]').replace(/'/g, '"')); } catch { return (s || '').replace(/^\[|\]$/g, '').split(/',\s*'/).map((x) => x.replace(/^'|'$/g, '')).filter(Boolean); } };
-const ent = (s) => s.replace(/&#10;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&mdash;/g, '—').replace(/&ndash;/g, '–').replace(/&rsquo;|&#039;/g, "'").replace(/&ldquo;|&rdquo;/g, '"').replace(/&[a-z]+;/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+import { parseCSV, list, ent } from './lib.mjs';
 
 if (!fs.existsSync(raw)) fs.mkdirSync(raw, { recursive: true });
 const ratings = parseCSV(await cached('ratings.csv', BASE + 'ratings.csv'));
@@ -46,7 +31,8 @@ for (const r of top) {
   let w;
   try { w = JSON.parse(await cached(`dyn-${r.id}.json`, `https://api.geekdo.com/api/dynamicinfo?objectid=${r.id}&objecttype=thing`)).item; } catch (e) { console.warn('skip', r.id, e.message); continue; }
   const weight = Number(w.stats?.avgweight), votes = Number(w.stats?.numweights);
-  if (!(weight > 0) || votes < 150) continue;
+  if (!(weight > 1 && weight <= 5) || votes < 150) continue;
+  if (!(Number(d.playingtime) > 0) || !(Number(d.minplayers) > 0)) continue; // e.g. Chess has playingtime 0
   const desc = ent(d.description || '');
   if (desc.length < 120) continue;
   games.push({
