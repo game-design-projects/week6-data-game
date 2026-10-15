@@ -46,7 +46,7 @@ test('explain: specific text and look-alikes', () => {
     const ex = explain(d, data.dishes);
     assert.ok(ex.bits.length >= 1 && ex.bits.every((b) => b && !/undefined|NaN/.test(b)), d.name);
     assert.equal(ex.near.length, 2);
-    assert.ok(!ex.near.some((n) => n.startsWith(d.name + '（')));
+    assert.ok(!ex.near.some((n) => n.startsWith(d.name + ' (')));
   }
   assert.equal(lookalikes(data.dishes[0], data.dishes, 3).length, 3);
 });
@@ -61,5 +61,5 @@ test('feedback extremes: self is all hit; a far dish has arrows', () => {
 test('scoring text matches engine default 100*(7-n)/6', () => {
   const s = (n) => Math.round(100 * (6 - n + 1) / 6);
   assert.deepEqual([1, 2, 6].map(s), [100, 83, 17]);
-  assert.match(game.meta.scoring, /第 2 次 83/);
+  assert.match(game.meta.scoring, /83 on the 2nd guess/);
 });
