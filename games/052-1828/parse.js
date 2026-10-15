@@ -5,10 +5,62 @@ export function stem(w) {
   return w.length <= 4 ? w : w.slice(0, Math.max(4, w.length - 2));
 }
 
-/** Replace the headword (and its inflections, by stem) with a black block. */
+const SUFFIXES = ['ation', 'ing', 'ion', 'ern', 'ment', 'ness', 'able', 'less', 'ity', 'ive', 'ous', 'ant', 'ent', 'ance', 'ence', 'ful', 'ic', 'al', 'ly', 'ed', 'er'];
+const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Regex source fragments that match the headword and its likely derived forms. */
+export function redactPatterns(word) {
+  const w = word.toLowerCase();
+  const pats = new Set([`${esc(stem(w))}[a-z]*`]);
+  for (const suf of SUFFIXES) {
+    if (w.endsWith(suf) && w.length - suf.length >= 4) pats.add(`${esc(w.slice(0, -suf.length))}[a-z]*`);
+  }
+  if (w.endsWith('e') && w.length - 1 >= 3) pats.add(`${esc(w.slice(0, -1))}(?:ing|ings|ed|er|ers|ation|ations)`);
+  if (w.endsWith('y') && w.length >= 4) pats.add(`${esc(w.slice(0, -1))}i[a-z]*`);
+  return [...pats];
+}
+
+/** Replace the headword (and its inflections / derivations) with a black block. */
 export function redactWord(text, word) {
-  const s = stem(word.toLowerCase()).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return text.replace(new RegExp(`\\b${s}[a-z]*`, 'gi'), '▇▇▇');
+  return text.replace(new RegExp(`\\b(?:${redactPatterns(word).join('|')})`, 'gi'), '▇▇▇');
+}
+
+/** Words still visible after redaction that start like the answer (≥ 5 letters or the whole word). */
+export function leakTokens(text, word) {
+  const w = word.toLowerCase();
+  const k = Math.min(5, w.length);
+  return (redactWord(text, w).toLowerCase().match(/[a-z]{4,}/g) || []).filter((t) => t.slice(0, k) === w.slice(0, k));
+}
+
+/** Which clues unlock, in order. Every slot is distinct. */
+export function clueSpecs(e) {
+  const s = [{ t: 's', i: 0 }, { t: 's', i: 1 }, { t: 's', i: 2 }];
+  if (e.senses[3]) {
+    s.push({ t: 's', i: 3 }, e.ety ? { t: 'ety' } : { t: 'pos' });
+  } else {
+    s.push({ t: 'pos' }, e.ety ? { t: 'ety' } : { t: 'sn' });
+  }
+  s.push({ t: 'letters' });
+  return s;
+}
+
+const list = (a) => a.map((x) => `“${x}”`).join('、');
+
+/** Specific, per-word explanation of what in the entry gave the word away (Chinese strings; uses unredacted text). */
+export function analyze(e) {
+  const out = [];
+  const first = e.senses[0];
+  const segs = first.split(/;\s*/).map((x) => x.replace(/[.,]$/, '').trim());
+  const syn = segs.filter((x) => /^[A-Za-z-]+( [A-Za-z-]+)?$/.test(x) && !/^(as|a|an|the|to)$/i.test(x)).slice(0, 4);
+  if (syn.length >= 2) out.push(`释义 1 用分号并列了近义词 ${list(syn)}，它们圈出了这个词的核心意思。`);
+  const ex = e.senses.map((x) => x.match(/\bas,?\s+([^;]{8,70})/i)).find(Boolean);
+  if (ex) out.push(`释义里的用例“${ex[1].replace(/\.$/, '')}”展示了它在 1828 年的典型搭配。`);
+  if (/^to\b/i.test(first)) out.push('释义 1 以 “To” 开头，是动词的典型写法。');
+  else if (e.pos === '名词' && /^(a|an|the)\b/i.test(first)) out.push('释义 1 以冠词开头，是名词（某种事物）的典型写法。');
+  if (e.ety) out.push(`词源注释“${e.ety}”交代了它的来源。`);
+  if (!out.length) out.push(`词典为它列了 ${e.senses.length} 条释义，先看最具体的本义。`);
+  out.push(`共 ${e.senses.length} 条释义：越靠后的释义往往越抽象、越接近今天的引申义。`);
+  return out;
 }
 
 const clean = (h) => h.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim();
