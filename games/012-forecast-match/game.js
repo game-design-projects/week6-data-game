@@ -45,7 +45,7 @@ export function toCard(city, j) {
   if (![T, cl, w, p].every((a) => Array.isArray(a) && a.length === 24 && a.every((x) => Number.isFinite(x)))) return null;
   const sum = (a) => a.reduce((x, y) => x + y, 0);
   return {
-    name: city.name, zh: city.zh, country: city.country, lat: city.lat,
+    name: city.name, country: city.country, lat: city.lat,
     t: T.map(r1), cloud: Math.round(sum(cl) / 24), wind: Math.round(Math.max(...w)), rain: r1(sum(p)),
     rise: hm(j.daily?.sunrise?.[0]) == null ? null : Math.round(hm(j.daily.sunrise[0]) * 100) / 100,
     set: hm(j.daily?.sunset?.[0]) == null ? null : Math.round(hm(j.daily.sunset[0]) * 100) / 100,
@@ -68,22 +68,22 @@ export function liveUrl(cities, day) {
 
 const seasonOf = (date, lat) => {
   const m = +date.slice(5, 7);
-  const north = [12, 1, 2].includes(m) ? '冬' : [3, 4, 5].includes(m) ? '春' : [6, 7, 8].includes(m) ? '夏' : '秋';
-  const flip = { 冬: '夏', 夏: '冬', 春: '秋', 秋: '春' };
-  if (Math.abs(lat) < 20) return '热带，四季不分明';
-  return `${lat >= 0 ? '北' : '南'}半球${lat >= 0 ? north : flip[north]}季`;
+  const north = [12, 1, 2].includes(m) ? 'winter' : [3, 4, 5].includes(m) ? 'spring' : [6, 7, 8].includes(m) ? 'summer' : 'autumn';
+  const flip = { winter: 'summer', summer: 'winter', spring: 'autumn', autumn: 'spring' };
+  if (Math.abs(lat) < 20) return 'tropics, no clear seasons';
+  return `${lat >= 0 ? 'northern' : 'southern'} hemisphere ${lat >= 0 ? north : flip[north]}`;
 };
 
 /** Teaching sentence for one card: what in the data gives the city away. */
 export function explain(c, date) {
   const avg = mean(c.t), rng = Math.max(...c.t) - Math.min(...c.t), dl = dayLen(c);
-  const bits = [`均温 ${avg.toFixed(1)}°`];
-  bits.push(dl == null ? '极昼或极夜（日出日落缺失）→ 高纬度' : `白昼 ${dl.toFixed(1)} h → 纬度约 ${Math.abs(c.lat).toFixed(0)}°，${seasonOf(date, c.lat)}`);
-  if (rng >= 10) bits.push(`昼夜温差 ${rng.toFixed(0)}° → 内陆或干燥`);
-  else if (rng <= 3) bits.push(`温差仅 ${rng.toFixed(1)}° → 海洋/多云/湿润`);
-  if (c.rain >= 5) bits.push(`降水 ${c.rain} mm`);
-  if (c.wind >= 40) bits.push(`阵风 ${c.wind} km/h`);
-  return bits.join('；');
+  const bits = [`mean ${avg.toFixed(1)}°`];
+  bits.push(dl == null ? 'polar day or night (no sunrise/sunset) → high latitude' : `daylight ${dl.toFixed(1)} h → latitude about ${Math.abs(c.lat).toFixed(0)}°, ${seasonOf(date, c.lat)}`);
+  if (rng >= 10) bits.push(`day-night swing ${rng.toFixed(0)}° → inland or dry`);
+  else if (rng <= 3) bits.push(`swing of only ${rng.toFixed(1)}° → ocean, cloudy or humid`);
+  if (c.rain >= 5) bits.push(`rain ${c.rain} mm`);
+  if (c.wind >= 40) bits.push(`gusts ${c.wind} km/h`);
+  return bits.join('; ');
 }
 
 export default {
@@ -91,20 +91,20 @@ export default {
     num: 12,
     slug: 'forecast-match',
     title: 'Forecast Match',
-    tagline: '五座城市昨天的逐小时天气卡片，把气温曲线和日出日落一一配到城市上。',
+    tagline: 'Five cities, five weather cards from yesterday. Match each temperature curve and sunrise time to its city.',
     category: 'geo',
     data: 'live',
     howTo: [
-      '每张卡片是某座城市「昨天」（卡片上标注的日期）的逐小时气温（当地时间）、平均云量、最大风速、总降水，以及日出日落时刻，数据实时取自 Open-Meteo。',
-      '线索：气温水平和季节（南北半球相反）；日出日落的间隔暴露纬度；昼夜温差大说明内陆或干燥；云量高、降水多常见于海洋和热带。',
-      '把每张卡片配到下拉框里的城市，共 2 次提交机会，对的卡片会锁定。',
+      'Each card shows one city\'s hourly temperature for yesterday (the date is printed above the cards, local time), plus average cloud cover, peak wind, total rain and sunrise and sunset times. Pulled live from Open-Meteo.',
+      'Clues: the temperature level and the season (flipped between hemispheres); day length gives away latitude; a big day-night swing means inland or dry; cloud and rain are typical of oceans and the tropics.',
+      'Match each card to a city from the dropdown. You get 2 submissions, and correct cards lock in.',
     ],
-    scoring: '每张卡片 20 分：第 1 次提交就配对满分，第 2 次配对得一半，两次都没配对得 0。',
+    scoring: '20 points per card: a match on the 1st submission scores full, on the 2nd half, and 0 if neither.',
     sources: [
-      { name: 'Open-Meteo Forecast API（昨日逐小时数据）', url: 'https://open-meteo.com/en/docs' },
-      { name: 'Open-Meteo Historical Weather API（ERA5，离线快照）', url: 'https://open-meteo.com/en/docs/historical-weather-api' },
+      { name: 'Open-Meteo Forecast API (yesterday\'s hourly data)', url: 'https://open-meteo.com/en/docs' },
+      { name: 'Open-Meteo Historical Weather API (ERA5, offline snapshot)', url: 'https://open-meteo.com/en/docs/historical-weather-api' },
     ],
-    dataNote: '题目日期（北京/本地日期）的前一天，5 座城市由日期确定性地抽取（国家不重复、历史同期气候均温至少相差 3°C），所以所有玩家看到同一组城市；卡片数值在线取自 Open-Meteo 对昨天的分析场。联网失败时，改用 ERA5 再分析的离线快照（2025-10 至 2026-10 中的某一天），界面日期会随之显示为快照日。',
+    dataNote: 'The cards show the day before the puzzle date. The 5 cities are drawn deterministically from the date (no repeated country, climatological means at least 3°C apart), so every player gets the same set; values come live from Open-Meteo\'s analysis of yesterday. If the network fails, an offline ERA5 reanalysis snapshot (one day between Oct 2025 and Oct 2026) is used and the page shows the snapshot date instead.',
   },
 
   // live puzzle (from load) → else a snapshot puzzle
@@ -128,38 +128,38 @@ export default {
     const { ui } = ctx;
     ctx.log('forecast-match start', p.date, p.live ? 'live' : 'snapshot');
     const labels = 'ABCDE';
-    const nameOf = (c) => `${c.zh} ${c.name}（${c.country}）`;
+    const nameOf = (c) => `${c.name} (${c.country})`;
     const bodies = await Promise.all(p.cities.map(async (c, i) => {
       const data = c.t.map((v, h) => ({ h, v }));
       const lo = Math.floor(Math.min(...c.t)) - 1, hi = Math.ceil(Math.max(...c.t)) + 1;
       const chart = await ui.plot((Plot, col) => ({
         height: 120, marginLeft: 38, marginBottom: 24, width: 280,
-        x: { domain: [0, 23], ticks: [6, 12, 18], label: null, tickFormat: (h) => `${h}时` },
+        x: { domain: [0, 23], ticks: [6, 12, 18], label: null, tickFormat: (h) => `${h}h` },
         y: { label: null, ticks: 3, grid: true, domain: [lo, hi], tickFormat: (v) => `${v}°` },
         marks: [Plot.areaY(data, { x: 'h', y1: lo, y2: 'v', fill: col.accent, fillOpacity: 0.15 }), Plot.lineY(data, { x: 'h', y: 'v', stroke: col.accent, strokeWidth: 2 })],
       }));
       return ui.h('div', null,
         chart,
-        ui.h('div', { class: 'small mono ink2' }, `日出 ${hhmm(c.rise)} · 日落 ${hhmm(c.set)}`),
-        ui.h('div', { class: 'small mono muted' }, `云 ${c.cloud}% · 风 ${c.wind} km/h · 雨 ${c.rain} mm`));
+        ui.h('div', { class: 'small mono ink2' }, `Sunrise ${hhmm(c.rise)} · Sunset ${hhmm(c.set)}`),
+        ui.h('div', { class: 'small mono muted' }, `Cloud ${c.cloud}% · Wind ${c.wind} km/h · Rain ${c.rain} mm`));
     }));
 
-    ctx.stage.append(ui.panel({ kicker: `${p.live ? '昨天' : '快照日'}（${p.date}）· 当地时间`, title: '五张天气卡片' },
-      ui.h('div', { class: 'small ink2' }, '时间轴与日出日落都是当地钟表时间。每张卡片只显示该城市自己的气温范围，注意纵轴刻度。')));
+    ctx.stage.append(ui.panel({ kicker: `${p.live ? 'Yesterday' : 'Snapshot day'} (${p.date}) · local time`, title: 'Five weather cards' },
+      ui.h('div', { class: 'small ink2' }, 'The time axis and sunrise/sunset are local clock time. Each card scales to its own city\'s temperature range, so watch the y-axis.')));
 
     const answer = {};
     p.cities.forEach((c, i) => { answer[`c${i}`] = `n${i}`; });
     const r = await ctx.match({
-      left: bodies.map((body, i) => ({ id: `c${i}`, label: `卡片 ${labels[i]}`, body })),
+      left: bodies.map((body, i) => ({ id: `c${i}`, label: `Card ${labels[i]}`, body })),
       right: p.order.map((i) => ({ id: `n${i}`, label: nameOf(p.cities[i]) })),
       answer,
       attempts: 2,
-      title: '配对城市',
+      title: 'Match the cities',
     });
 
     r.detail = ui.stack(
-      ui.h('div', { class: 'small ink2' }, `答案与线索（${p.date}）：`),
-      ...p.cities.map((c, i) => ui.h('div', { class: 'small' }, ui.h('b', null, `${labels[i]} = ${c.zh} ${c.name}`), `：${explain(c, p.date)}`)));
+      ui.h('div', { class: 'small ink2' }, `Answers and clues (${p.date}):`),
+      ...p.cities.map((c, i) => ui.h('div', { class: 'small' }, ui.h('b', null, `${labels[i]} = ${c.name}`), `: ${explain(c, p.date)}`)));
     ctx.log('forecast-match done', r.score);
     return r;
   },

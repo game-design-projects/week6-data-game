@@ -2,23 +2,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { selectCities } from '../game.js';
-const ZH = {"Reykjavik": "雷克雅未克", "Oslo": "奥斯陆", "London": "伦敦", "Moscow": "莫斯科", "Madrid": "马德里", "Cairo": "开罗", "Dubai": "迪拜", "Riyadh": "利雅得", "Mumbai": "孟买", "Delhi": "德里", "Bangkok": "曼谷", "Singapore": "新加坡", "Beijing": "北京", "Shanghai": "上海", "Tokyo": "东京", "Seoul": "首尔", "Sydney": "悉尼", "Perth": "珀斯", "Auckland": "奥克兰", "Ulaanbaatar": "乌兰巴托", "Nairobi": "内罗毕", "Lagos": "拉各斯", "Cape Town": "开普敦", "Johannesburg": "约翰内斯堡", "New York": "纽约", "Chicago": "芝加哥", "Miami": "迈阿密", "Los Angeles": "洛杉矶", "Anchorage": "安克雷奇", "Mexico City": "墨西哥城", "Lima": "利马", "São Paulo": "圣保罗", "Buenos Aires": "布宜诺斯艾利斯", "Santiago": "圣地亚哥", "Manaus": "马瑙斯", "Vancouver": "温哥华", "Yakutsk": "雅库茨克", "Istanbul": "伊斯坦布尔", "Hong Kong": "香港", "La Paz": "拉巴斯", "Tehran": "德黑兰"};
 const dir = path.dirname(new URL(import.meta.url).pathname);
 const raw = path.join(dir, 'raw');
 fs.mkdirSync(raw, { recursive: true });
 const START = '2025-10-01', END = '2026-10-05';
 const C = [
- ['Reykjavik','冰岛',64.15,-21.94],['Oslo','挪威',59.91,10.75],['London','英国',51.51,-0.13],['Moscow','俄罗斯',55.76,37.62],
- ['Madrid','西班牙',40.42,-3.7],['Cairo','埃及',30.04,31.24],['Dubai','阿联酋',25.2,55.27],['Riyadh','沙特',24.71,46.68],
- ['Mumbai','印度',19.08,72.88],['Delhi','印度',28.61,77.21],['Bangkok','泰国',13.76,100.5],['Singapore','新加坡',1.35,103.82],
- ['Beijing','中国',39.9,116.4],['Shanghai','中国',31.23,121.47],['Tokyo','日本',35.68,139.69],['Seoul','韩国',37.57,126.98],
- ['Sydney','澳大利亚',-33.87,151.21],['Perth','澳大利亚',-31.95,115.86],['Auckland','新西兰',-36.85,174.76],['Ulaanbaatar','蒙古',47.89,106.91],
- ['Nairobi','肯尼亚',-1.29,36.82],['Lagos','尼日利亚',6.52,3.38],['Cape Town','南非',-33.92,18.42],['Johannesburg','南非',-26.2,28.05],
- ['Reykjavik2',null],['New York','美国',40.71,-74.01],['Chicago','美国',41.88,-87.63],['Miami','美国',25.76,-80.19],
- ['Los Angeles','美国',34.05,-118.24],['Anchorage','美国',61.22,-149.9],['Mexico City','墨西哥',19.43,-99.13],['Lima','秘鲁',-12.05,-77.04],
- ['São Paulo','巴西',-23.55,-46.63],['Buenos Aires','阿根廷',-34.6,-58.38],['Santiago','智利',-33.45,-70.67],['Manaus','巴西',-3.12,-60.02],
- ['Vancouver','加拿大',49.28,-123.12],['Yakutsk','俄罗斯',62.03,129.73],['Istanbul','土耳其',41.01,28.98],['Hong Kong','中国香港',22.32,114.17],
- ['La Paz','玻利维亚',-16.5,-68.15],['Tehran','伊朗',35.69,51.39],
+ ['Reykjavik','Iceland',64.15,-21.94],['Oslo','Norway',59.91,10.75],['London','United Kingdom',51.51,-0.13],['Moscow','Russia',55.76,37.62],
+ ['Madrid','Spain',40.42,-3.7],['Cairo','Egypt',30.04,31.24],['Dubai','United Arab Emirates',25.2,55.27],['Riyadh','Saudi Arabia',24.71,46.68],
+ ['Mumbai','India',19.08,72.88],['Delhi','India',28.61,77.21],['Bangkok','Thailand',13.76,100.5],['Singapore','Singapore',1.35,103.82],
+ ['Beijing','China',39.9,116.4],['Shanghai','China',31.23,121.47],['Tokyo','Japan',35.68,139.69],['Seoul','South Korea',37.57,126.98],
+ ['Sydney','Australia',-33.87,151.21],['Perth','Australia',-31.95,115.86],['Auckland','New Zealand',-36.85,174.76],['Ulaanbaatar','Mongolia',47.89,106.91],
+ ['Nairobi','Kenya',-1.29,36.82],['Lagos','Nigeria',6.52,3.38],['Cape Town','South Africa',-33.92,18.42],['Johannesburg','South Africa',-26.2,28.05],
+ ['Reykjavik2',null],['New York','United States',40.71,-74.01],['Chicago','United States',41.88,-87.63],['Miami','United States',25.76,-80.19],
+ ['Los Angeles','United States',34.05,-118.24],['Anchorage','United States',61.22,-149.9],['Mexico City','Mexico',19.43,-99.13],['Lima','Peru',-12.05,-77.04],
+ ['São Paulo','Brazil',-23.55,-46.63],['Buenos Aires','Argentina',-34.6,-58.38],['Santiago','Chile',-33.45,-70.67],['Manaus','Brazil',-3.12,-60.02],
+ ['Vancouver','Canada',49.28,-123.12],['Yakutsk','Russia',62.03,129.73],['Istanbul','Turkey',41.01,28.98],['Hong Kong','Hong Kong',22.32,114.17],
+ ['La Paz','Bolivia',-16.5,-68.15],['Tehran','Iran',35.69,51.39],
 ].filter((c) => c[2] != null);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const cities = [];
@@ -34,7 +33,7 @@ for (const [name, country, lat, lng] of C) {
     }
     await sleep(3000);
   }
-  cities.push({ name, zh: ZH[name], country, lat, lng, j: JSON.parse(fs.readFileSync(f, 'utf8')) });
+  cities.push({ name, country, lat, lng, j: JSON.parse(fs.readFileSync(f, 'utf8')) });
   console.log('ok', name);
 }
 const days = []; for (let t = Date.parse(START); t <= Date.parse(END); t += 864e5) days.push(new Date(t).toISOString().slice(0, 10));
@@ -47,11 +46,11 @@ function card(c, date) {
   if ([T, cl, w, p].some((a) => a.length < 24 || a.some((x) => x == null))) return null;
   const sum = (a) => a.reduce((x, y) => x + y, 0);
   const rise = hm(c.j.daily.sunrise[di]), set = hm(c.j.daily.sunset[di]);
-  return { name: c.name, zh: c.zh, country: c.country, lat: c.lat, t: T.map((x) => round(x, 1)), cloud: Math.round(sum(cl) / 24), wind: Math.round(Math.max(...w)), rain: round(sum(p), 1),
+  return { name: c.name, country: c.country, lat: c.lat, t: T.map((x) => round(x, 1)), cloud: Math.round(sum(cl) / 24), wind: Math.round(Math.max(...w)), rain: round(sum(p), 1),
     rise: rise == null ? null : round(rise, 2), set: set == null ? null : round(set, 2) };
 }
 // daily mean temperature per city (climatology for deterministic live city selection)
-const meta = cities.map((c) => ({ name: c.name, zh: c.zh, country: c.country, lat: c.lat, lng: c.lng,
+const meta = cities.map((c) => ({ name: c.name, country: c.country, lat: c.lat, lng: c.lng,
   dm: days.map((_, di) => { const a = c.j.hourly.temperature_2m.slice(di * 24, di * 24 + 24); return a.some((x) => x == null) ? null : round(a.reduce((x, y) => x + y, 0) / 24, 1); }) }));
 const byName = new Map(cities.map((c) => [c.name, c]));
 // evenly spaced dates across the range so every season/hemisphere mix appears

@@ -14,7 +14,7 @@ function validate(p, where) {
   assert.strictEqual(new Set(p.cities.map((c) => c.country)).size, 5, `${where} countries`);
   assert.strictEqual(new Set(p.cities.map((c) => c.name)).size, 5, `${where} names`);
   for (const c of p.cities) {
-    assert.ok(c.name && c.zh && c.country, where);
+    assert.ok(c.name && c.country && !('zh' in c), where);
     assert.strictEqual(c.t.length, 24, where);
     for (const v of c.t) assert.ok(Number.isFinite(v) && v > -75 && v < 60, `${where} temp ${v}`);
     assert.ok(c.cloud >= 0 && c.cloud <= 100, where);
@@ -28,7 +28,7 @@ function check(pz, where) {
   validate(pz, where);
   assert.strictEqual(pz.order.length, 5, where);
   assert.deepStrictEqual([...pz.order].sort(), [0, 1, 2, 3, 4], `${where} order is a permutation`);
-  const labels = pz.cities.map((c) => `${c.zh} ${c.name}（${c.country}）`);
+  const labels = pz.cities.map((c) => `${c.name} (${c.country})`);
   assert.strictEqual(new Set(labels).size, 5, where);
 }
 
@@ -41,7 +41,7 @@ test('snapshot pool: >= 60 valid puzzles, unique dates', () => {
 test('city pool and climatology are well-formed', () => {
   assert.ok(d.cities.length >= 40);
   for (const c of d.cities) {
-    assert.ok(c.zh && /[一-鿿]/.test(c.zh), c.name);
+    assert.ok(c.name && /^[\x20-\x7e\u00c0-\u024f]+$/.test(c.country), c.name);
     assert.ok(Number.isFinite(c.lat) && Number.isFinite(c.lng));
     assert.ok(c.dm.length >= 365);
     assert.ok(Number.isFinite(climMean(c, d.range, '2026-10-14')), c.name);
@@ -92,15 +92,15 @@ test('no answer leaks before the guess: visible text of a card carries no city i
   const src = fs.readFileSync(new URL('./game.js', import.meta.url), 'utf8');
   const play = src.slice(src.indexOf('async play('));
   const bodyPart = play.slice(play.indexOf('const bodies'), play.indexOf('const answer'));
-  assert.ok(!/\.name|\.zh|\.country|\.lat\b/.test(bodyPart), 'card bodies must not reference city identity');
+  assert.ok(!/\.name|\.country|\.lat\b/.test(bodyPart), 'card bodies must not reference city identity');
   for (const p of d.puzzles) for (const c of p.cities) assert.ok(!('lng' in c));
 });
 
 test('explain() is specific and names the facts', () => {
   const c = d.puzzles[0].cities[0];
   const s = explain(c, d.puzzles[0].date);
-  assert.match(s, /均温/);
-  assert.match(s, /白昼|极昼/);
+  assert.match(s, /mean/);
+  assert.match(s, /daylight|polar/);
   assert.ok(!/undefined|NaN/.test(s));
   assert.ok(!/undefined|NaN/.test(explain({ ...c, rise: null, set: null }, '2026-06-21')));
 });
