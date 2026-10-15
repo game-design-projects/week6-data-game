@@ -31,21 +31,21 @@ export default {
     num: 94,
     slug: 'paint-a-million',
     title: 'Paint a Million',
-    tagline: '在一张人口密度图上，用最小的面积涂出正好 100 万人。',
+    tagline: 'On a population-density map, paint the smallest area that holds exactly one million people.',
     category: 'levels',
     data: 'snapshot',
     howTo: [
-      '每个小格是 1 km × 1 km，颜色越深人越多。点按或拖动来涂格子，再点一次取消。',
-      '顶部实时显示你涂到的人数。目标是 100 万（±5% 都算准），同时让涂的格子尽量少。',
-      '诀窍：人口是高度集中的——先涂最深的核心，别为了凑数去涂大片浅色的郊区。',
-      '点按/鼠标悬停任意格可读出它的人数；颜色条给出色阶。提交后用绿框标出这片区域里“最省面积”的答案。',
+      'Each small cell is 1 km × 1 km; the darker it is, the more people live there. Tap or drag to paint cells, and tap again to unpaint.',
+      'The live total of people you have painted is shown at the top. Aim for 1,000,000 (within ±5% counts as exact) using as few cells as possible.',
+      'Tip: population is highly concentrated. Paint the darkest core first, and do not fill big pale suburbs just to make up the number.',
+      'Tap or hover any cell to read its population; the color bar shows the scale. After you submit, green outlines mark the most area-efficient answer for this window.',
     ],
-    scoring: '分数 = 100 × (最优格数 ÷ 你的格数)² × 准确度；多涂 10% 的格子约扣 19 分；人数在 ±5% 内准确度为 1，之后线性下降，偏差 30% 归零。',
+    scoring: 'Score = 100 × (optimal cells ÷ your cells)² × accuracy. Painting 10% too many cells costs about 19 points. Accuracy is 1 within ±5% of the target, then falls linearly to 0 at 30% off.',
     sources: [
       { name: 'WorldPop Global 1 km Aggregated Population 2020', url: 'https://hub.worldpop.org/geodata/listing?id=64', note: 'data.worldpop.org/GIS/Population/Global_2000_2020_1km/2020/' },
-      { name: 'GeoNames cities15000', url: 'https://download.geonames.org/export/dump/', note: '用于给 30 km 窗口命名' },
+      { name: 'GeoNames cities15000', url: 'https://download.geonames.org/export/dump/', note: 'used to name each 30 km window' },
     ],
-    dataNote: '每题是 WorldPop 2020 年 1 km 栅格上截取的 30×30 km 窗口（共 151 个窗口、82 个国家），窗口内总人口 160–800 万；格子面积随纬度略有差别（约 0.6–1 km²），按格数计分。这是 2020 年的建模估计，不是实时数据；地名取自 GeoNames 最近的城市。俄罗斯等少数国家的栅格下载失败，未收录。',
+    dataNote: 'Each puzzle is a 30×30 km window cut from the WorldPop 2020 1 km grid (151 windows, 82 countries) holding 1.6-8 million people in total. Cell area varies slightly with latitude (about 0.6-1 km²), and scoring counts cells. This is a 2020 modeled estimate, not live data; place names come from the nearest GeoNames city. A few countries, such as Russia, failed to download and are not included.',
   },
 
   puzzle({ data, pick }) {
@@ -62,30 +62,30 @@ export default {
     let done = false;
     const sum = () => { let s = 0; for (const i of painted) s += p.cells[i]; return s; };
     const optSet = new Set(p.optIdx);
-    const where = p.place ? `${p.place} 附近` : `${p.lat.toFixed(2)}°, ${p.lng.toFixed(2)}°`;
+    const where = p.place ? `near ${p.place}` : `${p.lat.toFixed(2)}°, ${p.lng.toFixed(2)}°`;
     ctx.log('puzzle', p.iso, where, 'total', p.total, 'optK', p.optK);
 
     const vTotal = ui.h('span', { class: 'mono' }, '0');
     const vCells = ui.h('span', { class: 'mono' }, '0');
     const vGap = ui.h('span', { class: 'mono' }, '');
-    const vCell = ui.h('span', { class: 'mono' }, '点按或悬停一格，读出它的人数');
+    const vCell = ui.h('span', { class: 'mono' }, 'Tap or hover a cell to read its population');
     const status = ui.h('div', { class: 'ds-grid', style: { '--min': '150px' } },
-      ui.stat({ label: '已涂人数', value: vTotal, sub: vGap }),
-      ui.stat({ label: '格数', value: vCells, sub: `目标 100 万 · ${p.km2.toFixed(2)} km²/格` }));
+      ui.stat({ label: 'People painted', value: vTotal, sub: vGap }),
+      ui.stat({ label: 'Cells', value: vCells, sub: `target 1 million · ${p.km2.toFixed(2)} km²/cell` }));
     const refresh = () => {
       const s = sum();
       vTotal.textContent = core.fmtNum(s);
       vCells.textContent = String(painted.size);
       const d = s - TARGET;
-      vGap.textContent = !painted.size ? '距目标 —' : '距目标 ' + ( Math.abs(d) <= TARGET * TOL ? '命中 ✓' : (d > 0 ? '+' : '−') + core.fmtCompact(Math.abs(d)));
+      vGap.textContent = !painted.size ? 'To target —' : 'To target ' + ( Math.abs(d) <= TARGET * TOL ? 'on target ✓' : (d > 0 ? '+' : '−') + core.fmtCompact(Math.abs(d)));
     };
 
-    ctx.stage.append(ui.panel({ kicker: `${p.country} · ${where} · ${N}×${N} km`, title: '涂出 100 万人' }, status,
-      ui.h('div', { class: 'small muted', style: { marginTop: '8px' } }, `这个窗口共有 ${core.fmtNum(p.total)} 人。颜色越深，一格里的人越多（平方根色阶）。`),
+    ctx.stage.append(ui.panel({ kicker: `${p.country} · ${where} · ${N}×${N} km`, title: 'Paint one million people' }, status,
+      ui.h('div', { class: 'small muted', style: { marginTop: '8px' } }, `This window holds ${core.fmtNum(p.total)} people in total. The darker the cell, the more people in it (square-root scale).`),
       ui.h('div', { class: 'ds-row', style: { gap: '8px', marginTop: '8px', alignItems: 'center' } },
         ui.h('span', { class: 'small muted mono' }, '0'),
         ui.h('div', { style: { flex: '1', maxWidth: '240px', height: '10px', borderRadius: '5px', border: '1px solid var(--rule)', background: 'linear-gradient(90deg, var(--paper2), var(--accent))' } }),
-        ui.h('span', { class: 'small muted mono' }, `${core.fmtNum(max)} 人/格`)),
+        ui.h('span', { class: 'small muted mono' }, `${core.fmtNum(max)} people/cell`)),
       ui.h('div', { class: 'small', style: { marginTop: '6px' } }, vCell)));
 
     const draw = (g, st) => {
@@ -112,7 +112,7 @@ export default {
         if (done) return;
         if (type === 'up') { mode = null; return; }
         const i = cellAt(pt, st);
-        if (i >= 0 && type !== 'up') vCell.textContent = `第 ${Math.floor(i / N) + 1} 行 · 第 ${(i % N) + 1} 列：${core.fmtNum(p.cells[i])} 人`;
+        if (i >= 0 && type !== 'up') vCell.textContent = `Row ${Math.floor(i / N) + 1}, column ${(i % N) + 1}: ${core.fmtNum(p.cells[i])} people`;
         if (type === 'move' && !mode) return;
         if (i < 0) return;
         if (type === 'down') mode = painted.has(i) ? 'erase' : 'paint';
@@ -131,13 +131,13 @@ export default {
         ctx.log('submit', { sum: s, k, optK: p.optK, score });
         resolve({
           score, max: 100,
-          emoji: `${Math.abs(s / TARGET - 1) <= TOL ? '🎯' : '🟡'} ${k}/${p.optK} 格`,
-          summary: `${core.fmtNum(s)} 人 · ${k} 格（最优 ${p.optK}）`,
+          emoji: `${Math.abs(s / TARGET - 1) <= TOL ? '🎯' : '🟡'} ${k}/${p.optK} cells`,
+          summary: `${core.fmtNum(s)} people · ${k} cells (optimal ${p.optK})`,
         });
       };
       const bar = ui.h('div', { class: 'ds-row', style: { gap: '10px', marginTop: '12px' } },
-        ui.button('提交', { variant: 'accent', onClick: () => { if (!painted.size) return ui.toast('先涂几格'); bar.remove(); finish(); } }),
-        ui.button('清空', { variant: 'ghost', onClick: () => { painted.clear(); refresh(); } }));
+        ui.button('Submit', { variant: 'accent', onClick: () => { if (!painted.size) return ui.toast('Paint a few cells first'); bar.remove(); finish(); } }),
+        ui.button('Clear', { variant: 'ghost', onClick: () => { painted.clear(); refresh(); } }));
       stage.el.after(bar);
       refresh();
       stage.start();
@@ -156,15 +156,15 @@ export default {
     const avg = (arr) => (arr.length ? arr.reduce((x, i) => x + p.cells[i], 0) / arr.length : 0);
     const s = sum(), dev = s / TARGET - 1;
     const yours = [];
-    if (Math.abs(dev) > TOL) yours.push(`人数${dev > 0 ? '多' : '少'}了 ${(Math.abs(dev) * 100).toFixed(0)}%，超出 ±5% 要扣准确度`);
-    if (!wasted.length && Math.abs(dev) <= TOL) yours.push('和最优解完全重合');
-    else if (wasted.length) yours.push(`有 ${wasted.length} 格不在最优解里，平均每格 ${core.fmtNum(Math.round(avg(wasted)))} 人；漏掉的 ${missed.length} 格平均 ${core.fmtNum(Math.round(avg(missed)))} 人`);
+    if (Math.abs(dev) > TOL) yours.push(`${(Math.abs(dev) * 100).toFixed(0)}% ${dev > 0 ? 'over' : 'under'} the target; outside ±5% costs accuracy`);
+    if (!wasted.length && Math.abs(dev) <= TOL) yours.push('Matches the optimal answer exactly');
+    else if (wasted.length) yours.push(`${wasted.length} ${wasted.length === 1 ? 'cell is' : 'cells are'} not in the optimal answer (avg ${core.fmtNum(Math.round(avg(wasted)))} people each); the ${missed.length} you missed averaged ${core.fmtNum(Math.round(avg(missed)))}`);
     result.detail = ui.kv([
-      ['地点', `${p.country} · ${where}（${p.lat.toFixed(2)}°, ${p.lng.toFixed(2)}°）`],
-      ['最省面积', `${p.optK} 格 ≈ ${(p.optK * p.km2).toFixed(0)} km²，装下 ${core.fmtNum(p.optSum)} 人（最优解数到 95 万就算够，因为 ±5% 内都算准）`],
-      ['集中度', `只用窗口 ${(100 * p.optK / (N * N)).toFixed(1)}% 的面积就装下了窗口内 ${(100 * p.optSum / p.total).toFixed(0)}% 的人；最密的 5 格就有 ${core.fmtNum(top5)} 人，而窗口中位数格只有 ${core.fmtNum(median)} 人`],
-      ['规律', `人口按密度从高到低排序后累加，数到 100 万就停——这就是最小面积。最深的一格（${core.fmtNum(max)} 人）抵得上中位数格的 ${median > 0 ? Math.round(max / median) : '数百'} 倍；颜色相近的格子要靠悬停读数来排先后。`],
-      ['你的', `${painted.size} 格 · ${core.fmtNum(s)} 人。${yours.join('；')}`],
+      ['Place', `${p.country} · ${where} (${p.lat.toFixed(2)}°, ${p.lng.toFixed(2)}°)`],
+      ['Smallest area', `${p.optK} cells ≈ ${(p.optK * p.km2).toFixed(0)} km², holding ${core.fmtNum(p.optSum)} people (the optimum stops at 950,000, since anything within ±5% counts as exact)`],
+      ['Concentration', `Just ${(100 * p.optK / (N * N)).toFixed(1)}% of the window area holds ${(100 * p.optSum / p.total).toFixed(0)}% of its people. The 5 densest cells alone hold ${core.fmtNum(top5)} people, while the median cell has only ${core.fmtNum(median)}`],
+      ['The rule', `Sort cells from densest to sparsest and add them up until you reach 1 million: that is the minimum area. The densest cell (${core.fmtNum(max)} people) equals ${median > 0 ? Math.round(max / median) : 'hundreds of'} median cells; for near-identical shades, hover to read the numbers and rank them.`],
+      ['Yours', `${painted.size} cells · ${core.fmtNum(s)} people. ${yours.join('; ')}`],
     ]);
     return result;
   },
