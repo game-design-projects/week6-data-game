@@ -14,14 +14,14 @@ export function scoreFor(n, won, max = MAX_GUESSES) {
 export function coordClue(p) {
   const la = Math.floor(p.lat / 5) * 5, lo = Math.floor(p.lng / 5) * 5;
   const ew = (v) => `${Math.abs(v)}°${v < 0 ? 'W' : 'E'}`;
-  return `大致位置：${la}°–${la + 5}°N，${ew(lo)}–${ew(lo + 5)}`;
+  return `Rough location: ${la}°–${la + 5}°N, ${ew(lo)}–${ew(lo + 5)}`;
 }
 
 /** The result-card explanation, built from this place's own data. */
 export function explain(place) {
   const lines = [place.note];
-  if (place.axis && place.axis.elong >= 2) lines.push(`图中黄、红色的高密度带大致是${axisWords(place.axis.bearing)}。`);
-  else lines.push('图中没有一条特别突出的高密度主航道，船流比较分散。');
+  if (place.axis && place.axis.elong >= 2) lines.push(`The yellow and red high-density band runs ${axisWords(place.axis.bearing)}.`);
+  else lines.push('No single main lane stands out in the picture: traffic is spread out.');
   return lines;
 }
 
@@ -30,22 +30,22 @@ export default {
     num: 85,
     slug: 'ship-lane',
     title: 'Ship Lane',
-    tagline: '一小块欧洲海域的船舶密度热力图，认出这是哪个海峡、海域或港口。',
+    tagline: 'A crop of European shipping-density heat map. Name the strait, sea or port.',
     category: 'transit',
     data: 'snapshot',
     howTo: [
-      '图里是 EMODnet 的船舶密度图（2023 年平均）：绿色表示船少，黄、红表示船多，灰色是陆地，深蓝是没有船信号的海面。图上没有任何地名，海岸线形状和航线走向就是线索。',
-      '先看最近的特写，猜错一次就多解锁一条线索：中等视野、广角视野、地点类型、大致坐标。',
-      '从列表里选一个地点。每次猜测会告诉你相距多少公里、答案在哪个方向。最多猜 6 次。',
-      '越早猜中分数越高：第 1 次 100 分，之后每多猜一次少约 17 分，没猜中为 0。',
+      'The picture is EMODnet\u2019s vessel-density map (2023 average): green means few ships, yellow and red many, gray is land, dark blue is sea with no ship signals. No labels: coastline shapes and lane directions are your clues.',
+      'You start with the closest crop. Each miss unlocks a clue: a medium view, a wide view, the place type, then rough coordinates.',
+      'Pick a place from the list. Each guess shows how many kilometers away the answer is and in which direction. Up to 6 guesses.',
+      'The sooner the better: 100 points on guess 1, about 17 fewer for each extra guess, 0 if you miss.',
     ],
-    scoring: '100 × (7 − 猜测次数) / 6，没猜中为 0。',
+    scoring: '100 × (7 − guesses) / 6, or 0 if you miss.',
     sources: [
-      { name: 'EMODnet Human Activities: Vessel density', url: 'https://emodnet.ec.europa.eu/en/human-activities', note: '全部船型，年平均（2023）' },
-      { name: 'EMODnet WMS (vesseldensity_allavg)', url: 'https://ows.emodnet-humanactivities.eu/wms', note: 'GetMap 截图，EPSG:3857' },
-      { name: 'Natural Earth via world-atlas', url: 'https://github.com/topojson/world-atlas', note: '陆地底图' },
+      { name: 'EMODnet Human Activities: Vessel density', url: 'https://emodnet.ec.europa.eu/en/human-activities', note: 'All vessel types, annual average (2023)' },
+      { name: 'EMODnet WMS (vesseldensity_allavg)', url: 'https://ows.emodnet-humanactivities.eu/wms', note: 'GetMap crops, EPSG:3857' },
+      { name: 'Natural Earth via world-atlas', url: 'https://github.com/topojson/world-atlas', note: 'Land base map' },
     ],
-    dataNote: '密度图来自 EMODnet（基于 AIS 信号，只覆盖欧盟及邻近海域），选取 2023 年平均值，已预先裁成 3 种缩放存成图片，因此不是实时数据，且列表只含欧洲水域。陆地由 Natural Earth 绘制，不含任何地名；坐标为地点的大致中心。',
+    dataNote: 'Density maps come from EMODnet (built from AIS signals, covering EU and neighboring waters only), using the 2023 average. They are pre-cropped at three zoom levels and saved as images, so this is not live data, and the list covers European waters only. Land is drawn from Natural Earth with no place names; coordinates are the approximate center of each place.',
   },
 
   puzzle({ data, pick }) {
@@ -63,7 +63,7 @@ export default {
 
     // one crop = sea colour, Natural Earth land, then the transparent density PNG on top
     const crop = async (i) => {
-      const W = 480, cv = ui.h('canvas', { width: W, height: W, role: 'img', 'aria-label': '船舶密度热力图，地名已隐藏',
+      const W = 480, cv = ui.h('canvas', { width: W, height: W, role: 'img', 'aria-label': 'Vessel-density heat map, place names hidden',
         style: { width: '100%', height: 'auto', display: 'block', aspectRatio: '1' } });
       const g = cv.getContext('2d');
       g.fillStyle = SEA; g.fillRect(0, 0, W, W);
@@ -77,19 +77,19 @@ export default {
       if (img.naturalWidth) g.drawImage(img, 0, 0, W, W);
       return ui.stack(
         ui.h('div', { style: { borderRadius: '10px', overflow: 'hidden', width: '100%', maxWidth: '320px', margin: '0 auto' } }, cv),
-        ui.h('div', { class: 'ds-muted', style: { textAlign: 'center', fontSize: '.85em' } }, `图幅约 ${place.spanKm[i]} km 见方 · 绿→红＝船越来越多`));
+        ui.h('div', { class: 'ds-muted', style: { textAlign: 'center', fontSize: '.85em' } }, `Frame about ${place.spanKm[i].toLocaleString('en-US')} km across · green to red = more ships`));
     };
     const views = await Promise.all([0, 1, 2].map(crop));
 
-    const kind = place.kind === 'strait' ? '海峡 / 海域通道' : '港口 / 河口';
+    const kind = place.kind === 'strait' ? 'Strait / sea passage' : 'Port / estuary';
     const r = await ctx.guess({
-      title: '这是哪里？',
-      options: P.map((p) => ({ id: p.id, label: p.zh, hint: p.en, aliases: [p.en] })),
+      title: 'Where is this?',
+      options: P.map((p) => ({ id: p.id, label: p.en })),
       answer: place.id,
       maxGuesses: MAX_GUESSES,
-      clues: [views[0], views[1], views[2], `类型：${kind}`, coordClue(place)],
-      cluesTitle: '密度图',
-      columns: ['距离', '方向'],
+      clues: [views[0], views[1], views[2], `Type: ${kind}`, coordClue(place)],
+      cluesTitle: 'Density map',
+      columns: ['Distance', 'Direction'],
       feedback: (g, a) => {
         const gp = byId[g.id], ap = byId[a.id];
         const d = distKm(gp, ap);
@@ -100,9 +100,9 @@ export default {
       scoring: (n, won) => scoreFor(n, won),
     });
     r.detail = ui.kv([
-      ['答案', `${place.zh}（${place.en}）`],
-      ['类型', kind],
-      ['线索', ui.stack(...explain(place).map((t) => ui.h('div', {}, t)))],
+      ['Answer', place.en],
+      ['Type', kind],
+      ['Why', ui.stack(...explain(place).map((t) => ui.h('div', {}, t)))],
     ]);
     return r;
   },

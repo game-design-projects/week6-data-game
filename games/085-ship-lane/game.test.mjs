@@ -19,11 +19,11 @@ test('bearing', () => {
   assert.equal(arrow(bearing({ lat: 0, lng: 0 }, { lat: -1, lng: -1 })), '↙');
 });
 test('axis words', () => {
-  assert.equal(axisWords(0), '南北走向');
-  assert.equal(axisWords(179), '南北走向');
-  assert.equal(axisWords(90), '东西走向');
-  assert.equal(axisWords(45), '东北—西南走向');
-  assert.equal(axisWords(135), '西北—东南走向');
+  assert.equal(axisWords(0), 'north-south');
+  assert.equal(axisWords(179), 'north-south');
+  assert.equal(axisWords(90), 'east-west');
+  assert.equal(axisWords(45), 'northeast-southwest');
+  assert.equal(axisWords(135), 'northwest-southeast');
 });
 
 test('scoring extremes', () => {
@@ -37,11 +37,11 @@ test('scoring extremes', () => {
 
 test('pool: 60+ places, sane fields', () => {
   assert.ok(data.places.length >= 60);
-  const ids = new Set(), zh = new Set(), en = new Set();
+  const ids = new Set(), en = new Set();
   for (const p of data.places) {
-    for (const k of ['id', 'zh', 'en', 'kind', 'note']) assert.ok(typeof p[k] === 'string' && p[k].trim() && !/undefined|NaN/.test(p[k]), `${p.id}.${k}`);
-    assert.ok(!ids.has(p.id) && !zh.has(p.zh) && !en.has(p.en), 'duplicate ' + p.id);
-    ids.add(p.id); zh.add(p.zh); en.add(p.en);
+    for (const k of ['id', 'en', 'kind', 'note']) assert.ok(typeof p[k] === 'string' && p[k].trim() && !/undefined|NaN/.test(p[k]), `${p.id}.${k}`);
+    assert.ok(!ids.has(p.id) && !en.has(p.en), 'duplicate ' + p.id);
+    ids.add(p.id); en.add(p.en);
     assert.ok(['strait', 'port'].includes(p.kind));
     assert.ok(p.lat > 30 && p.lat < 70 && p.lng > -15 && p.lng < 35, p.id + ' coords');
     assert.equal(p.files.length, 3); assert.equal(p.half.length, 3); assert.equal(p.spanKm.length, 3);
@@ -70,13 +70,13 @@ test('no answer leaks: nothing visible names the place', () => {
     assert.ok(p.spanKm.every((k) => k > 0));
   }
   const src = readFileSync(dir + 'game.js', 'utf8');
-  assert.ok(!/alt:\s*place/.test(src) && src.includes("地名已隐藏"));
+  assert.ok(!/alt:\s*place/.test(src) && src.includes("place names hidden"));
 });
 
 test('coordinate clue is a coarse 5-degree box', () => {
   const n = {};
   data.places.forEach((p) => { const k = coordClue(p); n[k] = (n[k] || 0) + 1; });
   assert.ok(Object.values(n).filter((c) => c === 1).length / data.places.length < 0.5, 'too many places identified by the box alone');
-  assert.equal(coordClue({ lat: 51, lng: 1.5 }), '大致位置：50°–55°N，0°E–5°E');
-  assert.equal(coordClue({ lat: 36, lng: -5.6 }), '大致位置：35°–40°N，10°W–5°W');
+  assert.equal(coordClue({ lat: 51, lng: 1.5 }), 'Rough location: 50°–55°N, 0°E–5°E');
+  assert.equal(coordClue({ lat: 36, lng: -5.6 }), 'Rough location: 35°–40°N, 10°W–5°W');
 });

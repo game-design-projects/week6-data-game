@@ -14,8 +14,8 @@ export const arrow = (deg) => '↑↗→↘↓↙←↖'[Math.round(deg / 45) % 
 /** Words for an undirected axis bearing 0..180 (0 = north–south, 90 = east–west). */
 export function axisWords(b) {
   const x = ((b % 180) + 180) % 180;
-  if (x < 22.5 || x >= 157.5) return '南北走向';
-  if (x < 67.5) return '东北—西南走向';
-  if (x < 112.5) return '东西走向';
-  return '西北—东南走向';
+  if (x < 22.5 || x >= 157.5) return 'north-south';
+  if (x < 67.5) return 'northeast-southwest';
+  if (x < 112.5) return 'east-west';
+  return 'northwest-southeast';
 }
