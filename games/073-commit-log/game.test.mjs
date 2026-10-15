@@ -77,7 +77,13 @@ test('every puzzle keeps at least 60% of its text readable', () => {
 test('styleNotes is specific to the repo', () => {
   const linux = data.repos.find((r) => r.id === 'torvalds/linux');
   const notes = styleNotes(linux, data.repos);
-  assert.ok(notes.length >= 1 && notes.some((n) => n.includes('子系统')), notes.join('|'));
+  assert.ok(notes.length >= 1 && notes.some((n) => n.includes('subsystem')), notes.join('|'));
   const fake = { msgs: ['Add a thing to the thing', 'Fix another thing here ok'] };
   assert.ok(styleNotes(fake, data.repos).every((n) => /\d+%/.test(n)));
+});
+
+test('main-language clue is redacted when the language names the repo', () => {
+  const julia = data.repos.find((r) => r.id === 'JuliaLang/julia');
+  assert.ok(julia);
+  assert.ok(!/julia/i.test(redact(julia.lang, julia.id)));
 });

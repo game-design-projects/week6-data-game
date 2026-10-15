@@ -24,16 +24,16 @@ export function redact(text, id) {
 
 // ---- style fingerprint: which formatting habits give a repo away ----
 const FEATURES = [
-  { key: 'prefix', test: (m) => /^[\w./+-]+(\([^)]*\))?!?: /.test(m), say: (p, a) => `${p}% 的提交以「子系统: 」式前缀开头（样本池平均 ${a}%）` },
-  { key: 'conv', test: (m) => /^(feat|fix|chore|docs|refactor|test|tests|perf|build|ci|style)(\([^)]*\))?!?: /i.test(m), say: (p, a) => `${p}% 的提交用 Conventional Commits 前缀 feat/fix/chore（样本池平均 ${a}%）` },
-  { key: 'pr', test: (m) => /\(#\d+\)\s*$/.test(m), say: (p, a) => `${p}% 的提交末尾带 PR 编号「(#1234)」（样本池平均 ${a}%）` },
-  { key: 'cap', test: (m) => /^[A-Z]/.test(m), say: (p, a) => `${p}% 的提交首字母大写（样本池平均 ${a}%）` },
-  { key: 'dot', test: (m) => /\.$/.test(m), say: (p, a) => `${p}% 的提交以句号结尾（样本池平均 ${a}%）` },
-  { key: 'long', test: (m) => m.length > 60, say: (p, a) => `${p}% 的提交标题超过 60 个字符（样本池平均 ${a}%）` },
+  { key: 'prefix', test: (m) => /^[\w./+-]+(\([^)]*\))?!?: /.test(m), say: (p, a) => `${p}% of its commits start with a “subsystem: ” prefix (pool average ${a}%)` },
+  { key: 'conv', test: (m) => /^(feat|fix|chore|docs|refactor|test|tests|perf|build|ci|style)(\([^)]*\))?!?: /i.test(m), say: (p, a) => `${p}% of its commits use a Conventional Commits prefix like feat/fix/chore (pool average ${a}%)` },
+  { key: 'pr', test: (m) => /\(#\d+\)\s*$/.test(m), say: (p, a) => `${p}% of its commits end with a PR number like “(#1234)” (pool average ${a}%)` },
+  { key: 'cap', test: (m) => /^[A-Z]/.test(m), say: (p, a) => `${p}% of its commits start with a capital letter (pool average ${a}%)` },
+  { key: 'dot', test: (m) => /\.$/.test(m), say: (p, a) => `${p}% of its commits end with a period (pool average ${a}%)` },
+  { key: 'long', test: (m) => m.length > 60, say: (p, a) => `${p}% of its commit titles are over 60 characters (pool average ${a}%)` },
 ];
 export const shareOf = (msgs, f) => msgs.filter(f.test).length / Math.max(1, msgs.length);
 
-/** Two most distinctive style habits of `repo` relative to the pool, as Chinese sentences. */
+/** Two most distinctive style habits of `repo` relative to the pool, as English sentences. */
 export function styleNotes(repo, repos) {
   const rows = FEATURES.map((f) => {
     const mine = shareOf(repo.msgs, f);
@@ -48,21 +48,21 @@ export default {
     num: 73,
     slug: 'commit-log',
     title: 'Commit Log',
-    tagline: '五条真实的 commit message，猜它们来自哪个开源仓库。',
+    tagline: 'Five real commit messages. Guess which open-source repository they came from.',
     category: 'tech',
     data: 'snapshot',
     howTo: [
-      '先给你两条真实的 commit message（仓库名、作者名已涂黑），从列表里选出是哪个仓库，最多猜 6 次。',
-      '每猜错一次多解锁一条线索：更多 commit、主语言、创建年份与简介。',
-      '每次猜测的反馈：语言相同标黄；年份与星标旁的箭头指向答案所在方向（↑ 答案更新 / 更多，↓ 答案更早 / 更少）。',
-      '看格式：「subsystem: 动词」是内核风格；feat/fix 前缀是前端工具链；末尾 (#1234) 是 GitHub PR 合并。',
+      'You start with two real commit messages (repository and author names blacked out). Pick the repository from the list. You get up to 6 guesses.',
+      'Each miss unlocks another clue: more commits, the main language, the creation year and the description.',
+      'Feedback for each guess: a matching language turns yellow, and the arrows beside year and stars point toward the answer (↑ the answer is newer / has more, ↓ older / fewer).',
+      'Read the format: “subsystem: verb” is kernel style; a feat/fix prefix is front-end tooling; a trailing (#1234) is a GitHub PR merge.',
     ],
-    scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分（第 6 次约 17 分），6 次都没猜中 0 分。',
+    scoring: 'A correct first guess scores 100, and each extra guess costs about 17 points (about 17 on the 6th). Six misses score 0.',
     sources: [
-      { name: 'GitHub REST API：commits', url: 'https://docs.github.com/en/rest/commits/commits', note: '每个仓库取默认分支最近 100 条提交，过滤合并、版本号、依赖更新、含链接或非 ASCII 的提交' },
-      { name: 'GitHub REST API：repos', url: 'https://docs.github.com/en/rest/repos/repos', note: '主语言、创建年份、星标数、简介' },
+      { name: 'GitHub REST API: commits', url: 'https://docs.github.com/en/rest/commits/commits', note: 'The latest 100 commits on each default branch, filtering out merges, version bumps, dependency updates and commits with links or non-ASCII text' },
+      { name: 'GitHub REST API: repos', url: 'https://docs.github.com/en/rest/repos/repos', note: 'Main language, creation year, star count, description' },
     ],
-    dataNote: '题库是 100 个知名开源仓库的快照（commit 取自抓取时的最近 100 条，星标数为抓取时数值）。原建议的 GH Archive 按小时的全站事件包过大，改用 GitHub API 直接取同类事实；GitHub 匿名接口限速 60 次/小时，因此不在浏览器里实时抓取。',
+    dataNote: 'The pool is a snapshot of 100 well-known open-source repositories (commits are the latest 100 at fetch time, and star counts are as of then). The originally suggested hourly GH Archive event dumps are too big, so the GitHub API supplies the same kind of facts instead; anonymous GitHub API access is limited to 60 requests an hour, so nothing is fetched live in the browser.',
   },
 
   puzzle({ data, pick, rng }) {
@@ -81,18 +81,18 @@ export default {
     const clues = [
       msgBox(p.msgs.slice(0, 2), R),
       msgBox([p.msgs[2]], R),
-      `主语言：${ans.lang}`,
+      `Main language: ${R(ans.lang)}`,
       msgBox([p.msgs[3]], R),
-      `创建于 ${ans.year} 年。简介：${R(ans.desc) || '（无）'}`,
+      `Created in ${ans.year}. Description: ${R(ans.desc) || '(none)'}`,
       msgBox([p.msgs[4]], R),
     ];
     const options = repos.map((r) => ({ id: r.id, label: r.id, aliases: [r.name] }));
     const dir = (d) => (d > 0 ? '↑' : '↓');
     const res = await ctx.guess({
       options, answer: ans.id, maxGuesses: 6,
-      title: '这是哪个仓库？', placeholder: '输入仓库名…',
-      clues, cluesTitle: 'Commit 与线索',
-      columns: ['语言', '创建年份', '星标'],
+      title: 'Which repository is this?', placeholder: 'Type a repository name…',
+      clues, cluesTitle: 'Commits and clues',
+      columns: ['Language', 'Created', 'Stars'],
       near: (g, a) => by.get(g.id).lang === by.get(a.id).lang,
       feedback: (g) => {
         const gr = by.get(g.id);
@@ -109,12 +109,12 @@ export default {
     });
     const notes = styleNotes(ans, repos);
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.kv([['答案', `${ans.id}（${ans.lang}，${ans.year} 年，★${ctx.core.fmtCompact(ans.stars)}）`], ['简介', ans.desc || '—']]),
-      ui.h('div', { class: 'ink2' }, '原始 commit message（未涂黑）：'),
+      ui.kv([['Answer', `${ans.id} (${ans.lang}, ${ans.year}, ★${ctx.core.fmtCompact(ans.stars)})`], ['Description', ans.desc || '—']]),
+      ui.h('div', { class: 'ink2' }, 'The original commit messages (unredacted):'),
       msgBox(p.msgs),
       ui.callout(notes.length
-        ? `这个仓库的格式指纹：${notes.join('；')}。`
-        : `${ans.name} 的提交格式很「大众」，没有突出的格式习惯，要靠内容里的专有名词（模块、函数、工具名）才能认出来。`, 'good'));
+        ? `This repository's format fingerprint: ${notes.join('; ')}.`
+        : `${ans.name}'s commit format is pretty generic, with no standout habits, so you would have to recognize it by the proper nouns in the content (module, function and tool names).`, 'good'));
     return res;
   },
 };
