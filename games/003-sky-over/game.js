@@ -6,7 +6,7 @@ export { gmstDeg, altAz, project };
 
 const DARK_SUN_ALT = -12; // nautical twilight is over: stars are really out
 const POLARIS = 11767;
-const PLANET_ZH = { Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星' };
+const PLANET_NAME = { Mercury: 'Mercury', Venus: 'Venus', Mars: 'Mars', Jupiter: 'Jupiter', Saturn: 'Saturn' };
 const PLANET_COLOR = { Mercury: '#c9c2b8', Venus: '#fff2b8', Mars: '#ff8a65', Jupiter: '#ffd9a8', Saturn: '#e8d28a' };
 
 const hm = (h) => {
@@ -38,7 +38,7 @@ export function skyAt(data, p) {
   const aa = (ra, dec) => altAz(ra, dec, lat, lst);
   const stars = data.stars.map(([ra0, dec0, mag, name, hip]) => { const [ra, dec] = precess(ra0, dec0, T); return { mag, name, hip, ...aa(ra, dec) }; });
   const pl = planets(p.ms);
-  const bodies = Object.keys(PLANET_ZH).map((k) => ({ key: k, name: PLANET_ZH[k], ...aa(pl[k][0], pl[k][1]) }));
+  const bodies = Object.keys(PLANET_NAME).map((k) => ({ key: k, name: PLANET_NAME[k], ...aa(pl[k][0], pl[k][1]) }));
   const mn = moon(p.ms);
   const m = { ...mn, ...aa(mn.ra, mn.dec) };
   m.alt -= 0.95 * Math.cos(m.alt * Math.PI / 180); // topocentric parallax (~57′ at the horizon)
@@ -47,11 +47,11 @@ export function skyAt(data, p) {
 
 function moonPhaseName(m) {
   const e = m.elong;
-  if (e < 12) return '新月前后';
-  if (e < 80) return m.waxing ? '蛾眉月（渐盈）' : '残月（渐亏）';
-  if (e < 100) return m.waxing ? '上弦月' : '下弦月';
-  if (e < 168) return m.waxing ? '盈凸月' : '亏凸月';
-  return '满月前后';
+  if (e < 12) return 'around new moon';
+  if (e < 80) return m.waxing ? 'waxing crescent' : 'waning crescent';
+  if (e < 100) return m.waxing ? 'first quarter' : 'last quarter';
+  if (e < 168) return m.waxing ? 'waxing gibbous' : 'waning gibbous';
+  return 'around full moon';
 }
 
 export default {
@@ -59,24 +59,24 @@ export default {
     num: 3,
     slug: 'sky-over',
     title: 'Sky Over',
-    tagline: '一张从神秘城市仰望的星空图。北极星有多高，纬度就是多少；天赤道与子午线的交点，扣掉格林尼治恒星时，就是经度。',
+    tagline: 'A star chart from a mystery city. Polaris\'s height is the latitude; where the celestial equator crosses the meridian, minus Greenwich sidereal time, is the longitude.',
     category: 'geo',
     data: 'computed',
     howTo: [
-      '圆盘是整片天空：圆心是头顶，外圈是地平线，上北左东；同心圈标出 30° 与 60° 高度。图中还有月亮和五大行星。',
-      '纬度：北半球北极星的高度角 ≈ 纬度；看不到北极星，说明在赤道附近或南半球。橙色虚线是天赤道，它在正南/正北方向的高度 = 90° − |纬度|。',
-      '经度：竖直的细线是子午线。读出天赤道与它交叉处标的赤经（如 4h），就是当地恒星时 LST；再减去题面给出的格林尼治恒星时 GMST，每差 1 小时 = 经度 15°（LST 大于 GMST 为东经）。',
-      '在地图上点出这座城市。0 km 得 100 分，每差约 1,500 km 降到约三分之一。',
+      'The disc is the whole sky: the center is straight overhead, the rim is the horizon, north is up and east is left; the rings mark 30° and 60° altitude. The Moon and the five bright planets are drawn too.',
+      'Latitude: in the Northern Hemisphere, Polaris\'s altitude is about the latitude. No Polaris means you are near the equator or in the Southern Hemisphere. The dashed orange line is the celestial equator; its height due south (or north) is 90° − |latitude|.',
+      'Longitude: the thin vertical line is the meridian. Read the right ascension where the celestial equator crosses it (say 4h): that is the local sidereal time (LST). Subtract the Greenwich sidereal time (GMST) given on the page; each hour of difference is 15° of longitude (east if LST is larger than GMST).',
+      'Pin the city on the map. 0 km scores 100, and every ~1,500 km cuts the score to about a third.',
     ],
-    scoring: '100 × e^(−距离 / 1500 km)。',
+    scoring: '100 × e^(−distance / 1500 km).',
     sources: [
-      { name: 'HYG Database v4（Hipparcos / Yale / Gliese 合并星表）', url: 'https://github.com/astronexus/HYG-Database', note: '亮于 4.6 等的 1000 多颗 Hipparcos 恒星' },
-      { name: 'd3-celestial 星座连线', url: 'https://github.com/ofrohn/d3-celestial' },
-      { name: 'GeoNames cities15000', url: 'https://download.geonames.org/export/dump/', note: '人口 100 万以上的城市（同一都市圈只留最大者）作为候选地点' },
-      { name: 'JPL 行星近似轨道根数（Standish）', url: 'https://ssd.jpl.nasa.gov/planets/approx_pos.html', note: '行星位置，精度约 0.3°' },
-      { name: 'Meeus《Astronomical Algorithms》第 47 章', url: 'https://en.wikipedia.org/wiki/Jean_Meeus', note: '月亮位置（截取主要项，精度约 0.1°）' },
+      { name: 'HYG Database v4 (merged Hipparcos / Yale / Gliese catalog)', url: 'https://github.com/astronexus/HYG-Database', note: 'Over 1,000 Hipparcos stars brighter than magnitude 4.6' },
+      { name: 'd3-celestial constellation lines', url: 'https://github.com/ofrohn/d3-celestial' },
+      { name: 'GeoNames cities15000', url: 'https://download.geonames.org/export/dump/', note: 'Cities over 1 million people (only the largest in each metro area) as candidate locations' },
+      { name: 'JPL approximate planetary orbital elements (Standish)', url: 'https://ssd.jpl.nasa.gov/planets/approx_pos.html', note: 'Planet positions, accurate to about 0.3°' },
+      { name: 'Meeus, Astronomical Algorithms, chapter 47', url: 'https://en.wikipedia.org/wiki/Jean_Meeus', note: 'Moon position (main terms only, accurate to about 0.1°)' },
     ],
-    dataNote: '恒星为 J2000 坐标，已做岁差修正到当天；未做大气折射。月亮与行星按轨道根数在浏览器中计算（约 0.3° 误差，不含周期摄动小项）。天象由坐标与时间计算，非实时观测；题目选在太阳低于地平线 12° 以下的时刻，保证天空全黑。',
+    dataNote: 'Stars use J2000 coordinates corrected by precession to the day; atmospheric refraction is ignored. The Moon and planets are computed in the browser from orbital elements (about 0.3° error, without the small periodic perturbation terms). The sky is computed from coordinates and time, not observed live; the puzzle is set at a moment when the Sun is more than 12° below the horizon so the sky is fully dark.',
   },
 
   puzzle: makePuzzle,
@@ -98,7 +98,7 @@ export default {
     const sunScreen = (() => { const [ra, dec] = planets(p.ms).Sun; return aa(ra, dec); })();
 
     const box = ui.h('div', { style: { maxWidth: '600px', margin: '0 auto' } });
-    const panel = ui.panel({ kicker: `${iso.slice(0, 10)} · ${iso.slice(11, 16)} UTC`, title: '今晚头顶的星空', aside: ui.badge(`GMST ${hm(gmst / 15)}`) }, box);
+    const panel = ui.panel({ kicker: `${iso.slice(0, 10)} · ${iso.slice(11, 16)} UTC`, title: 'The sky overhead tonight', aside: ui.badge(`GMST ${hm(gmst / 15)}`) }, box);
     ctx.stage.append(panel);
 
     const cv = ctx.canvas({
@@ -129,7 +129,7 @@ export default {
         g.beginPath(); g.moveTo(cx, cy - R); g.lineTo(cx, cy + R); g.strokeStyle = 'rgba(160,175,235,0.28)'; g.lineWidth = 1; g.stroke();
         g.beginPath(); g.moveTo(cx - 4, cy); g.lineTo(cx + 4, cy); g.moveTo(cx, cy - 4); g.lineTo(cx, cy + 4); g.strokeStyle = 'rgba(190,200,245,0.6)'; g.stroke();
         g.textAlign = 'center'; g.fillStyle = '#b8c2ee'; g.font = 'bold 13px sans-serif';
-        g.fillText('北', cx, cy - R - 6); g.fillText('南', cx, cy + R + 15); g.fillText('东', cx - R - 9, cy + 4); g.fillText('西', cx + R + 9, cy + 4);
+        g.fillText('N', cx, cy - R - 6); g.fillText('S', cx, cy + R + 15); g.fillText('E', cx - R - 9, cy + 4); g.fillText('W', cx + R + 9, cy + 4);
         // celestial equator with RA ticks
         g.beginPath(); let pen = false;
         for (const e of equator) { if (e.alt < 0) { pen = false; continue; } const [x, y] = P(e.alt, e.az); if (pen) g.lineTo(x, y); else g.moveTo(x, y); pen = true; }
@@ -157,7 +157,7 @@ export default {
           if (st.name && (!narrow || st.mag < 1.5 || st.hip === POLARIS)) bright.push([st, x, y]);
         }
         g.textAlign = 'left'; g.font = '10px sans-serif';
-        for (const [st, x, y] of bright.sort((a, b) => a[0].mag - b[0].mag)) { g.fillStyle = st.hip === POLARIS ? '#ffd166' : '#d6dcf7'; label(st.name === 'Polaris' ? 'Polaris 北极星' : st.name, x, y); }
+        for (const [st, x, y] of bright.sort((a, b) => a[0].mag - b[0].mag)) { g.fillStyle = st.hip === POLARIS ? '#ffd166' : '#d6dcf7'; label(st.name, x, y); }
         // planets
         for (const b of sky.bodies) {
           if (b.alt < 0) continue; const [x, y] = P(b.alt, b.az);
@@ -177,21 +177,21 @@ export default {
           g.closePath(); g.fillStyle = '#fff6d8'; g.fill();
           g.beginPath(); g.arc(0, 0, r, 0, 7); g.strokeStyle = 'rgba(255,246,216,0.7)'; g.lineWidth = 1; g.stroke();
           g.restore();
-          g.font = 'bold 11px sans-serif'; g.fillStyle = '#fff6d8'; g.textAlign = 'left'; label('月亮', x + r, y);
+          g.font = 'bold 11px sans-serif'; g.fillStyle = '#fff6d8'; g.textAlign = 'left'; label('Moon', x + r, y);
         }
       },
     });
     box.append(cv.el || cv.canvas || cv);
     cv.start();
     box.append(ui.h('div', { class: 'small muted', style: { marginTop: '8px' } },
-      `上北左东，圆心 + 是天顶，竖线是子午线，橙色虚线是天赤道（标注赤经小时）。这一刻当地天已全黑（太阳至少在地平线下 12°）。格林尼治恒星时 GMST = ${hmShort(gmst / 15)}。`));
+      `North is up and east is left. The + at the center is the zenith, the vertical line is the meridian, and the dashed orange line is the celestial equator (marked in hours of right ascension). The sky is fully dark here (the Sun is at least 12° below the horizon). Greenwich sidereal time GMST = ${hmShort(gmst / 15)}.`));
 
     const res = await ctx.pin({
       answer: { lat, lng, label: `${p.city.name}, ${p.city.country}` },
       view: { bounds: [[-56, -168], [72, 168]] },
       scale: 1500,
       setup: ({ map, el }) => { map.setMaxBounds([[-85, -540], [85, 540]]); el.style.background = 'var(--paper2)'; },
-      title: '这是哪座城市的夜空？',
+      title: 'Which city\'s night sky is this?',
     });
     cv.stop();
 
@@ -199,20 +199,20 @@ export default {
     const polaris = vis.find((s) => s.hip === POLARIS);
     const zen = vis.filter((s) => s.mag < 3.5).sort((a, b) => b.alt - a.alt)[0];
     const dLng = wrap180(lst - gmst);
-    const seen = sky.bodies.filter((b) => b.alt > 5).map((b) => `${b.name}（${b.alt.toFixed(0)}°）`);
+    const seen = sky.bodies.filter((b) => b.alt > 5).map((b) => `${b.name} (${b.alt.toFixed(0)}°)`);
     const m = sky.moon;
     const g = res.guess || {};
     const latErr = Number.isFinite(g.lat) ? g.lat - lat : null, lngErr = Number.isFinite(g.lng) ? wrap180(g.lng - lng) : null;
     const eqAlt = 90 - Math.abs(lat);
     res.detail = ui.kv([
-      ['地点', `${p.city.name}，${p.city.country}（${lat.toFixed(1)}°, ${lng.toFixed(1)}°）`],
-      ['纬度怎么看', (polaris && polaris.alt > 0 ? `北极星高 ${polaris.alt.toFixed(1)}°，约等于纬度 ${lat.toFixed(1)}°。` : `北极星在地平线下，说明在${lat < 0 ? '南半球' : '赤道附近'}。`)
-        + `天赤道在正${lat >= 0 ? '南' : '北'}方高 ${eqAlt.toFixed(0)}° = 90° − ${Math.abs(lat).toFixed(0)}°。`],
-      ['经度怎么看', `子午线上天赤道对应赤经约 ${(lst / 15).toFixed(2)} h（地方恒星时 LST）；题面 GMST = ${(gmst / 15).toFixed(2)} h；差 ${(dLng / 15).toFixed(2)} h × 15 = ${dLng.toFixed(1)}°，即${dLng >= 0 ? '东' : '西'}经 ${Math.abs(dLng).toFixed(1)}°。`],
-      ['当地时间', `平太阳时 ${hm(p.solar)}（UTC ${iso.slice(11, 16)}，经度每 15° 差 1 小时）`],
-      ['头顶的星', zen ? `${zen.name || `HIP ${zen.hip}`}（${zen.mag.toFixed(1)} 等，高度 ${zen.alt.toFixed(0)}°）：天顶的赤纬 ≈ 纬度` : '—'],
-      ['月亮与行星', `${m.alt > 0 ? `月亮在地平线上（${moonPhaseName(m)}，受光 ${Math.round(m.illum * 100)}%，高 ${m.alt.toFixed(0)}°）` : `月亮在地平线下（${moonPhaseName(m)}）`}；${seen.length ? `可见行星：${seen.join('、')}` : '地平线上没有明亮行星'}。月亮和行星在恒星间的位置对各地几乎相同，不提供定位线索。`],
-      ...(latErr == null ? [] : [['你的读数', `纬度差 ${Math.abs(latErr).toFixed(1)}°，经度差 ${Math.abs(lngErr).toFixed(1)}°`]]),
+      ['Location', `${p.city.name}, ${p.city.country} (${lat.toFixed(1)}°, ${lng.toFixed(1)}°)`],
+      ['Reading latitude', (polaris && polaris.alt > 0 ? `Polaris stands ${polaris.alt.toFixed(1)}° high, about the latitude of ${lat.toFixed(1)}°. ` : `Polaris is below the horizon, so this is ${lat < 0 ? 'the Southern Hemisphere' : 'near the equator'}. `)
+        + `The celestial equator is ${eqAlt.toFixed(0)}° high due ${lat >= 0 ? 'south' : 'north'} = 90° − ${Math.abs(lat).toFixed(0)}°.`],
+      ['Reading longitude', `On the meridian the celestial equator sits at right ascension about ${(lst / 15).toFixed(2)} h (local sidereal time, LST); the GMST on the page is ${(gmst / 15).toFixed(2)} h; the difference is ${(dLng / 15).toFixed(2)} h × 15 = ${dLng.toFixed(1)}°, i.e. ${Math.abs(dLng).toFixed(1)}° ${dLng >= 0 ? 'east' : 'west'}.`],
+      ['Local time', `Mean solar time ${hm(p.solar)} (UTC ${iso.slice(11, 16)}; every 15° of longitude is 1 hour)`],
+      ['Star overhead', zen ? `${zen.name || `HIP ${zen.hip}`} (magnitude ${zen.mag.toFixed(1)}, altitude ${zen.alt.toFixed(0)}°): the declination at the zenith ≈ the latitude` : '—'],
+      ['Moon and planets', `${m.alt > 0 ? `The Moon is above the horizon (${moonPhaseName(m)}, ${Math.round(m.illum * 100)}% lit, ${m.alt.toFixed(0)}° high)` : `The Moon is below the horizon (${moonPhaseName(m)})`}; ${seen.length ? `visible planets: ${seen.join(', ')}` : 'no bright planets above the horizon'}. The Moon and planets sit at almost the same place among the stars everywhere on Earth, so they give no location clue.`],
+      ...(latErr == null ? [] : [['Your error', `${Math.abs(latErr).toFixed(1)}° off in latitude, ${Math.abs(lngErr).toFixed(1)}° off in longitude`]]),
     ]);
     return res;
   },
