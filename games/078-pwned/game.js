@@ -26,27 +26,27 @@ export function makePairs(items, rng, n = ROUNDS) {
   return pairs;
 }
 
-const kind = (p) => (/^\d+$/.test(p) ? '纯数字' : /\d/.test(p) ? '字母+数字' : '纯字母');
+const kind = (p) => (/^\d+$/.test(p) ? 'digits' : /\d/.test(p) ? 'mixed' : 'letters');
 
 export default {
   meta: {
     num: 78,
     slug: 'pwned',
     title: 'Pwned',
-    tagline: '两个常见密码，哪个在泄露数据库里出现得更多？',
+    tagline: 'Two common passwords. Which one shows up more often in data breaches?',
     category: 'tech',
     data: 'snapshot',
     howTo: [
-      '每轮给出两个真实存在的常用密码。',
-      '点选你认为在历史泄露数据中出现次数更多的那个，共 8 轮，越往后两者越接近（从相差 8 倍以上到只差 1.3 倍）。',
-      '每轮答完立即显示双方的真实泄露次数；全部答完后还会统计今天这 8 组里“更短 / 更常见”能解释多少结果。',
+      'Each round shows two real, commonly used passwords.',
+      'Tap the one you think appears more often in historical breach data. There are 8 rounds, and the pairs get closer as you go (from 8x or more apart down to just 1.3x).',
+      'After each round you see the real breach counts for both; at the end you see how much of today\'s 8 pairs "shorter / more common" explains.',
     ],
-    scoring: '每答对一轮得 1 分，满分 8 分。',
+    scoring: '1 point for every round you get right, 8 points at most.',
     sources: [
-      { name: 'Have I Been Pwned: Pwned Passwords range API', url: 'https://haveibeenpwned.com/API/v3#PwnedPasswords', note: '只发送 SHA-1 前 5 位（k-匿名），返回该前缀下所有哈希的出现次数' },
-      { name: 'SecLists 10k-most-common.txt', url: 'https://github.com/danielmiessler/SecLists/tree/master/Passwords/Common-Credentials', note: '候选密码列表' },
+      { name: 'Have I Been Pwned: Pwned Passwords range API', url: 'https://haveibeenpwned.com/API/v3#PwnedPasswords', note: 'Only the first 5 characters of the SHA-1 are sent (k-anonymity); it returns the counts for every hash under that prefix' },
+      { name: 'SecLists 10k-most-common.txt', url: 'https://github.com/danielmiessler/SecLists/tree/master/Passwords/Common-Credentials', note: 'Candidate password list' },
     ],
-    dataNote: '次数为 2026-10-14 从 HIBP 抓取的快照，候选词取自 SecLists 前 1 万常用密码的抽样（447 个），已过滤不雅词汇。HIBP 虽允许浏览器直接访问，但没有按日期固定的版本、新泄露会让次数持续变动，会让不同玩家的“正确答案”不一致，因此不做实时抓取。',
+    dataNote: 'Counts are a snapshot fetched from HIBP on Oct 14, 2026. Candidates are a sample (447) of the 10,000 most common passwords in SecLists, with vulgar words filtered out. HIBP allows browser access, but there is no date-pinned version and new breaches keep changing the counts, which would give different players different "right answers", so nothing is fetched live.',
   },
 
   puzzle({ data, rng }) {
@@ -56,13 +56,13 @@ export default {
   async play(ctx, p) {
     const { ui, core } = ctx;
     ctx.log('pwned pairs', p.pairs.length);
-    ctx.stage.append(ui.panel({ kicker: '背景', title: '密码泄露了多少次？' },
-      ui.h('p', { class: 'small muted' }, '数据来自 Have I Been Pwned：数十亿条在数据泄露中曝光的真实密码。数字越大，被攻击者拿去撞库的概率越高。')));
+    ctx.stage.append(ui.panel({ kicker: 'Background', title: 'How often has each password leaked?' },
+      ui.h('p', { class: 'small muted' }, 'Data from Have I Been Pwned: billions of real passwords exposed in data breaches. The bigger the number, the more likely attackers are to try it in credential-stuffing attacks.')));
     const rounds = p.pairs.map(([a, b], i) => ({
-      prompt: `第 ${i + 1} 轮：哪个泄露次数更多？`,
+      prompt: `Round ${i + 1}: which has leaked more?`,
       options: [a, b].map((x) => ({ label: x.p })),
       correct: a.n >= b.n ? 0 : 1,
-      explain: `${a.p}：${core.fmtNum(a.n)} 次；${b.p}：${core.fmtNum(b.n)} 次（相差 ${(Math.max(a.n, b.n) / Math.min(a.n, b.n)).toFixed(1)} 倍）`,
+      explain: `${a.p}: ${core.fmtNum(a.n)} times; ${b.p}: ${core.fmtNum(b.n)} times (${(Math.max(a.n, b.n) / Math.min(a.n, b.n)).toFixed(1)}x apart)`,
     }));
     const r = await ctx.rounds({ rounds, minWidth: 140 });
     const winners = p.pairs.map(([a, b]) => (a.n >= b.n ? [a, b] : [b, a]));
@@ -73,12 +73,12 @@ export default {
     const top = all[0], bot = all[all.length - 1];
     r.detail = ui.stack(
       ui.table({ columns: [
-        { key: 'p', label: '密码' },
-        { key: 'n', label: '泄露次数', num: true, fmt: (v) => core.fmtNum(v) },
-        { key: 'r', label: '常用榜名次', num: true, fmt: (v) => `#${core.fmtNum(v)}` },
-        { key: 'p', label: '类型', fmt: (v) => `${v.length} 位${kind(v)}` },
+        { key: 'p', label: 'Password' },
+        { key: 'n', label: 'Leaks', num: true, fmt: (v) => core.fmtNum(v) },
+        { key: 'r', label: 'List rank', num: true, fmt: (v) => `#${core.fmtNum(v)}` },
+        { key: 'p', label: 'Type', fmt: (v) => `${v.length} ${kind(v)}` },
       ], rows: all }),
-      ui.callout(`今天的规律：8 组里，泄露更多的一方有 ${higher} 次在 SecLists 常用榜里排名更靠前，${shorter} 次更短、${longer} 次更长。最高的 ${top.p} 出现 ${core.fmtNum(top.n)} 次，最低的 ${bot.p} 只有 ${core.fmtNum(bot.n)} 次，相差 ${core.fmtNum(Math.round(top.n / bot.n))} 倍。泄露次数大致服从齐普夫分布：越短、越“人人都会想到”的词（纯数字序列、键盘走位）次数越高；人名、地名和冷门单词则低得多。`, 'good'),
+      ui.callout(`Today\'s pattern: across the 8 pairs, the more-leaked password ranked higher on the SecLists common list ${higher} times, was shorter ${shorter} times and longer ${longer} times. The top one, ${top.p}, appears ${core.fmtNum(top.n)} times and the lowest, ${bot.p}, only ${core.fmtNum(bot.n)}, ${core.fmtNum(Math.round(top.n / bot.n))}x apart. Leak counts roughly follow a Zipf distribution: the shorter and more obvious the word (digit sequences, keyboard walks), the higher the count; names, places and rare words are far lower.`, 'good'),
     );
     return r;
   },
