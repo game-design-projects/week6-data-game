@@ -20,26 +20,50 @@ export function pathCost(grid, w, path) {
   return c;
 }
 
-/** Dijkstra over 8-neighbours. Returns { cost, path, straight } where straight = cost of the direct line. */
-export function solve(grid, w, h, from, to) {
+/** Single-source Dijkstra over 8-neighbours with a binary heap. Returns { dist, prev } typed arrays. */
+export function dijkstra(grid, w, h, from) {
   const n = w * h, dist = new Float64Array(n).fill(Infinity), prev = new Int32Array(n).fill(-1);
-  const src = from[1] * w + from[0], dst = to[1] * w + to[0];
-  dist[src] = 0;
-  const done = new Uint8Array(n);
-  for (;;) {
-    let u = -1, best = Infinity;
-    for (let i = 0; i < n; i++) if (!done[i] && dist[i] < best) { best = dist[i]; u = i; }
-    if (u < 0 || u === dst) break;
-    done[u] = 1;
+  const hd = [], hv = []; // heap of (dist, node)
+  const push = (d, v) => {
+    let i = hd.length; hd.push(d); hv.push(v);
+    while (i > 0) { const p = (i - 1) >> 1; if (hd[p] <= d) break; hd[i] = hd[p]; hv[i] = hv[p]; i = p; }
+    hd[i] = d; hv[i] = v;
+  };
+  const pop = () => {
+    const d0 = hd[0], v0 = hv[0], d = hd.pop(), v = hv.pop(), m = hd.length;
+    if (m) {
+      let i = 0;
+      for (;;) {
+        let c = 2 * i + 1; if (c >= m) break;
+        if (c + 1 < m && hd[c + 1] < hd[c]) c++;
+        if (hd[c] >= d) break;
+        hd[i] = hd[c]; hv[i] = hv[c]; i = c;
+      }
+      hd[i] = d; hv[i] = v;
+    }
+    return [d0, v0];
+  };
+  const src = from[1] * w + from[0];
+  dist[src] = 0; push(0, src);
+  while (hd.length) {
+    const [d, u] = pop();
+    if (d > dist[u]) continue;
     const ux = u % w, uy = (u / w) | 0;
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       if (!dx && !dy) continue;
       const x = ux + dx, y = uy + dy;
       if (x < 0 || y < 0 || x >= w || y >= h) continue;
-      const v = y * w + x, nd = dist[u] + hazard(grid[v]) * (dx && dy ? SQ2 : 1);
-      if (nd < dist[v]) { dist[v] = nd; prev[v] = u; }
+      const v = y * w + x, nd = d + hazard(grid[v]) * (dx && dy ? SQ2 : 1);
+      if (nd < dist[v]) { dist[v] = nd; prev[v] = u; push(nd, v); }
     }
   }
+  return { dist, prev };
+}
+
+/** Optimal route. Returns { cost, path, straight } where straight = cost of the direct line. */
+export function solve(grid, w, h, from, to) {
+  const { dist, prev } = dijkstra(grid, w, h, from);
+  const dst = to[1] * w + to[0];
   const path = [];
   for (let v = dst; v >= 0; v = prev[v]) path.push([v % w, (v / w) | 0]);
   path.reverse();
