@@ -72,7 +72,7 @@ test('scoring extremes', () => {
 test('explain is specific to the item', () => {
   const a = explain(data.items.find((x) => x.r === 0), data);
   const b = explain(data.items.find((x) => x.r > 15), data);
-  assert.match(a, /免税/);
+  assert.match(a, /duty-free/);
   assert.notEqual(a, b);
   assert.ok(!/undefined|NaN/.test(a + b));
 });
