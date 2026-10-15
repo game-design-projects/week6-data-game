@@ -35,8 +35,10 @@ export const hhmm = (h) => {
   const m = Math.round((((h % 24) + 24) % 24) * 60) % 1440;
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 };
-const dur = (h) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)} 小时 ${m % 60} 分`; };
-const fmtMin = (m) => { const a = Math.round(Math.abs(m)); return a >= 60 ? `${Math.floor(a / 60)} 小时 ${a % 60} 分` : `${a} 分钟`; };
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const mdLabel = (iso) => `${MON[Number(iso.slice(5, 7)) - 1]} ${Number(iso.slice(8, 10))}`;
+const dur = (h) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)} h ${m % 60} min`; };
+const fmtMin = (m) => { const a = Math.round(Math.abs(m)); return a >= 60 ? `${Math.floor(a / 60)} h ${a % 60} min` : `${a} min`; };
 const fmtUtc = (h) => `UTC${h < 0 ? '−' : '+'}${Math.floor(Math.abs(h))}${Math.abs(h) % 1 ? `:${String(Math.round((Math.abs(h) % 1) * 60)).padStart(2, '0')}` : ''}`;
 
 /** Standard-time UTC offset (hours) of a zone in a year: the smaller of the Jan and Jul offsets. */
@@ -60,11 +62,11 @@ export function explain(city, days, year, fmt) {
   const std = stdOffsetHours(year, fmt);
   const dMin = (city.lng - std * 15) * 4; // minutes the sun reaches the meridian before (+) the zone's central meridian
   const jumps = dstJumps(days);
-  const lat = `最长白昼 ${hhmm(longest.len)}（${longest.iso.slice(5)}）、最短 ${hhmm(shortest.len)}（${shortest.iso.slice(5)}），相差 ${dur(range)}；` +
-    `最长白昼出现在${north ? '年中' : '年底年初'}，所以在${north ? '北' : '南'}半球。纬度 ${Math.abs(city.lat).toFixed(1)}°${city.lat < 0 ? 'S' : 'N'}：${Math.abs(city.lat) < 15 ? '落差很小，靠近赤道' : Math.abs(city.lat) > 50 ? '落差很大，靠近极圈' : '落差中等，位于中纬度'}。`;
-  const lng = `时区 ${fmtUtc(std)} 的中央经线是 ${Math.abs(std * 15).toFixed(0)}°${std < 0 ? 'W' : 'E'}，城市在 ${Math.abs(city.lng).toFixed(1)}°${city.lng < 0 ? 'W' : 'E'}，` +
-    (Math.abs(dMin) < 1 ? '几乎正好在中央经线上' : `${dMin > 0 ? '偏东' : '偏西'}，太阳正午比 12:00（标准时间）${dMin > 0 ? '早' : '晚'}约 ${fmtMin(dMin)}`) + '（另有 ±16 分钟的均时差）。';
-  const dst = jumps.length ? `夏令时：钟表在 ${jumps.join('、')} 平移 1 小时，这套切换日期对应 ${city.country} 一带的规则。` : '全年没有平移，说明所在地不实行夏令时。';
+  const lat = `Longest day ${hhmm(longest.len)} (${mdLabel(longest.iso)}), shortest ${hhmm(shortest.len)} (${mdLabel(shortest.iso)}), a difference of ${dur(range)}. ` +
+    `The longest day falls ${north ? 'mid-year' : 'around the turn of the year'}, so this is the ${north ? 'Northern' : 'Southern'} Hemisphere. Latitude ${Math.abs(city.lat).toFixed(1)}°${city.lat < 0 ? 'S' : 'N'}: ${Math.abs(city.lat) < 15 ? 'a tiny swing, close to the equator' : Math.abs(city.lat) > 50 ? 'a huge swing, close to the polar circle' : 'a moderate swing, in the mid-latitudes'}.`;
+  const lng = `The central meridian of time zone ${fmtUtc(std)} is ${Math.abs(std * 15).toFixed(0)}°${std < 0 ? 'W' : 'E'}, and the city sits at ${Math.abs(city.lng).toFixed(1)}°${city.lng < 0 ? 'W' : 'E'}, ` +
+    (Math.abs(dMin) < 1 ? 'almost exactly on the central meridian' : `${dMin > 0 ? 'east' : 'west'} of it, so solar noon comes about ${fmtMin(dMin)} ${dMin > 0 ? 'before' : 'after'} 12:00 standard time`) + ' (plus or minus 16 minutes from the equation of time).';
+  const dst = jumps.length ? `Daylight saving: the clocks shift by 1 hour on ${jumps.map((j) => mdLabel(`2000-${j}`)).join(' and ')}, a pair of dates that matches the rules around ${city.country}.` : 'No shift all year, so the place does not observe daylight saving time.';
   return { lat, lng, dst, jumps, longest, shortest, std };
 }
 
@@ -73,20 +75,20 @@ export default {
     num: 1,
     slug: 'daylight',
     title: 'Daylight',
-    tagline: '一座城市一整年的日出日落曲线。读出它的纬度、经度和夏令时，然后在地图上标出来。',
+    tagline: 'A city\'s sunrise and sunset curves for a whole year. Read its latitude, longitude and daylight saving time, then pin it on the map.',
     category: 'geo',
     data: 'computed',
     howTo: [
-      '图里是某座城市今年每天的日出（下沿）和日落（上沿）时刻，用当地钟表时间表示；虚线是太阳正午。高纬度夏天日落可能越过 24:00。',
-      '曲线的振幅告诉你纬度：夏冬白昼差得越多，离赤道越远；6 月白昼长说明在北半球。',
-      '正午偏离 12:00 多少，说明城市在时区里偏东还是偏西；曲线上突然平移 1 小时就是夏令时，跳变日期能暴露国家。',
-      '在地图上点出你的答案。按距离计分：0 km 得 100 分，每差约 1,500 km 分数降到约三分之一。',
+      'The chart shows the city\'s sunrise (lower edge) and sunset (upper edge) for every day of this year in local clock time; the dotted line is solar noon. At high latitudes the summer sunset can run past 24:00.',
+      'The swing of the curves tells you the latitude: the bigger the gap between summer and winter days, the farther from the equator. Long days in June mean the Northern Hemisphere.',
+      'How far noon sits from 12:00 shows whether the city is east or west within its time zone. A sudden 1-hour shift in the curve is daylight saving time, and the dates of the jump can give away the country.',
+      'Tap the map to place your answer. Scoring is by distance: 100 points at 0 km, dropping to about a third for every 1,500 km off.',
     ],
-    scoring: '100 × e^(−距离/1500 km)：差 0 km 得 100 分，差 1,500 km 约 37 分，跨洲基本为 0。只能猜一次。',
-    dataNote: '城市来自 GeoNames（人口 ≥ 100 万的城市，以及人口 ≥ 10 万的首都；相距 150 km 内只留较大者），共 389 座。日出日落由坐标用日出方程（含 −0.833° 大气折射）在浏览器里计算，精度约几分钟；夏令时与时区规则取自浏览器内置的 IANA 时区数据库，不联网，也没有实时数据。',
+    scoring: '100 × e^(−distance / 1500 km): 100 points at 0 km, about 37 at 1,500 km, and close to 0 across continents. One guess only.',
+    dataNote: 'Cities come from GeoNames (cities of 1 million or more, plus capitals of 100,000 or more; when two are within 150 km only the larger is kept), 389 in all. Sunrise and sunset are computed in the browser from coordinates with the sunrise equation (including −0.833° of atmospheric refraction), accurate to a few minutes. Daylight saving and time-zone rules come from the browser\'s built-in IANA time zone database; nothing is fetched and there is no live data.',
     sources: [
-      { name: 'GeoNames cities15000（CC BY 4.0）', url: 'https://download.geonames.org/export/dump/' },
-      { name: 'Sunrise equation', url: 'https://en.wikipedia.org/wiki/Sunrise_equation', note: '日出日落时刻由坐标计算，时区规则来自浏览器内置的 IANA tz 数据库' },
+      { name: 'GeoNames cities15000 (CC BY 4.0)', url: 'https://download.geonames.org/export/dump/' },
+      { name: 'Sunrise equation', url: 'https://en.wikipedia.org/wiki/Sunrise_equation', note: 'sunrise and sunset computed from coordinates; time-zone rules from the browser\'s built-in IANA tz database' },
     ],
   },
 
@@ -127,39 +129,39 @@ export default {
         Plot.lineY(rows, { x: 'date', y: 'noon', stroke: c.muted, strokeDasharray: '3 4', curve: 'step' }),
         Plot.ruleY([12], { stroke: c.muted, strokeOpacity: 0.5 }),
         today && Plot.ruleX([today.date], { stroke: c.ink, strokeOpacity: 0.35 }),
-        Plot.tip(rows, Plot.pointerX({ x: 'date', y: 'set', title: (d) => `${d.iso}\n日出 ${hhmm(d.rise)} · 日落 ${hhmm(d.set)}\n白昼 ${dur(d.len)}` })),
+        Plot.tip(rows, Plot.pointerX({ x: 'date', y: 'set', title: (d) => `${d.iso}\nSunrise ${hhmm(d.rise)} · Sunset ${hhmm(d.set)}\nDaylight ${dur(d.len)}` })),
       ],
     }));
 
     ctx.stage.append(ui.panel(
-      { kicker: `${p.year} 年 · 当地钟表时间`, title: '这座城市一年的白昼' },
+      { kicker: `${p.year} · local clock time`, title: 'A year of daylight in this city' },
       chart,
       ui.h('div', { class: 'ds-row small mono ink2', style: { marginTop: '10px', gap: '16px' } },
-        ui.h('span', ui.h('span', { style: { color: 'var(--accent)' } }, '━'), ' 日出'),
-        ui.h('span', '━ 日落'),
-        ui.h('span', { class: 'muted' }, '┄ 太阳正午')),
+        ui.h('span', ui.h('span', { style: { color: 'var(--accent)' } }, '━'), ' Sunrise'),
+        ui.h('span', '━ Sunset'),
+        ui.h('span', { class: 'muted' }, '┄ Solar noon')),
       ui.h('div', { class: 'ds-grid', style: { '--min': '150px', marginTop: '14px' } },
-        ui.stat({ label: '最长白昼', value: hhmm(longest.len), sub: longest.iso.slice(5) }),
-        ui.stat({ label: '最短白昼', value: hhmm(shortest.len), sub: shortest.iso.slice(5) }),
-        ui.stat({ label: '今天日出', value: today ? hhmm(today.rise) : '—', sub: today ? `日落 ${hhmm(today.set)}` : '' })),
+        ui.stat({ label: 'Longest day', value: hhmm(longest.len), sub: mdLabel(longest.iso) }),
+        ui.stat({ label: 'Shortest day', value: hhmm(shortest.len), sub: mdLabel(shortest.iso) }),
+        ui.stat({ label: 'Sunrise today', value: today ? hhmm(today.rise) : '—', sub: today ? `Sunset ${hhmm(today.set)}` : '' })),
     ));
 
     const res = await ctx.pin({
       answer: { lat: p.city.lat, lng: p.city.lng, label: `${p.city.name}, ${p.city.country}` },
       view: ctx.stage.clientWidth < 600 ? { bounds: [[-58, -170], [75, 180]] } : { center: [10, 10], zoom: 1 },
       scale: 1500,
-      title: '它在哪里？',
+      title: 'Where is it?',
     });
 
     const fmt = new Intl.DateTimeFormat('en-US', { timeZone: p.city.tz, hour: 'numeric', minute: 'numeric', hourCycle: 'h23' });
     const ex = explain(p.city, p.days, p.year, fmt);
     res.detail = ui.panel({ plain: true },
       ui.kv([
-        ['答案', `${p.city.name}，${p.city.country}（人口 ${core.fmtCompact(p.city.pop)}）`],
-        ['坐标 · 时区', `${p.city.lat.toFixed(2)}°, ${p.city.lng.toFixed(2)}° · ${p.city.tz}`],
-        ['纬度线索', ex.lat],
-        ['经度线索', ex.lng],
-        ['夏令时线索', ex.dst],
+        ['Answer', `${p.city.name}, ${p.city.country} (population ${core.fmtCompact(p.city.pop)})`],
+        ['Coordinates · time zone', `${p.city.lat.toFixed(2)}°, ${p.city.lng.toFixed(2)}° · ${p.city.tz}`],
+        ['Latitude clue', ex.lat],
+        ['Longitude clue', ex.lng],
+        ['Daylight saving clue', ex.dst],
       ]));
     return res;
   },

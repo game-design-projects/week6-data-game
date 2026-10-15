@@ -96,9 +96,9 @@ test('explain: Berlin is north, UTC+1, west of its meridian, DST in March/Octobe
   const f = fmt(c.tz);
   assert.equal(stdOffsetHours(2026, f), 1);
   const ex = explain(c, p.days, 2026, f);
-  assert.match(ex.lat, /北半球/);
+  assert.match(ex.lat, /Northern Hemisphere/);
   assert.match(ex.lng, /UTC\+1/);
-  assert.match(ex.lng, /偏西/);
+  assert.match(ex.lng, /west of it/);
   assert.deepEqual(ex.jumps, ['03-29', '10-25']);
 });
 
@@ -106,11 +106,11 @@ test('explain: Sydney is south; Singapore has no DST and tiny amplitude', () => 
   const syd = { name: 'Sydney', country: 'Australia', lat: -33.87, lng: 151.21, tz: 'Australia/Sydney' };
   const sg = { name: 'Singapore', country: 'Singapore', lat: 1.29, lng: 103.85, tz: 'Asia/Singapore' };
   const ps = game.puzzle({ data: { cities: [syd] }, date: '2026-10-15', pick: (a) => a[0] });
-  assert.match(explain(syd, ps.days, 2026, fmt(syd.tz)).lat, /南半球/);
+  assert.match(explain(syd, ps.days, 2026, fmt(syd.tz)).lat, /Southern Hemisphere/);
   const pg = game.puzzle({ data: { cities: [sg] }, date: '2026-10-15', pick: (a) => a[0] });
   const e = explain(sg, pg.days, 2026, fmt(sg.tz));
-  assert.match(e.lat, /赤道/);
-  assert.match(e.dst, /不实行/);
+  assert.match(e.lat, /equator/);
+  assert.match(e.dst, /does not observe/);
 });
 
 test('scoring extremes: exact = 100, 1500 km ≈ 37, antipode ≈ 0', () => {
