@@ -11,8 +11,8 @@ test('localHour wraps around midnight', () => {
   assert.equal(localHour(23, 2), '01:00');
 });
 test('fmtPlayers', () => {
-  assert.equal(fmtPlayers(856000), '86 万');
-  assert.equal(fmtPlayers(12345), '1.2 万');
+  assert.equal(fmtPlayers(856000), '856K');
+  assert.equal(fmtPlayers(12345), '12.3K');
   assert.equal(fmtPlayers(9800), '9,800');
 });
 test('peakHour / depth', () => {
@@ -22,9 +22,9 @@ test('peakHour / depth', () => {
 });
 test('tell mentions depth bucket and zones', () => {
   const deep = { v: Array.from({ length: 24 }, (_, h) => (h === 13 ? 1000 : 80)) };
-  assert.match(tell(deep), /谷底极深.*UTC 13:00.*北京 21:00/);
+  assert.match(tell(deep), /Very deep trough.*13:00 UTC.*Beijing 21:00/);
   const flat = { v: Array.from({ length: 24 }, (_, h) => (h === 3 ? 1000 : 800)) };
-  assert.match(tell(flat), /偏平/);
+  assert.match(tell(flat), /flat curve/i);
 });
 
 test('pool validity over days 1-120', () => {
@@ -53,7 +53,7 @@ test('pool validity over days 1-120', () => {
 test('no game name leaks via visible clue text before the guess', () => {
   // visible card label is only the peak count; names only appear as options
   const p = game.puzzle({ data, pick: (a) => a[0] });
-  for (const it of p.items) assert.ok(!/[A-Za-z]/.test(fmtPlayers(it.peak)));
+  for (const it of p.items) assert.match(fmtPlayers(it.peak), /^[\d.,]+[KM]?$/);
 });
 
 test('every puzzle has pairwise-distinguishable curves or sizes', () => {

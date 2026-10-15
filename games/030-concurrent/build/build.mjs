@@ -12,17 +12,17 @@ EXCLUDE.delete(3240220); EXCLUDE.add(271590);
 const RENAME = { 489830: 'Skyrim Special Edition', 3240220: 'Grand Theft Auto V', 1172620: 'Sea of Thieves', 1938090: 'Call of Duty', 2357570: 'Overwatch 2', 1172470: 'Apex Legends', 2215430: "Ghost of Tsushima", 2420110: 'Horizon Forbidden West', 292030: 'The Witcher 3', 289070: 'Civilization VI', 359550: 'Rainbow Six Siege', 578080: 'PUBG: Battlegrounds', 1222670: 'The Sims 4', 2246340: 'Monster Hunter Wilds', 1364780: 'Street Fighter 6', 1229490: 'ULTRAKILL', 1245620: 'Elden Ring', 2073850: 'THE FINALS', 1203220: 'Naraka: Bladepoint', 1778820: 'Tekken 8', 3489700: 'Stellar Blade', 2050650: 'Resident Evil 4', 2399830: 'ARK: Survival Ascended', 4000: "Garry's Mod", 1604030: 'V Rising' };
 // Neutral, verifiable one-liners shown after the guess (origin / audience of the game); omitted when unsure.
 const NOTE = {
-  1203220: '网易开发的多人动作游戏，玩家基本都在中国。',
-  2358720: '国产单机动作游戏，玩家以中国为主。',
-  1599340: '韩国 Smilegate 开发，韩国玩家占很大比重。',
-  582660: '韩国 Pearl Abyss 开发的 MMORPG。',
-  216150: '韩国 Nexon 的 MMORPG。',
-  227300: '欧洲卡车模拟，欧洲玩家为主。',
-  570: '玩家遍布欧洲、独联体、东南亚与中国。',
-  730: '全球性竞技射击游戏，玩家遍布各大洲。',
-  578080: '亚洲玩家占很大比重（尤其是中国）。',
-  1086940: '西方单机 RPG，欧美玩家为主。',
-  252490: '欧美玩家为主的生存服务器游戏。',
+  1203220: 'A multiplayer action game by NetEase; its players are almost all in China.',
+  2358720: 'A Chinese single-player action game with a mostly Chinese audience.',
+  1599340: 'Developed by Smilegate in Korea; Korean players make up a large share.',
+  582660: 'An MMORPG by Pearl Abyss of Korea.',
+  216150: 'An MMORPG by Nexon of Korea.',
+  227300: 'A European truck simulator, played mostly in Europe.',
+  570: 'Players come from Europe, the CIS, Southeast Asia and China.',
+  730: 'A global competitive shooter with players on every continent.',
+  578080: 'Asian players make up a large share (especially China).',
+  1086940: 'A Western single-player RPG, mostly played in Europe and North America.',
+  252490: 'A survival server game with a mostly European and North American audience.',
 };
 
 fs.mkdirSync('raw/steam', { recursive: true });
