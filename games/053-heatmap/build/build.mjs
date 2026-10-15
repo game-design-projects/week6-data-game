@@ -13,14 +13,16 @@ for await (const l of lines('title.ratings')) { const [id, r, v] = l.split('\t')
 const eps = new Map(); // parent -> [{id,s,e}]
 for await (const l of lines('title.episode')) {
   const [id, parent, s, e] = l.split('\t');
-  if (s === '\\N' || e === '\\N' || !rating.has(id) || !rating.has(parent)) continue;
+  if (s === '\\N' || e === '\\N' || +s < 1 || +e < 1 || !rating.has(id) || !rating.has(parent)) continue;
   if (!eps.has(parent)) eps.set(parent, []);
   eps.get(parent).push({ id, s: +s, e: +e });
 }
 
+// Excluded: tt7657124 'The Heroes' (obscure Iranian series with vote-inflated ratings, easily confused with 'Heroes').
+const EXCLUDE = new Set(['tt7657124']);
 // candidate shows: popular, >= 2 seasons, >= 20 rated episodes
 const cand = [...eps.entries()].map(([p, list]) => ({ p, list, v: rating.get(p)[1] }))
-  .filter((x) => x.list.length >= 20 && new Set(x.list.map((e) => e.s)).size >= 2 && x.v >= 150000)
+  .filter((x) => x.list.length >= 20 && new Set(x.list.map((e) => e.s)).size >= 2 && x.v >= 100000)
   .sort((a, b) => b.v - a.v);
 const want = new Set(cand.map((c) => c.p));
 for (const c of cand) for (const e of c.list) want.add(e.id);
@@ -36,8 +38,8 @@ for await (const l of lines('title.basics')) {
 const shows = [];
 for (const c of cand) {
   const b = info.get(c.p);
-  if (!b || b.type !== 'tvSeries') continue;
-  const rows = c.list.map((e) => ({ s: e.s, e: e.e, r: rating.get(e.id)[0], v: rating.get(e.id)[1], t: info.get(e.id)?.title || '' }))
+  if (!b || b.type !== 'tvSeries' || EXCLUDE.has(c.p)) continue;
+  const rows = c.list.map((e) => ({ s: e.s, e: e.e, r: rating.get(e.id)[0], v: rating.get(e.id)[1], t: (info.get(e.id)?.title || '').replace(/^\\N$/, '') }))
     .filter((e) => e.v >= 50);
   if (rows.length < 20) continue;
   const seasons = [...new Set(rows.map((e) => e.s))].sort((a, b) => a - b);
@@ -49,7 +51,7 @@ for (const c of cand) {
     rating: rating.get(c.p)[0], votes: c.v,
     eps: rows.map((e) => [e.s, e.e, e.r, e.t]),
   });
-  if (shows.length >= 120) break;
+  if (shows.length >= 200) break;
 }
 const out = { source: 'IMDb non-commercial datasets (title.basics / title.episode / title.ratings), snapshot ' + new Date().toISOString().slice(0, 10), shows };
 writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify(out));
