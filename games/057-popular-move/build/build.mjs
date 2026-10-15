@@ -1,12 +1,14 @@
-// raw/low.json + raw/high.json (from count.mjs) + opening names -> ../data.json
+// raw/057-low.json + raw/057-high.json (from count.mjs) + raw/{a..e}.tsv (opening names) -> ../data.json
+// run from build/:  node build.mjs     (see fetch.sh for the downloads and the count.mjs invocations)
 import { Chess } from './chess.mjs';
 import fs from 'node:fs';
-const low = JSON.parse(fs.readFileSync('raw/low.json'));
-const high = JSON.parse(fs.readFileSync('raw/high.json'));
+const low = JSON.parse(fs.readFileSync('raw/057-low.json'));
+const high = JSON.parse(fs.readFileSync('raw/057-high.json'));
 const key = (fen) => fen.split(' ').slice(0, 4).join(' ');
 const sum = (m) => Object.values(m).reduce((a, b) => a + b, 0);
+const MIN_N = Number(process.env.MIN_N || 150), GAP = 0.06, MAX_PER_OPENING = 3, MAX = 100;
 
-// opening names: EPD -> {eco, name}, keeping the deepest (longest pgn) entry per position
+// opening names: EPD -> {eco, name}; keep the deepest (longest pgn) entry per position
 const names = new Map();
 for (const f of 'abcde') {
   for (const line of fs.readFileSync(`raw/${f}.tsv`, 'utf8').split('\n').slice(1)) {
@@ -23,38 +25,52 @@ for (const [k, lm] of Object.entries(low)) {
   const hm = high[k];
   if (!hm) continue;
   const nl = sum(lm), nh = sum(hm);
-  if (nl < 60 || nh < 150) continue;
+  if (nl < MIN_N || nh < MIN_N) continue;
   const c = new Chess(k + ' 0 1');
-  const legal = new Set(c.moves());
-  const all = {};
-  for (const m of Object.keys(lm)) all[m] = (all[m] || 0) + lm[m] / nl;
-  for (const m of Object.keys(hm)) all[m] = (all[m] || 0) + hm[m] / nh;
-  const top = Object.keys(all).filter((m) => legal.has(m)).sort((a, b) => all[b] - all[a]).slice(0, 4);
-  if (top.length < 3) continue;
-  const rank = (m) => top.slice().sort((a, b) => (m[b] || 0) - (m[a] || 0));
-  const rl = rank(lm), rh = rank(hm);
-  const gap = (m, r, n) => ((m[r[0]] || 0) - (m[r[1]] || 0)) / n;
-  if (gap(lm, rl, nl) < 0.06 || gap(hm, rh, nh) < 0.06) continue; // a clear winner in both bands
-  // ply = number of half-moves played
+  const verbose = c.moves({ verbose: true });
+  const bySan = new Map(verbose.map((m) => [m.san, m]));
+  const sl = (m) => (lm[m] || 0) / nl, sh = (m) => (hm[m] || 0) / nh;
+  const legal = [...bySan.keys()];
+  const rl = legal.slice().sort((a, b) => sl(b) - sl(a)), rh = legal.slice().sort((a, b) => sh(b) - sh(a));
+  if (sl(rl[0]) - sl(rl[1]) < GAP || sh(rh[0]) - sh(rh[1]) < GAP) continue; // a clear winner in both bands
+  if (rl[0] === rh[0] && sl(rl[0]) > 0.8 && sh(rh[0]) > 0.8) continue; // forced move, no skill involved
+  // 4 options: both bands' winners, then the next most played (by the larger share) with >= 2% in some band
+  const opts = [...new Set([rl[0], rh[0]])];
+  for (const m of legal.slice().sort((a, b) => Math.max(sl(b), sh(b)) - Math.max(sl(a), sh(a)))) {
+    if (opts.length >= 4) break;
+    if (!opts.includes(m) && Math.max(sl(m), sh(m)) >= 0.02) opts.push(m);
+  }
+  if (opts.length < 4) continue;
   const fen = k + ' 0 1';
-  cands.push({ k, fen, turn: k.split(' ')[1], opts: top.map((m) => ({ san: m, low: lm[m] || 0, high: hm[m] || 0 })), nl, nh, topLow: rl[0], topHigh: rh[0], opening: names.get(k) || null, diff: rl[0] !== rh[0] });
+  cands.push({
+    fen, turn: k.split(' ')[1], nLow: nl, nHigh: nh, opening: names.get(k) || null,
+    opts: opts.map((san) => ({ san, from: bySan.get(san).from, to: bySan.get(san).to, low: lm[san] || 0, high: hm[san] || 0 })),
+    diff: rl[0] !== rh[0],
+  });
 }
-// ply from move search is not stored; recover it from fullmove via a replay-free trick: unknown -> use piece count heuristic skip
 console.log('candidates', cands.length, 'divergent', cands.filter((c) => c.diff).length);
-// diversify: rank by total weight, drop positions that are a single move apart from an already chosen one
-const bySize = cands.sort((a, b) => (b.diff - a.diff) * 1e6 + (b.nl + b.nh) - (a.nl + a.nh) * 1);
-const chosen = [];
-const dist = (a, b) => { let d = 0; const x = a.k.split(' ')[0], y = b.k.split(' ')[0]; for (let i = 0; i < Math.max(x.length, y.length); i++) if (x[i] !== y[i]) d++; return d; };
-for (const c of [...cands.filter((c) => c.diff).sort((a, b) => b.nl + b.nh - a.nl - a.nh), ...cands.filter((c) => !c.diff).sort((a, b) => b.nl + b.nh - a.nl - a.nh)]) {
-  if (c.fen.startsWith('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')) continue;
-  if (chosen.some((d) => d.k.split(' ')[0] === c.k.split(' ')[0])) continue;
-  if (chosen.length < 90) chosen.push(c);
-}
-const puzzles = chosen.map((c) => ({ fen: c.fen, turn: c.turn, nLow: c.nl, nHigh: c.nh, opening: c.opening, opts: c.opts }));
-const out = {
-  low: { label: '1500 分段', desc: 'Lichess 2013-01 标准对局，双方评分 1350–1650', games: 37479 },
-  high: { label: '2500 分段', desc: 'Lichess Elite Database 2020-06，双方评分 ≥ 2400', games: 190185 },
-  puzzles,
+
+// pick: divergent first (they are the point of the game), then agreeing ones; <= MAX_PER_OPENING per opening family;
+// the start position is excluded. Order by sample size so well-supported positions win.
+const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+const fam = (c) => (c.opening ? c.opening.name.split(':')[0].split(',')[0] : c.fen.split(' ')[0]);
+const order = (a, b) => (b.nLow * b.nHigh) ** 0.5 - (a.nLow * a.nHigh) ** 0.5;
+const chosen = [], seen = new Set(), perFam = new Map();
+const take = (c) => {
+  if (c.fen.startsWith(START) || seen.has(c.fen)) return;
+  if ((perFam.get(fam(c)) || 0) >= MAX_PER_OPENING || chosen.length >= MAX) return;
+  perFam.set(fam(c), (perFam.get(fam(c)) || 0) + 1); seen.add(c.fen); chosen.push(c);
 };
-fs.writeFileSync('../data.json', JSON.stringify(out));
-console.log('puzzles', puzzles.length, 'divergent', puzzles.filter((p) => { const t = (b) => p.opts.slice().sort((x, y) => y[b] - x[b])[0].san; return t('low') !== t('high'); }).length, 'bytes', fs.statSync('../data.json').size);
+cands.filter((c) => c.diff).sort(order).forEach((c) => { if (chosen.length < 70) take(c); });
+// keep a minority of "everyone agrees" positions so the answer is not always "they differ"
+cands.filter((c) => !c.diff).sort(order).forEach(take);
+const puzzles = chosen.map(({ diff, ...p }) => p);
+const st = (f) => JSON.parse(fs.readFileSync(f, 'utf8').trim().split('\n').pop());
+const sl = st('raw/057-low.log'), sh = st('raw/057-high.log');
+const meta = {
+  low: { label: '1500 分段', desc: 'Lichess 2014-01 标准对局（非 Bullet），走子方评分 1400–1600', games: sl.usedGames, moves: sl.moves },
+  high: { label: '2500+ 分段', desc: 'Lichess Elite Database 2021-12 与 2022-01，走子方评分 ≥ 2500', games: sh.usedGames, moves: sh.moves },
+};
+fs.writeFileSync('../data.json', JSON.stringify({ ...meta, puzzles }));
+const topOf = (p, b) => p.opts.slice().sort((x, y) => y[b] - x[b])[0].san;
+console.log('puzzles', puzzles.length, 'divergent', puzzles.filter((p) => topOf(p, 'low') !== topOf(p, 'high')).length, 'bytes', fs.statSync('../data.json').size);
