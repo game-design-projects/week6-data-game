@@ -1,0 +1,32 @@
+// Extra names to black out per repo (display name, repo name and owner are always included by game.js).
+// A trailing "$" means the whole word only (no suffix matching), used for names that are also ordinary words.
+// Short names (< 3 chars) are always matched case-sensitively as whole words.
+export const EXTRA = {
+  'BurntSushi/ripgrep': ['rg'],
+  'angular/angular': ['ng'],
+  'astral-sh/uv': ['uvx', 'uv'],
+  'babel/babel': ['babeljs'],
+  'expressjs/express': ['Express$'],
+  'facebook/react': ['React$', 're:React[A-Z]\\w*', 'react-native'],
+  'home-assistant/core': ['hass', 'homeassistant'],
+  'huggingface/transformers': ['Transformers$', 'Hugging Face'],
+  'laravel/framework': ['Illuminate'],
+  'microsoft/TypeScript': ['tsc', 'tsconfig'],
+  'microsoft/vscode': ['VS Code', 'Visual Studio Code'],
+  'moby/moby': ['Docker'],
+  'neovim/neovim': ['nvim', 'vim'],
+  'nodejs/node': ['Node$', 'node.js'],
+  'numpy/numpy': ['np'],
+  'obsproject/obs-studio': ['OBS$'],
+  'oven-sh/bun': ['Bun$', 'bunx'],
+  'pandas-dev/pandas': ['pd'],
+  'prometheus/prometheus': ['PromQL', 'promtool'],
+  'pytorch/pytorch': ['torch'],
+  'rails/rails': ['Active Record', 'Active Support', 'Active Job', 'Action Pack', 'Action View', 'Action Cable', 'Action Mailer', 'Active Storage'],
+  'rust-lang/rust': ['rustc', 'cargo', 'rustup', 'clippy'],
+  'scikit-learn/scikit-learn': ['sklearn', 'scikit'],
+  'sharkdp/bat': ['Bat$'],
+  'spring-projects/spring-boot': ['Spring'],
+  'tensorflow/tensorflow': ['tf', 'TF', 'tflite'],
+  'zed-industries/zed': ['Zed$'],
+};
