@@ -1,6 +1,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { CITIES } from './cities.mjs';
+import { rawName } from './common.mjs';
+const here = new URL('.', import.meta.url).pathname;
 const CLS = { motorway: 0, trunk: 0, primary: 0, secondary: 0, tertiary: 0, motorway_link: 0, trunk_link: 0, primary_link: 0, secondary_link: 0, tertiary_link: 0,
   residential: 1, unclassified: 1, living_street: 1, service: 2, pedestrian: 2 };
 const S = 1000;
@@ -38,19 +40,19 @@ export function build(name, lat, lng, raw, eps = 2) {
   }
   return ways.map(([cls, p]) => { const q = p.map(([x, y]) => [Math.round(x), Math.round(y)]); const out = [cls, q[0][0], q[0][1]]; for (let i = 1; i < q.length; i++) out.push(q[i][0] - q[i - 1][0], q[i][1] - q[i - 1][1]); return out; });
 }
+const BUDGET = 30000; // bytes of JSON per city
 const cities = []; let total = 0;
-for (const [name, country, lat, lng] of CITIES) {
-  const f = `raw/${name.replace(/\W+/g, '_')}.json`;
+for (const [name, country, lat, lng, note] of CITIES) {
+  const f = here + 'raw/' + rawName(name, lat, lng);
   if (!existsSync(f)) { console.log('missing', name); continue; }
   const raw = JSON.parse(await readFile(f, 'utf8'));
   let ways = build(name, lat, lng, raw);
   let size = JSON.stringify(ways).length;
-  if (size > 19000) { ways = ways.filter((w) => w[0] < 2); size = JSON.stringify(ways).length; }
-  if (size > 19000) { ways = build(name, lat, lng, raw, 4).filter((w) => w[0] < 2); size = JSON.stringify(ways).length; }
-  const len = ways.reduce((s, w) => s + Math.max(0, (w.length - 3) / 2), 0);
-  if (ways.length < 12) { console.log('too sparse', name, ways.length); continue; }
-  cities.push({ name, country, lat, lng, ways }); total += size;
+  if (size > BUDGET) { ways = build(name, lat, lng, raw, 3); size = JSON.stringify(ways).length; }
+  if (size > BUDGET) { ways = ways.filter((w) => w[0] < 2); size = JSON.stringify(ways).length; }
+  if (ways.length < 40) { console.log('too sparse', name, ways.length); continue; }
+  cities.push({ name, country, lat, lng, note, ways }); total += size;
   console.log(name, ways.length, size);
 }
-await writeFile('../data.json', JSON.stringify({ built: new Date().toISOString().slice(0, 10), cities }));
+await writeFile(here + '../data.json', JSON.stringify({ built: new Date().toISOString().slice(0, 10), cities }));
 console.log('cities', cities.length, 'bytes', total);
