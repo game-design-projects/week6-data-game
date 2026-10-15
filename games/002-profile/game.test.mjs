@@ -23,7 +23,7 @@ test('geometry: destPoint distance and bearing', () => {
   assert.ok(e.b.lng > e.a.lng);
   assert.equal(angleDiff(350, 10), 20);
   assert.equal(angleDiff(0, 180), 180);
-  assert.equal(compassName(90), '东');
+  assert.equal(compassName(90), 'E');
 });
 
 test('scoring extremes', () => {
@@ -75,7 +75,7 @@ test('no answer leak in anything shown before the guess', () => {
   for (const p of data.puzzles) {
     for (const r of Object.values(data.regions)) assert.ok(!r.name.includes(p.place));
   }
-  assert.ok(!/地名/.test(game.meta.title));
+  assert.ok(!/place name/.test(game.meta.title));
   const bearings = new Set(data.puzzles.map((p) => p.bearing));
   assert.ok(bearings.size >= 12, 'bearings should vary');
 });

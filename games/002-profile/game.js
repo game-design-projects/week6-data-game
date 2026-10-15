@@ -8,7 +8,7 @@ const POS_MAX = 70;
 const DIR_MAX = 30;
 const DIR_ZERO = 90; // degrees of bearing error at which the direction score hits 0
 const fmt = (x) => x.toLocaleString('en-US');
-const COMPASS = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
+const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 
 /** Point reached from `p` after `km` along the great circle with initial `bearing` (deg, 0 = north, clockwise). */
 export function destPoint(p, bearing, km) {
@@ -59,16 +59,16 @@ export function explain(elev, bearing, lenKm) {
   const head = elev.slice(0, 5), tail = elev.slice(-5);
   const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
   if (seaFrac > 0.15 && seaFrac < 0.95) {
-    const side = seaAt(0) || avg(head) < avg(tail) ? '起点（左端）' : '终点（右端）';
-    out.push(`线上有 ${Math.round(seaFrac * 100)}% 的采样点在海平面（≤ 5 m），海岸就在${side}一侧——先找出海岸线朝哪边。`);
-  } else if (seaFrac >= 0.95) out.push('几乎全程贴着海平面：这是一条主要在水面上的线。');
+    const side = seaAt(0) || avg(head) < avg(tail) ? 'start (left end)' : 'end (right end)';
+    out.push(`${Math.round(seaFrac * 100)}% of the samples on the line are at sea level (5 m or less), and the coast is toward the ${side}. Work out which way the shoreline runs first.`);
+  } else if (seaFrac >= 0.95) out.push('Almost the whole way is at sea level: this line runs mostly over water.');
   const trend = avg(tail) - avg(head);
-  if (Math.abs(trend) > 800) out.push(`从起点到终点${trend > 0 ? '净爬升' : '净下降'}约 ${fmt(Math.round(Math.abs(trend)))} m：地势朝${compassName(trend > 0 ? bearing : (bearing + 180) % 360)}方向抬升。`);
-  if (s.min > 1500) out.push(`最低点也有 ${fmt(s.min)} m：整条线都在高原或高山区。`);
-  else if (s.relief > 2500) out.push(`起伏高达 ${fmt(s.relief)} m：穿过年轻的造山带或深切的峡谷。`);
-  else if (s.relief < 500) out.push(`起伏只有 ${s.relief} m：平原、盆地或老高原，线索主要靠绝对海拔。`);
+  if (Math.abs(trend) > 800) out.push(`From start to end the line ${trend > 0 ? 'climbs' : 'drops'} a net ${fmt(Math.round(Math.abs(trend)))} m: the land rises toward the ${compassName(trend > 0 ? bearing : (bearing + 180) % 360)}.`);
+  if (s.min > 1500) out.push(`Even the lowest point is ${fmt(s.min)} m: the whole line is on a plateau or in high mountains.`);
+  else if (s.relief > 2500) out.push(`Relief of ${fmt(s.relief)} m: it crosses a young mountain belt or a deep canyon.`);
+  else if (s.relief < 500) out.push(`Relief of only ${s.relief} m: plains, a basin or an old plateau, so the clue is mostly absolute elevation.`);
   const pk = Math.round(s.peakAt * lenKm);
-  out.push(`最高点 ${fmt(s.max)} m 在离起点约 ${pk} km 处——这个山峰/山脊正是定位的锚点。`);
+  out.push(`The highest point, ${fmt(s.max)} m, is about ${pk} km from the start. That peak or ridge is your anchor for placing the line.`);
   return out;
 }
 
@@ -77,22 +77,22 @@ export default {
     num: 2,
     slug: 'profile',
     title: 'Profile',
-    tagline: '沿一条隐藏直线切开大地：看海拔剖面图，猜这条线在哪、朝哪个方向。',
+    tagline: 'Slice the Earth along a hidden straight line. Read the elevation profile, then guess where the line is and which way it points.',
     category: 'geo',
     data: 'snapshot',
     howTo: [
-      '图里是一条 240 公里长、方向未知的直线上的海拔剖面：左端是起点，右端是终点。',
-      '读它的形状：贴着 0 m 说明靠海，一路平坦是高原或平原，陡峭起伏是造山带，深切的 V 形是峡谷或裂谷。',
-      '地图已限定在这条线所在的大洲，底图只有山体阴影，没有地名。点击地图放下线的中点，再用滑块或方位按钮转动箭头（箭头指向终点）。',
-      '计分：中点最高 70 分（每差约 600 km 降到约三分之一），方向最高 30 分（偏差 90° 以上为 0）。',
+      'The chart is the elevation profile along a 240 km straight line of unknown direction: the left end is the start, the right end is the finish.',
+      'Read its shape: hugging 0 m means the coast, a flat run is a plateau or plain, steep swings are mountain belts, and a deep V is a canyon or rift.',
+      'The map is already limited to the continent the line is on, and the basemap is shaded relief with no place names. Click the map to drop the line\'s midpoint, then turn the arrow with the slider or compass buttons (the arrow points to the finish).',
+      'Scoring: up to 70 points for the midpoint (falls to about a third for every 600 km off), up to 30 for direction (0 at 90° or more off).',
     ],
-    scoring: '70 × e^(−中点误差/600 km) + 30 × max(0, 1 − 方向误差/90°)。',
+    scoring: '70 × e^(−midpoint error/600 km) + 30 × max(0, 1 − bearing error/90°).',
     sources: [
-      { name: 'Copernicus DEM GLO-90', url: 'https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model', note: '90 米分辨率全球数字高程模型' },
-      { name: 'Open-Meteo Elevation API', url: 'https://open-meteo.com/en/docs/elevation-api', note: '以 Copernicus DEM 为底层，沿线每 4 公里取样一点' },
-      { name: 'Esri World Shaded Relief', url: 'https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d', note: '地图底图（猜测时无地名）' },
+      { name: 'Copernicus DEM GLO-90', url: 'https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model', note: 'Global digital elevation model at 90 m resolution' },
+      { name: 'Open-Meteo Elevation API', url: 'https://open-meteo.com/en/docs/elevation-api', note: 'Built on the Copernicus DEM; one sample every 4 km along the line' },
+      { name: 'Esri World Shaded Relief', url: 'https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d', note: 'Map basemap (no place names while guessing)' },
     ],
-    dataNote: '约 77 条精选样线（覆盖六大洲的高山、高原、峡谷、平原与海岛），方向按固定规则在 0–345° 间取值；由我们离线通过 Open-Meteo 读取 Copernicus DEM 后存入 data.json，不是逐块下载 DEM 瓦片。起伏过小、几乎没有线索的样线已剔除。',
+    dataNote: 'About 77 hand-picked lines (high mountains, plateaus, canyons, plains and islands across six continents), with bearings from 0 to 345° chosen by a fixed rule. We read the Copernicus DEM through Open-Meteo offline and stored the result in data.json, rather than downloading DEM tiles. Lines with too little relief, and so almost no clues, were dropped.',
   },
 
   puzzle({ data, pick }) {
@@ -111,7 +111,7 @@ export default {
     const chart = await ui.plot((Plot, c) => ({
       height: 240,
       marginLeft: 48,
-      x: { label: '距离 (km)' },
+      x: { label: 'Distance (km)' },
       y: { label: null, grid: true, tickFormat: (v) => core.fmtNum(v) },
       marks: [
         Plot.areaY(pts, { x: 'km', y: 'e', fill: c.accent, fillOpacity: 0.25 }),
@@ -120,12 +120,12 @@ export default {
         Plot.tip(pts, Plot.pointerX({ x: 'km', y: 'e', title: (d) => `${Math.round(d.km)} km · ${core.fmtNum(d.e)} m` })),
       ],
     }));
-    ctx.stage.append(ui.panel({ kicker: `在${reg.name} · 左端起点 → 右端终点 · 海拔 (m)`, title: '这条线的海拔剖面' },
+    ctx.stage.append(ui.panel({ kicker: `In ${reg.name} · elevation (m)`, title: 'Elevation profile, start on the left' },
       chart,
       h('div', { class: 'ds-grid', style: { '--min': '90px', marginTop: '12px' } },
-        ui.stat({ label: '最高 (m)', value: core.fmtNum(s.max) }),
-        ui.stat({ label: '最低 (m)', value: core.fmtNum(s.min) }),
-        ui.stat({ label: '起伏 (m)', value: core.fmtNum(s.relief) }))));
+        ui.stat({ label: 'Highest (m)', value: core.fmtNum(s.max) }),
+        ui.stat({ label: 'Lowest (m)', value: core.fmtNum(s.min) }),
+        ui.stat({ label: 'Relief (m)', value: core.fmtNum(s.relief) }))));
 
     // ── placement: midpoint pin + bearing arrow ──
     const m = await ui.createMap({ bounds: reg.bounds, basemap: 'hillshade' });
@@ -133,10 +133,10 @@ export default {
     const { L, map } = m;
     let mid = null, bearing = 90, marker = null, arrow = null, seg = null;
     const bearingTxt = h('b', { class: 'mono' });
-    const slider = h('input', { type: 'range', class: 'ds-range', min: 0, max: 359, step: 1, value: bearing, 'aria-label': '方向（度）' });
+    const slider = h('input', { type: 'range', class: 'ds-range', min: 0, max: 359, step: 1, value: bearing, 'aria-label': 'Bearing (degrees)' });
     const chipBtns = COMPASS.map((name, i) => h('button', { class: 'ds-chip', type: 'button', onClick: () => setBearing(i * 45) }, name));
-    const status = h('div', { class: 'ink2 small' }, '点击地图放下中点，可拖动图钉；再转动箭头指向终点');
-    const submit = ui.button('确定这条线', { variant: 'accent', disabled: true });
+    const status = h('div', { class: 'ink2 small' }, 'Click the map to drop the midpoint (the pin is draggable), then turn the arrow toward the finish');
+    const submit = ui.button('Lock in this line', { variant: 'accent', disabled: true });
 
     const c0 = ui.colors();
     const ACC = c0.accent;
@@ -174,11 +174,11 @@ export default {
     map.on('click', (e) => setMid(e.latlng));
     slider.addEventListener('input', () => setBearing(Number(slider.value)));
 
-    const card = ui.panel({ kicker: '放置这条线', title: '它在哪里？朝哪个方向？' },
-      h('p', { class: 'ink2' }, `箭头从线的中点指向终点（剖面图右端）。线长 ${p.lenKm} km，在地图上只有几个像素，箭头是放大示意。`),
+    const card = ui.panel({ kicker: 'Place the line', title: 'Where is it, and which way does it point?' },
+      h('p', { class: 'ink2' }, `The arrow points from the line\'s midpoint to the finish (the right end of the profile). The line is ${p.lenKm} km long, only a few pixels on the map, so the arrow is drawn enlarged.`),
       m.el,
       h('div', { style: { marginTop: '12px' } },
-        h('div', { class: 'ds-row between' }, h('span', { class: 'ink2 small' }, '方向（起点 → 终点）'), bearingTxt),
+        h('div', { class: 'ds-row between' }, h('span', { class: 'ink2 small' }, 'Bearing (start → finish)'), bearingTxt),
         slider,
         h('div', { class: 'ds-chips', style: { marginTop: '4px' } }, chipBtns)),
       h('div', { class: 'ds-row between', style: { marginTop: '12px' } }, status, submit));
@@ -216,7 +216,7 @@ export default {
     L.marker([p.lat, p.lng], { icon: L.divIcon({ className: '', iconSize: [84, 84], iconAnchor: [42, 42], html: `<svg width="84" height="84" viewBox="-42 -42 84 84" style="transform:rotate(${p.bearing}deg);overflow:visible;pointer-events:none"><polygon points="0,-42 -9,-26 9,-26" fill="#e11" stroke="#fff" stroke-width="2"/></svg>` }), interactive: false }).addTo(map);
     m.setLabels(true);
     map.fitBounds(L.latLngBounds([[guess.mid.lat, guess.mid.lng], [p.lat, p.lng]]).pad(0.5), { maxZoom: 8 });
-    status.replaceChildren('中点相差 ', h('b', { class: 'mono' }, core.fmtKm(km)), ' · 方向偏差 ', h('b', { class: 'mono' }, `${err}°`), h('span', { class: 'mono', style: { marginLeft: '10px' } }, `${sc.total}/100`));
+    status.replaceChildren('Midpoint off by ', h('b', { class: 'mono' }, core.fmtKm(km)), ' · bearing off by ', h('b', { class: 'mono' }, `${err}°`), h('span', { class: 'mono', style: { marginLeft: '10px' } }, `${sc.total}/100`));
 
     return {
       score: sc.total,
@@ -225,9 +225,9 @@ export default {
       emoji: core.emojiBar(sc.total / 100),
       summary: `${core.fmtKm(km)} · ${err}°`,
       detail: ui.kv([
-        ['答案', `${p.place}（${p.lat.toFixed(2)}°, ${p.lng.toFixed(2)}°），自${compassName((p.bearing + 180) % 360)}向${compassName(p.bearing)}（${p.bearing}°）`],
-        ['你的得分', `中点 ${sc.pos}/${POS_MAX}（差 ${core.fmtKm(km)}）+ 方向 ${sc.dir}/${DIR_MAX}（偏 ${err}°）`],
-        ...explain(p.elev, p.bearing, p.lenKm).map((t, i) => [i === 0 ? '线索' : ' ', t]),
+        ['Answer', `${p.place} (${p.lat.toFixed(2)}°, ${p.lng.toFixed(2)}°), running from ${compassName((p.bearing + 180) % 360)} to ${compassName(p.bearing)} (${p.bearing}°)`],
+        ['Your score', `Midpoint ${sc.pos}/${POS_MAX} (off by ${core.fmtKm(km)}) + bearing ${sc.dir}/${DIR_MAX} (off by ${err}°)`],
+        ...explain(p.elev, p.bearing, p.lenKm).map((t, i) => [i === 0 ? 'Clues' : ' ', t]),
       ]),
     };
   },
