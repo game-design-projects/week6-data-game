@@ -12,7 +12,7 @@ test('scoring extremes', () => {
   assert.equal(scoreGuess(10, 10), 100);
   assert.ok(scoreGuess(20, 10) < scoreGuess(12, 10));
   assert.ok(scoreGuess(11, 10) >= 85);            // close = rewarded
-  assert.ok(scoreGuess(0, 60) <= 1);              // worst case ≈ 0
+  assert.ok(scoreGuess(0, 60) <= 1);              // worst case ~ 0
   // always guessing 13 (the old trivial strategy) must not score high across the pool
   const avg = data.items.reduce((s, i) => s + scoreGuess(13, i.score), 0) / data.items.length;
   assert.ok(avg < 55, `constant guess averages ${avg}`);
@@ -30,7 +30,7 @@ test('pool: every item is valid', () => {
     assert.equal(new Set(i.v.map((v) => v.code)).size, 3, `dup code ${i.name}`);
     for (const v of i.v) {
       assert.ok(v.text.length > 10 && !/undefined|NaN/.test(v.text));
-      assert.ok(data.zh[v.code], `no zh for ${v.code}`);
+      assert.ok(data.plain[v.code], `no plain gloss for ${v.code}`);
       assert.ok(ptsOf(data.pts, v), `no pts for ${v.code}`);
     }
     assert.ok(!names.has(i.name.toLowerCase()), `dup name ${i.name}`); names.add(i.name.toLowerCase());
@@ -48,7 +48,7 @@ test('puzzle() days 1–120 valid and answer not leaked in visible fields', () =
     assert.ok(item && item.v.length === 3);
     for (const v of item.v) { // visible text must not contain the restaurant name or the score
       assert.ok(!v.text.toLowerCase().includes(item.name.toLowerCase()));
-      assert.ok(!(data.zh[v.code]).includes(String(item.score) + ' 分'));
+      assert.ok(!(data.plain[v.code]).includes(String(item.score) + ' pts'));
     }
     assert.ok(!/undefined|NaN/.test(JSON.stringify(item)));
   }

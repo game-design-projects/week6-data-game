@@ -2,7 +2,7 @@
 //   items: three-violation inspections, stratified by score (so every score band appears)
 //   pts:   "code|C" or "code|G" → [min, median, max, n] total score of inspections that cited ONLY that violation
 import fs from 'node:fs';
-import { ZH } from './zh.mjs';
+import { PLAIN } from './plain.mjs';
 const rows = JSON.parse(fs.readFileSync(new URL('./raw/inspections.json', import.meta.url), 'utf8'));
 const clean = (s) => s.replace(/\s+/g, ' ').replace(/ /g, ' ').trim();
 const g = new Map();
@@ -33,7 +33,7 @@ for (const [k, v] of g) {
   if (!Number.isFinite(score) || score > 60 || !/^(Manhattan|Brooklyn|Queens|Bronx|Staten Island)$/.test(v[0].boro)) continue;
   if (!v[0].dba || !v[0].cuisine_description) continue;
   if ((grade === 'A') !== (score <= 13) || (grade === 'C') !== (score >= 28)) continue;
-  if (new Set(v.map((x) => x.violation_code)).size !== 3 || v.some((x) => !ZH[x.violation_code] || !pts[x.violation_code + '|' + flag(x)])) continue;
+  if (new Set(v.map((x) => x.violation_code)).size !== 3 || v.some((x) => !PLAIN[x.violation_code] || !pts[x.violation_code + '|' + flag(x)])) continue;
   cands.push({ name: clean(v[0].dba), boro: v[0].boro, cuisine: clean(v[0].cuisine_description), date: v[0].inspection_date.slice(0, 10), score, grade,
     v: v.map((x) => ({ code: x.violation_code, text: clean(x.violation_description), crit: x.critical_flag === 'Critical' })) });
 }
@@ -49,8 +49,8 @@ for (const c of shuf(cands)) {
 }
 items.sort((a, b) => a.score - b.score || a.name.localeCompare(b.name));
 const used = new Set(items.flatMap((i) => i.v.map((x) => x.code)));
-const zh = Object.fromEntries([...used].sort().map((c) => [c, ZH[c]]));
+const plain = Object.fromEntries([...used].sort().map((c) => [c, PLAIN[c]]));
 const usedPts = Object.fromEntries(Object.entries(pts).filter(([k]) => used.has(k.split('|')[0])));
-fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ items, zh, pts: usedPts }));
+fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ items, plain, pts: usedPts }));
 const gc = { A: 0, B: 0, C: 0 }; for (const i of items) gc[i.grade]++;
 console.log(items.length, gc, JSON.stringify(perScore), fs.statSync(new URL('../data.json', import.meta.url)).size);

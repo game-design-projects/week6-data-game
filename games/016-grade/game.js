@@ -20,10 +20,10 @@ export function explain(item, pts) {
   const crit = item.v.filter((x) => x.crit).length;
   const typ = typicalTotal(item, pts);
   const diff = item.score - typ;
-  const parts = [`三条里有 ${crit} 条 Critical、${3 - crit} 条 General；按各自的典型分值相加约 ${typ} 分，实际 ${item.score} 分`];
-  if (Math.abs(diff) <= 2) parts.push('，基本吻合：这次检查里每条都扣的是常见分值。');
-  else if (diff > 0) parts.push(`，高出 ${diff} 分：至少有一条的严重程度或影响范围高于常见情形（扣分随情节加重，最高档可达 28 分）。`);
-  else parts.push(`，低出 ${-diff} 分：违规情节偏轻，几条都扣在分值区间的低端。`);
+  const parts = [`${crit} of the 3 are Critical and ${3 - crit} General; adding their typical point values gives about ${typ}, versus the actual ${item.score}`];
+  if (Math.abs(diff) <= 2) parts.push(': a close match, every violation was scored at its usual value.');
+  else if (diff > 0) parts.push(`: ${diff} ${diff === 1 ? 'point' : 'points'} higher, so at least one violation was more severe or widespread than usual (points rise with severity, up to 28 for the worst tier).`);
+  else parts.push(`: ${-diff} ${-diff === 1 ? 'point' : 'points'} lower, so the violations were milder and each was scored at the low end of its range.`);
   return parts.join('');
 }
 
@@ -32,20 +32,20 @@ export default {
     num: 16,
     slug: 'grade',
     title: 'Grade',
-    tagline: '一次纽约餐厅检查里的三条真实违规记录。猜它的总扣分，再猜门口贴的字母等级。',
+    tagline: 'Three real violations from one NYC restaurant inspection. Guess the total points, then the letter grade in the window.',
     category: 'nyc',
     data: 'snapshot',
     howTo: [
-      '卫生局检查员在一家纽约餐厅记下了三条违规（附中文译注和英文原文）。这次检查的结果只来自这三条。',
-      '先估总扣分，分数越低越好。经验：每条 Critical 违规约扣 5–10 分，General 约扣 2–5 分；情节特别严重的（比如没有洗手设施）一条就能扣到 28 分。',
-      '再选字母等级：0–13 分是 A，14–27 分是 B，28 分及以上是 C。',
+      'A health inspector wrote up three violations at a New York restaurant (a plain-English summary plus the official wording). This inspection\'s result comes from these three alone.',
+      'First estimate the total points; lower is better. Rule of thumb: a Critical violation costs about 5–10 points and a General one about 2–5, but a particularly serious one (say, no hand-washing facilities) can cost up to 28 on its own.',
+      'Then pick the letter grade: 0–13 points is an A, 14–27 is a B, and 28 or more is a C.',
     ],
-    scoring: '扣分：100 × e^(−误差/8)，差 1 分约少 12 分；等级猜对 100。两项相加，满分 200。',
+    scoring: 'Points guess: 100 × e^(−error/8), so each point off costs about 12; a correct grade earns 100. The two add up to a maximum of 200.',
     sources: [
       { name: 'NYC Open Data · DOHMH Restaurant Inspection Results', url: 'https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j' },
       { name: 'NYC Health · Restaurant grading and scoring', url: 'https://www.nyc.gov/site/doh/business/food-operators/letter-grading-for-restaurants.page' },
     ],
-    dataNote: '快照：2024 年以来、恰好记录了 3 条违规且带 A/B/C 等级的检查，每个得分档最多取 7 家，所以 B、C 比真实比例多（现实里绝大多数检查是 A）。单条违规的分值不在公开数据里；结果页的“典型分值”取自只记录了这一条违规的检查的总分中位数。违规中文为译注，英文为官方原文。',
+    dataNote: 'Snapshot: inspections since 2024 with exactly 3 violations and an A/B/C grade, at most 7 restaurants per score, so B and C are over-represented (in reality most inspections are an A). Points for a single violation are not in the public data; the "typical" figure on the result page is the median total score of inspections that cited only that one violation. The plain-English summaries are written by hand; the official wording is shown beneath.',
   },
 
   puzzle({ data, pick }) {
@@ -54,42 +54,42 @@ export default {
 
   async play(ctx, { item }) {
     const { ui } = ctx;
-    const { pts, zh } = ctx.data;
+    const { pts, plain } = ctx.data;
     ctx.log('inspection', item.name, item.date, item.score, item.grade);
-    ctx.stage.append(ui.panel({ kicker: `${item.boro} · ${item.cuisine}`, title: '三条违规记录' },
+    ctx.stage.append(ui.panel({ kicker: `${item.boro} · ${item.cuisine}`, title: 'Three violations' },
       ui.h('div', { class: 'ds-stack' },
         item.v.map((x, i) => ui.h('div', { class: 'ds-stack', style: { gap: '4px' } },
           ui.h('div', { class: 'ds-row', style: { gap: '8px', alignItems: 'center' } },
             ui.badge(x.crit ? 'Critical' : 'General', x.crit ? 'bad' : undefined),
             ui.h('span', { class: 'mono small muted' }, `${i + 1} · ${x.code}`)),
-          ui.h('div', zh?.[x.code] ?? x.text),
-          zh?.[x.code] ? ui.h('div', { class: 'small muted' }, x.text) : null)))));
+          ui.h('div', plain?.[x.code] ?? x.text),
+          plain?.[x.code] ? ui.h('div', { class: 'small muted' }, x.text) : null)))));
 
     const r1 = await ctx.estimate({
       answer: item.score, min: 0, max: 60, initial: 12, step: 1, log: false,
-      title: '总扣分是多少？', scoring: (g, a) => scoreGuess(g, a) / 100, format: (v) => `${Math.round(v)} 分`,
+      title: 'How many points in total?', scoring: (g, a) => scoreGuess(g, a) / 100, format: (v) => `${Math.round(v)} pts`,
     });
     const gr = gradeOf(item.score);
-    const labels = [['A', '0–13 分'], ['B', '14–27 分'], ['C', '28 分以上']];
+    const labels = [['A', '0–13 pts'], ['B', '14–27 pts'], ['C', '28+ pts']];
     const r2 = await ctx.rounds({
-      rounds: [{ prompt: '门口会贴哪个等级？', options: labels.map(([l, s]) => ({ label: l, sub: s })), correct: 'ABC'.indexOf(gr),
-        explain: `实际 ${item.score} 分，等级 ${gr}` }],
+      rounds: [{ prompt: 'Which grade goes in the window?', options: labels.map(([l, s]) => ({ label: l, sub: s })), correct: 'ABC'.indexOf(gr),
+        explain: `Actual: ${item.score} points, grade ${gr}` }],
     });
     const r2n = { ...r2, score: r2.score ? 100 : 0, max: 100 };
     const res = ctx.combine([r1, r2n]);
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.kv([
-        ['餐厅', `${item.name}（${item.boro}，${item.cuisine}）`],
-        ['检查日期', item.date],
-        ['实际扣分', `${item.score} 分 → 等级 ${gr}`],
+        ['Restaurant', `${item.name} (${item.boro}, ${item.cuisine})`],
+        ['Inspection date', item.date],
+        ['Actual points', `${item.score} pts → grade ${gr}`],
       ]),
       ui.h('div', { class: 'ds-stack', style: { gap: '6px' } },
         item.v.map((x) => {
           const p = ptsOf(pts, x);
           return ui.h('div', { class: 'ds-row', style: { gap: '8px', alignItems: 'baseline' } },
             ui.badge(x.crit ? 'Critical' : 'General', x.crit ? 'bad' : undefined),
-            ui.h('span', { class: 'small' }, `${zh?.[x.code] ?? x.code}`),
-            p ? ui.h('span', { class: 'mono small muted' }, `典型 ${p[1]} 分（${p[0]}–${p[2]}，n=${p[3]}）`) : null);
+            ui.h('span', { class: 'small' }, `${plain?.[x.code] ?? x.code}`),
+            p ? ui.h('span', { class: 'mono small muted' }, `Typical ${p[1]} pts (${p[0]}–${p[2]}, n=${p[3]})`) : null);
         })),
       ui.h('div', explain(item, pts)));
     return res;
