@@ -117,7 +117,7 @@ function verdict(frac) {
   if (frac >= 0.95) return '完美。';
   if (frac >= 0.75) return '漂亮！';
   if (frac >= 0.5) return '不错。';
-  if (frac > 0) return '差一点。';
+  if (frac >= 0.25) return '差一点。';
   return '明天再来。';
 }
 

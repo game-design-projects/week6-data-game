@@ -200,7 +200,7 @@ export async function estimate(ctx, {
   const within = (g) => (typeof scoring === 'function' ? scoring(g, answer) >= 0.95 : errOf(g) <= tol);
 
   // append the unit unless a custom format() already printed it
-  const hasUnit = (txt) => !unit || String(txt).trim().endsWith(unit.trim());
+  const hasUnit = (txt) => !unit || String(txt).includes(unit.trim());
   const fu = (v) => { const t = format(v); return hasUnit(t) ? String(t) : `${t} ${unit}`; };
 
   const RES = 1000;
@@ -627,6 +627,7 @@ export async function groups(ctx, { groups: gs, mistakes = 4, title = '分组', 
   let wrong = 0;
   let found = 0;
   const lines = [];
+  const tried = new Set();
   const draw = () => {
     clear(gridEl);
     solved.forEach((gi) => gridEl.append(h('div', { class: 'solved', style: { background: GROUP_COLORS[gi % 4] } }, h('b', gs[gi].label), h('span', gs[gi].items.join(' · ')))));
@@ -641,6 +642,9 @@ export async function groups(ctx, { groups: gs, mistakes = 4, title = '分组', 
   await new Promise((resolve) => {
     const go = () => {
       const sel = pool.filter((x) => picked.has(x.label));
+      const key = sel.map((x) => x.label).sort().join('\u0001');
+      if (tried.has(key)) { toast('这一组已经试过了'); return; }
+      tried.add(key);
       const counts = new Map();
       sel.forEach((x) => counts.set(x.gi, (counts.get(x.gi) ?? 0) + 1));
       lines.push(sel.map((x) => ['🟨', '🟩', '🟦', '🟪'][x.gi % 4]).join(''));
@@ -695,6 +699,8 @@ export function canvasStage(ctx, { aspect = 16 / 9, onFrame, onPointer, onKey, c
     canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     s.colors = colors();
+    // resizing wipes the bitmap; a stopped loop would otherwise leave it blank
+    if (!s.running && s.started && r.width) onFrame?.(0, g, s);
   };
   new ResizeObserver(resize).observe(el);
   resize();
@@ -707,11 +713,13 @@ export function canvasStage(ctx, { aspect = 16 / 9, onFrame, onPointer, onKey, c
     onFrame?.(dt, g, s);
     raf = requestAnimationFrame(frame);
   };
-  s.start = () => { if (s.running) return; s.running = true; last = 0; raf = requestAnimationFrame(frame); };
+  s.start = () => { if (s.running) return; s.running = s.started = true; last = 0; raf = requestAnimationFrame(frame); };
   s.stop = () => { s.running = false; cancelAnimationFrame(raf); };
   const pt = (e) => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, e }; };
   if (onPointer) {
-    for (const type of ['pointerdown', 'pointermove', 'pointerup']) canvas.addEventListener(type, (e) => onPointer(type.slice(7), pt(e), s));
+    canvas.addEventListener('pointerdown', (e) => { try { canvas.setPointerCapture(e.pointerId); } catch { /* synthetic event */ } onPointer('down', pt(e), s); });
+    canvas.addEventListener('pointermove', (e) => onPointer('move', pt(e), s));
+    for (const type of ['pointerup', 'pointercancel']) canvas.addEventListener(type, (e) => onPointer('up', pt(e), s));
   }
   if (onKey) {
     const kd = (e) => onKey('down', e, s);

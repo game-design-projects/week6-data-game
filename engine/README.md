@@ -132,7 +132,7 @@ await ctx.pin({
   view: { center: [40.73, -73.95], zoom: 11 } | { bounds: [[s, w], [n, e]] },
   basemap: 'gray' | 'imagery' | 'topo' | 'hillshade',   // label-free 'gray' by default
   scale: 1500,                   // km: 0 → 100 pts, scale → 37 pts. NYC-scale games use ~2–3
-  attempts: 1, hint: (km, bearing) => '…',            // multi-attempt hot/cold
+  attempts: 1, hint: (km, bearing) => '…',            // multi-attempt hot/cold: −15% per extra try (floor 40%), ends early within scale×2%
   setup: async ({ map, L, pin }) => {},              // draw clue overlays before guessing (tracks, polygons…)
   reveal: async ({ map, L, pin }, guess) => {},      // extra drawing after the answer is shown
 })  // → { score, max: 100, km, guess, map, emoji, summary }
@@ -190,7 +190,7 @@ uses [Observable Plot](https://observablehq.com/plot/) (lazy-loaded) with theme 
 `c.series[i]` for colors. `axis: false` hides axes (for "unlabeled chart" puzzles). Pass `width` for charts inside
 small cards. Line/area/bar/cell(heatmap)/dot/rule/text/tip marks cover almost everything.
 
-**Maps** — `await ctx.ui.createMap({ center, zoom, bounds, basemap, height })` → `{ el, map, L, pin, setLabels }`
+**Maps** — fractional zoom (`zoomSnap: 0.25`), so `fitBounds` fills tall phone frames. `await ctx.ui.createMap({ center, zoom, bounds, basemap, height })` → `{ el, map, L, pin, setLabels }`
 (Leaflet; append `el` right away). `await ctx.ui.geo('countries' | 'countries50' | 'land' | 'states' | 'counties')`
 returns GeoJSON (world-atlas / us-atlas) for drawing shapes with Plot (`Plot.geo`) or Leaflet.
 
@@ -246,7 +246,7 @@ node scripts/check.mjs NNN-slug --shot
 checks meta, data size, that `puzzle()` is deterministic and gives ≥ 7 distinct puzzles over 14 days, runs
 `game.test.mjs`, then loads the page in headless Chrome twice: `?smoke=1` (must reach `playing`) and
 `?autoplay=1` (presets auto-answer; must reach `done` — custom loops must honour `ctx.autoplay`). It writes
-screenshots to `.shots/NNN-slug-{start,done,start-mobile}.png` — **open and look at them** and fix layout problems.
-`--date=YYYY-MM-DD` checks another puzzle day (shots tagged `@date`), `--dark` takes the screenshots in the dark
+screenshots to `.shots/NNN-slug-{start,done,start-mobile,done-mobile}.png` — **open and look at them** and fix layout problems.
+`--date=YYYY-MM-DD` checks another past puzzle day (future dates fall back to today) (shots tagged `@date`), `--dark` takes the screenshots in the dark
 theme (tagged `-dark`; `?theme=dark` works on any page). Play it yourself by serving `node scripts/serve.mjs 8787` and opening `http://localhost:8787/play.html?g=NNN-slug`
 (`&date=YYYY-MM-DD` for other days, `&practice=1` to replay, `&debug=1` for logs).

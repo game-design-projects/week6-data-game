@@ -125,6 +125,7 @@ img, svg, canvas { max-width: 100%; }
 .mono, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
 .ink2 { color: var(--ink-2); }
+[hidden] { display: none !important; }
 .small { font-size: 0.85rem; }
 .center { text-align: center; }
 .hidden { display: none !important; }
@@ -236,6 +237,9 @@ img, svg, canvas { max-width: 100%; }
 .ds-table th { text-align: left; font: 600 0.7rem/1.2 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--rule-strong); }
 .ds-table td { padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
 .ds-table td.num, .ds-table th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+/* on phones a many-column table scrolls sideways instead of squeezing text cells to one character per line */
+.ds-table td:not(.num) { min-width: 6em; }
+.ds-table td.num { white-space: nowrap; }
 .ds-table tr:last-child td { border-bottom: 0; }
 
 /* chips */
@@ -383,7 +387,7 @@ select.ds-input { background-image: linear-gradient(45deg, transparent 50%, var(
 .ds-groups { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .ds-groups .cell {
   appearance: none; border: 0; border-radius: var(--r-sm); background: var(--paper-2); color: var(--ink); min-height: 64px;
-  padding: 6px; font: 650 clamp(0.68rem, 2.6vw, 0.9rem)/1.15 var(--font-ui); text-transform: uppercase; cursor: pointer; overflow-wrap: anywhere;
+  padding: 6px; font: 650 clamp(0.68rem, 2.6vw, 0.9rem)/1.15 var(--font-ui); cursor: pointer; overflow-wrap: anywhere;
   transition: transform 0.1s var(--ease), background 0.12s;
 }
 .ds-groups .cell.on { background: var(--ink); color: var(--paper); }
@@ -395,7 +399,8 @@ select.ds-input { background-image: linear-gradient(45deg, transparent 50%, var(
 /* map */
 .ds-map { height: clamp(300px, 58vh, 520px); border-radius: var(--r); overflow: hidden; border: 1px solid var(--rule); background: var(--paper-2); }
 .ds-map.crosshair .leaflet-container, .ds-map.crosshair { cursor: crosshair; }
-.ds-map .leaflet-container { background: var(--paper-2); font-family: var(--font-ui); }
+/* .ds-map is itself the Leaflet container; beat leaflet.css's #ddd so areas past the poles match the page */
+.ds-map.leaflet-container, .ds-map .leaflet-container { background: var(--paper-2); font-family: var(--font-ui); }
 .ds-pin { width: 22px; height: 22px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--ink); border: 2px solid var(--card); box-shadow: 0 3px 8px rgba(0,0,0,.35); }
 .ds-pin.answer { background: var(--hit); }
 .ds-pin.accent { background: var(--accent); }

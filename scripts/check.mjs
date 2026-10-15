@@ -3,7 +3,7 @@
 //   node scripts/check.mjs 001-daylight            # one game: meta, data, puzzle, tests, browser smoke
 //   node scripts/check.mjs 001-daylight --shot     # + screenshots in .shots/<dir>-{start,done}{,-mobile}.png
 //   node scripts/check.mjs --all [--no-browser]    # every game
-//   --date=YYYY-MM-DD  smoke/screenshot another puzzle day (shots get an @date tag)
+//   --date=YYYY-MM-DD  smoke/screenshot another past puzzle day (future dates fall back to today; shots get an @date tag)
 //   --dark             screenshots in the dark theme (shots get a -dark tag)
 // Exit code 1 if any check fails.
 import { readdir, readFile, stat, mkdir, rm, mkdtemp } from 'node:fs/promises';
@@ -155,10 +155,11 @@ async function checkOne(dir) {
       const u = (mode) => `http://127.0.0.1:${pt}/play.html?g=${dir}&date=${SMOKE_DATE}${THEME}&${mode}=1`;
       await Promise.all([
         runChrome(u('smoke'), { shot: path.join(shots, `${dir}${TAG}-start.png`), height: 1400 }),
-        runChrome(u('autoplay'), { shot: path.join(shots, `${dir}${TAG}-done.png`), height: 1800 }),
+        runChrome(u('autoplay'), { shot: path.join(shots, `${dir}${TAG}-done.png`), height: 2600 }),
+        runChrome(`http://127.0.0.1:${pt}/scripts/mobile.html#${encodeURIComponent(u('autoplay'))}`, { shot: path.join(shots, `${dir}${TAG}-done-mobile.png`), width: 390, height: 3200 }),
         runChrome(`http://127.0.0.1:${pt}/scripts/mobile.html#${encodeURIComponent(u('smoke'))}`, { shot: path.join(shots, `${dir}${TAG}-start-mobile.png`), width: 390, height: 1400 }),
       ]);
-      info.push(`screenshots → .shots/${dir}${TAG}-{start,done,start-mobile}.png`);
+      info.push(`screenshots → .shots/${dir}${TAG}-{start,done,start-mobile,done-mobile}.png`);
     }
   } else if (!browser) warns.push('browser smoke skipped');
 

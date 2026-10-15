@@ -111,7 +111,9 @@ const ATTR = 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Esri, HE
 export async function createMap({ center = [20, 0], zoom = 2, bounds, labels = false, basemap = 'gray', minZoom = 1, maxZoom = 18, height, className, worldCopyJump = true } = {}) {
   const L = await lib('leaflet');
   const el = h('div', { class: ['ds-map', `bm-${basemap}`, className], style: height ? { height: typeof height === 'number' ? `${height}px` : height } : null });
-  const map = L.map(el, { center, zoom, minZoom, maxZoom, worldCopyJump, zoomControl: true, attributionControl: true });
+  const still = document.documentElement.classList.contains('ds-static'); // smoke/autoplay: stable screenshots
+  const map = L.map(el, { center, zoom, minZoom, maxZoom, worldCopyJump, zoomSnap: 0.25, zoomControl: true, attributionControl: true,
+    fadeAnimation: !still, zoomAnimation: !still, markerZoomAnimation: !still });
   const urls = tileUrl({ basemap });
   if (urls.relief) {
     // label-free relief up to `split`, then the gray street canvas (no place names at city zooms)

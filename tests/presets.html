@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- Browser tests for engine presets. Run via `node --test tests/presets.test.mjs`
+     (headless Chrome dumps the DOM; results are JSON in <pre id="out">). -->
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../engine/ds.css"></head>
+<body><main class="ds-stage"></main><pre id="out"></pre>
+<script type="module">
+import * as presets from '../engine/presets.js';
+import { makeRng } from '../engine/core.js';
+
+const stage = document.querySelector('.ds-stage');
+const log = Object.assign(() => {}, { warn() {}, error() {} });
+log.scope = () => log;
+const ctx = { stage, log, rng: makeRng('presets-test'), autoplay: false, sleep: (ms) => new Promise((r) => setTimeout(r, ms)) };
+const out = {};
+const report = (e) => { document.getElementById('out').textContent = JSON.stringify({ ...out, error: String(e?.stack ?? e) }); };
+window.addEventListener('error', (e) => report(e.error ?? e.message));
+window.addEventListener('unhandledrejection', (e) => report(e.reason));
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+// groups: an identical wrong selection submitted twice costs one mistake, not two
+{
+  const box = document.createElement('div');
+  stage.append(box);
+  const groups = [['a1', 'a2', 'a3', 'a4'], ['b1', 'b2', 'b3', 'b4'], ['c1', 'c2', 'c3', 'c4'], ['d1', 'd2', 'd3', 'd4']].map((items, i) => ({ label: `G${i}`, items }));
+  const done = presets.groups({ ...ctx }, { groups, container: box, mistakes: 4 });
+  await tick();
+  const cell = (label) => [...box.querySelectorAll('.cell')].find((c) => c.textContent === label);
+  const submit = () => [...box.querySelectorAll('button')].find((b) => b.textContent === '提交').click();
+  const pick = (labels) => { for (const l of labels) cell(l).click(); };
+  const wrong = ['a1', 'a2', 'a3', 'b1'];
+  pick(wrong); submit(); await tick();
+  pick(wrong); submit(); await tick();
+  out.groupsLeftAfterRepeat = box.querySelector('.ds-panel .small.mono').textContent;
+  pick(wrong); // the repeated selection stays selected (like Connections' "already guessed"); clear it
+  for (const g of groups) { pick(g.items); submit(); await tick(); }
+  const r = await done;
+  out.groupsScore = r.score;
+  out.groupsCellCase = getComputedStyle(box.querySelector('.solved span') ?? document.body).textTransform;
+}
+
+// estimate: a prefix unit printed by format() is not appended again
+{
+  const box = document.createElement('div');
+  stage.append(box);
+  presets.estimate({ ...ctx }, { answer: 12, min: 1, max: 100, unit: '$', format: (v) => `$${Math.round(v)}`, container: box });
+  await tick();
+  out.estimateReadout = box.querySelector('.ds-readout').textContent;
+}
+
+// canvas: pointercancel is reported as "up"; a resize after stop() redraws once
+{
+  const box = document.createElement('div');
+  box.style.width = '300px';
+  stage.append(box);
+  const events = [];
+  let frames = 0;
+  const s = presets.canvasStage({ ...ctx }, { aspect: 2, container: box, onFrame: () => { frames++; }, onPointer: (type) => events.push(type) });
+  for (const type of ['pointerdown', 'pointermove', 'pointercancel']) s.canvas.dispatchEvent(new PointerEvent(type, { clientX: 5, clientY: 5, pointerId: 1 }));
+  out.canvasEvents = events.join(',');
+  s.start(); s.stop(); // rAF is unreliable headless; started-then-stopped is the state under test
+  const before = frames;
+  box.style.width = '200px';
+  await new Promise((r) => setTimeout(r, 50));
+  out.canvasRedrawnAfterResize = frames > before;
+}
+
+document.getElementById('out').textContent = JSON.stringify(out);
+document.body.dataset.state = 'done';
+</script></body></html>
