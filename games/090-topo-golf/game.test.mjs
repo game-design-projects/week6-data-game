@@ -37,7 +37,7 @@ test('data pool: sites well-formed', () => {
   const names = new Set(); const tiles = new Set();
   data.sites.forEach((s, i) => {
     assert.equal(s.id, i);
-    for (const k of ['name', 'zh', 'kind', 'region']) assert.ok(typeof s[k] === 'string' && s[k].length > 0, `${s.name} ${k}`);
+    for (const k of ['name', 'kind', 'region']) assert.ok(typeof s[k] === 'string' && s[k].length > 0, `${s.name} ${k}`);
     assert.ok(!names.has(s.name)); names.add(s.name);
     const t = `${s.lat},${s.lng}`; assert.ok(!tiles.has(t), `dup tile ${s.name}`); tiles.add(t);
     assert.ok(s.lat >= -85 && s.lat <= 85 && s.lng >= -180 && s.lng <= 180);
@@ -63,7 +63,7 @@ test('pool validity over days 1-120 + no pre-guess leaks', () => {
     const d = Math.hypot(p.ball[0] - p.hole[0], p.ball[1] - p.hole[1]); assert.ok(d >= 9 - 0.1 && d <= 13 + 0.1);
     // the puzzle object (what the page holds before the guess) carries no place identity beyond an opaque id
     const json = JSON.stringify(p);
-    for (const w of [site.name, site.zh, site.region]) assert.ok(!json.includes(w), `leak ${w}`);
+    for (const w of [site.name, site.region]) assert.ok(!json.includes(w), `leak ${w}`);
     // always holeable in one stroke
     const h = buildTerrain(site.grid);
     assert.ok(p.solve, `day ${day} has a solution`);

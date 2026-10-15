@@ -2,97 +2,97 @@
 import fs from 'node:fs'; import zlib from 'node:zlib'; import path from 'node:path';
 const here = path.dirname(new URL(import.meta.url).pathname);
 const Z = 11, N = 32;
-const SITES = `Mt Fuji|富士山|火山|35.36|138.73|日本
-Matterhorn|马特洪峰|高山|45.98|7.66|瑞士/意大利
-Grand Canyon|科罗拉多大峡谷|峡谷|36.1|-112.1|美国
-Mt Rainier|雷尼尔山|火山|46.85|-121.76|美国
-Kilimanjaro|乞力马扎罗山|火山|-3.07|37.35|坦桑尼亚
-Everest|珠穆朗玛峰|高山|27.99|86.93|尼泊尔/中国
-Mt St Helens|圣海伦斯火山|火山|46.2|-122.19|美国
-Yosemite Valley|优胜美地谷|峡谷|37.74|-119.57|美国
-Denali|德纳利（麦金利山）|高山|63.07|-151.0|美国
-Aconcagua|阿空加瓜山|高山|-32.65|-70.01|阿根廷
-Torres del Paine|百内塔|高山|-51.0|-73.0|智利
-Mt Etna|埃特纳火山|火山|37.75|15.0|意大利
-Vesuvius|维苏威火山|火山|40.82|14.43|意大利
-Mauna Kea|冒纳凯阿火山|火山|19.82|-155.47|美国夏威夷
-Haleakala|哈莱阿卡拉火山|火山|20.71|-156.25|美国夏威夷
-Kilauea|基拉韦厄火山|火山|19.42|-155.29|美国夏威夷
-Aoraki Mt Cook|库克山|高山|-43.59|170.14|新西兰
-Milford Sound|米尔福德峡湾|峡湾|-44.67|167.93|新西兰
-Tongariro|汤加里罗|火山|-39.16|175.63|新西兰
-Zhangjiajie|张家界|砂岩峰林|29.32|110.43|中国
-Huangshan|黄山|花岗岩山|30.13|118.17|中国
-Tianshan Heaven Lake|天山天池|高山|43.88|88.13|中国
-Mt Kailash|冈仁波齐|高山|31.07|81.31|中国西藏
-K2|乔戈里峰（K2）|高山|35.88|76.51|巴基斯坦/中国
-Annapurna|安纳普尔纳|高山|28.6|83.82|尼泊尔
-Fitz Roy|菲茨罗伊峰|高山|-49.27|-72.94|阿根廷
-Machu Picchu|马丘比丘|峡谷|-13.16|-72.55|秘鲁
-Cotopaxi|科托帕希火山|火山|-0.68|-78.44|厄瓜多尔
-Pico de Orizaba|奥里萨巴火山|火山|19.03|-97.27|墨西哥
-Popocatepetl|波波卡特佩特火山|火山|19.02|-98.62|墨西哥
-Crater Lake|火山口湖|火山|42.94|-122.1|美国
-Mt Whitney|惠特尼山|高山|36.58|-118.29|美国
-Death Valley|死亡谷|盆地|36.23|-116.77|美国
-Zion|锡安峡谷|峡谷|37.3|-113.0|美国
-Bryce Canyon|布莱斯峡谷|峡谷|37.59|-112.19|美国
-Mt Hood|胡德山|火山|45.37|-121.7|美国
-Grand Teton|大提顿山|高山|43.74|-110.8|美国
-Glacier NP|冰川国家公园|高山|48.7|-113.7|美国
-Mt Washington|华盛顿山|高山|44.27|-71.3|美国
-Lake Louise|路易斯湖|高山|51.42|-116.18|加拿大
-Mt Logan|洛根山|高山|60.57|-140.4|加拿大
-Sakurajima|樱岛|火山|31.58|130.66|日本
-Hallasan|汉拿山|火山|33.36|126.53|韩国
-Seoraksan|雪岳山|花岗岩山|38.12|128.47|韩国
-Mt Kinabalu|京那巴鲁山|花岗岩山|6.08|116.56|马来西亚
-Bromo|布罗莫火山|火山|-7.94|112.95|印度尼西亚
-Merapi|默拉皮火山|火山|-7.54|110.44|印度尼西亚
-Pinatubo|皮纳图博火山|火山|15.13|120.35|菲律宾
-Elbrus|厄尔布鲁士山|火山|43.35|42.44|俄罗斯
-Ararat|阿拉拉特山|火山|39.7|44.3|土耳其
-Olympus|奥林匹斯山|高山|40.09|22.36|希腊
-Tre Cime|三峰山|白云岩山|46.62|12.3|意大利
-Mont Blanc|勃朗峰|高山|45.83|6.86|法国/意大利
-Eiger|艾格峰|高山|46.58|8.0|瑞士
-Teide|泰德峰|火山|28.27|-16.64|西班牙加那利
-Ben Nevis|本尼维斯山|高地|56.8|-5.0|英国
-Snowdon|斯诺登山|高地|53.07|-4.08|英国
-Geiranger|盖朗厄尔峡湾|峡湾|62.1|7.2|挪威
-Lofoten|罗弗敦群岛|峡湾|68.2|13.6|挪威
-Landmannalaugar|兰德曼纳劳卡|火山|63.99|-19.06|冰岛
-Hvannadalshnukur|华纳达尔斯努克峰|火山|64.0|-16.7|冰岛
-Mt Sinai|西奈山|荒漠山地|28.54|33.97|埃及
-Petra|佩特拉|荒漠山地|30.33|35.44|约旦
-Ngorongoro|恩戈罗恩戈罗火山口|火山|-3.17|35.58|坦桑尼亚
-Drakensberg|德拉肯斯堡|断崖|-28.74|28.89|南非/莱索托
-Simien Mountains|塞米恩山|断崖|13.25|38.07|埃塞俄比亚
-Rwenzori|鲁文佐里山|高山|0.38|29.87|乌干达/刚果
-Kosciuszko|科修斯科山|高地|-36.46|148.26|澳大利亚
-Ojos del Salado|奥霍斯-德尔萨拉多山|火山|-27.11|-68.54|智利/阿根廷
-Roraima|罗赖马山|桌山|5.14|-60.76|委内瑞拉/圭亚那
-Sugarloaf Rio|里约面包山|海岸花岗岩山|-22.95|-43.16|巴西
-Table Mountain|桌山|桌山|-33.96|18.4|南非
-Mt Erebus|埃里伯斯火山|火山|-77.53|167.15|南极洲
-Paektu|长白山（白头山）|火山|42.0|128.06|中朝边境
-Taranaki|塔拉纳基山|火山|-39.3|174.06|新西兰
-Grossglockner|大格洛克纳山|高山|47.07|12.69|奥地利
-Triglav|特里格拉夫山|高山|46.38|13.84|斯洛文尼亚
-Gran Sasso|大萨索山|高山|42.47|13.57|意大利
-Tatra Gerlach|盖尔拉赫峰|高山|49.16|20.13|斯洛伐克
-Mt Cameroon|喀麦隆山|火山|4.2|9.17|喀麦隆
-Mt Kenya|肯尼亚山|火山|-0.15|37.31|肯尼亚
-Atlas Toubkal|图卜卡勒峰|高山|31.06|-7.92|摩洛哥
-Hunza Karakoram|罕萨喀喇昆仑|高山|36.32|74.65|巴基斯坦
-Nanga Parbat|南迦帕尔巴特峰|高山|35.24|74.59|巴基斯坦
-Kangchenjunga|干城章嘉峰|高山|27.7|88.15|尼泊尔/印度
-Mt Fuji Hakone|箱根|火山|35.23|139.02|日本
-Mt Hotaka|穗高岳|高山|36.29|137.65|日本
-Jade Dragon Snow Mt|玉龙雪山|高山|27.1|100.18|中国
-Yarlung Tsangpo Bend|雅鲁藏布大峡谷|峡谷|29.63|95.0|中国西藏
-Mt Meru|梅鲁山|火山|-3.25|36.75|坦桑尼亚
-Kazbek|卡兹别克山|火山|42.66|44.52|格鲁吉亚`.split('\n').map((l) => { const [name, zh, kind, lat, lng, region] = l.split('|'); return { name, zh, kind, lat: +lat, lng: +lng, region }; });
+const SITES = `Mt Fuji|volcano|35.36|138.73|Japan
+Matterhorn|alpine peak|45.98|7.66|Switzerland/Italy
+Grand Canyon|canyon|36.1|-112.1|USA
+Mt Rainier|volcano|46.85|-121.76|USA
+Kilimanjaro|volcano|-3.07|37.35|Tanzania
+Everest|alpine peak|27.99|86.93|Nepal/China
+Mt St Helens|volcano|46.2|-122.19|USA
+Yosemite Valley|canyon|37.74|-119.57|USA
+Denali|alpine peak|63.07|-151.0|USA
+Aconcagua|alpine peak|-32.65|-70.01|Argentina
+Torres del Paine|alpine peak|-51.0|-73.0|Chile
+Mt Etna|volcano|37.75|15.0|Italy
+Vesuvius|volcano|40.82|14.43|Italy
+Mauna Kea|volcano|19.82|-155.47|Hawaii, USA
+Haleakala|volcano|20.71|-156.25|Hawaii, USA
+Kilauea|volcano|19.42|-155.29|Hawaii, USA
+Aoraki / Mt Cook|alpine peak|-43.59|170.14|New Zealand
+Milford Sound|fjord|-44.67|167.93|New Zealand
+Tongariro|volcano|-39.16|175.63|New Zealand
+Zhangjiajie|sandstone pillars|29.32|110.43|China
+Huangshan|granite mountain|30.13|118.17|China
+Heaven Lake (Tian Shan)|alpine peak|43.88|88.13|China
+Mt Kailash|alpine peak|31.07|81.31|Tibet, China
+K2|alpine peak|35.88|76.51|Pakistan/China
+Annapurna|alpine peak|28.6|83.82|Nepal
+Fitz Roy|alpine peak|-49.27|-72.94|Argentina
+Machu Picchu|canyon|-13.16|-72.55|Peru
+Cotopaxi|volcano|-0.68|-78.44|Ecuador
+Pico de Orizaba|volcano|19.03|-97.27|Mexico
+Popocatepetl|volcano|19.02|-98.62|Mexico
+Crater Lake|volcano|42.94|-122.1|USA
+Mt Whitney|alpine peak|36.58|-118.29|USA
+Death Valley|basin|36.23|-116.77|USA
+Zion|canyon|37.3|-113.0|USA
+Bryce Canyon|canyon|37.59|-112.19|USA
+Mt Hood|volcano|45.37|-121.7|USA
+Grand Teton|alpine peak|43.74|-110.8|USA
+Glacier National Park|alpine peak|48.7|-113.7|USA
+Mt Washington|alpine peak|44.27|-71.3|USA
+Lake Louise|alpine peak|51.42|-116.18|Canada
+Mt Logan|alpine peak|60.57|-140.4|Canada
+Sakurajima|volcano|31.58|130.66|Japan
+Hallasan|volcano|33.36|126.53|South Korea
+Seoraksan|granite mountain|38.12|128.47|South Korea
+Mt Kinabalu|granite mountain|6.08|116.56|Malaysia
+Bromo|volcano|-7.94|112.95|Indonesia
+Merapi|volcano|-7.54|110.44|Indonesia
+Pinatubo|volcano|15.13|120.35|Philippines
+Elbrus|volcano|43.35|42.44|Russia
+Ararat|volcano|39.7|44.3|Turkey
+Olympus|alpine peak|40.09|22.36|Greece
+Tre Cime|dolomite peaks|46.62|12.3|Italy
+Mont Blanc|alpine peak|45.83|6.86|France/Italy
+Eiger|alpine peak|46.58|8.0|Switzerland
+Teide|volcano|28.27|-16.64|Canary Islands, Spain
+Ben Nevis|highlands|56.8|-5.0|UK
+Snowdon|highlands|53.07|-4.08|UK
+Geiranger|fjord|62.1|7.2|Norway
+Lofoten|fjord|68.2|13.6|Norway
+Landmannalaugar|volcano|63.99|-19.06|Iceland
+Hvannadalshnukur|volcano|64.0|-16.7|Iceland
+Mt Sinai|desert mountains|28.54|33.97|Egypt
+Petra|desert mountains|30.33|35.44|Jordan
+Ngorongoro|volcano|-3.17|35.58|Tanzania
+Drakensberg|escarpment|-28.74|28.89|South Africa/Lesotho
+Simien Mountains|escarpment|13.25|38.07|Ethiopia
+Rwenzori|alpine peak|0.38|29.87|Uganda/DR Congo
+Kosciuszko|highlands|-36.46|148.26|Australia
+Ojos del Salado|volcano|-27.11|-68.54|Chile/Argentina
+Roraima|tepui|5.14|-60.76|Venezuela/Guyana
+Sugarloaf Mountain|coastal granite|-22.95|-43.16|Brazil
+Table Mountain|tepui|-33.96|18.4|South Africa
+Mt Erebus|volcano|-77.53|167.15|Antarctica
+Paektu|volcano|42.0|128.06|China/North Korea border
+Taranaki|volcano|-39.3|174.06|New Zealand
+Grossglockner|alpine peak|47.07|12.69|Austria
+Triglav|alpine peak|46.38|13.84|Slovenia
+Gran Sasso|alpine peak|42.47|13.57|Italy
+Gerlach Peak (Tatras)|alpine peak|49.16|20.13|Slovakia
+Mt Cameroon|volcano|4.2|9.17|Cameroon
+Mt Kenya|volcano|-0.15|37.31|Kenya
+Atlas Toubkal|alpine peak|31.06|-7.92|Morocco
+Hunza Karakoram|alpine peak|36.32|74.65|Pakistan
+Nanga Parbat|alpine peak|35.24|74.59|Pakistan
+Kangchenjunga|alpine peak|27.7|88.15|Nepal/India
+Hakone|volcano|35.23|139.02|Japan
+Mt Hotaka|alpine peak|36.29|137.65|Japan
+Jade Dragon Snow Mountain|alpine peak|27.1|100.18|China
+Yarlung Tsangpo Grand Canyon|canyon|29.63|95.0|Tibet, China
+Mt Meru|volcano|-3.25|36.75|Tanzania
+Kazbek|volcano|42.66|44.52|Georgia`.split('\n').map((l) => { const [name, kind, lat, lng, region] = l.split('|'); return { name, kind, lat: +lat, lng: +lng, region }; });
 
 function decodePNG(buf) {
   let p = 8, w, h, bpp, ct; const idat = [];
@@ -137,7 +137,7 @@ for (const s of SITES) {
   if (flat0 > 0.3 && Math.min(...grid) > -50) { console.warn('skip ocean', s.name); continue; }
   if (range < 150) { console.warn('skip flat', s.name); continue; }
   const c = tileCenter(x, y); const km = +(40075.017 * Math.cos(c.lat * Math.PI / 180) / 2 ** Z).toFixed(2);
-  sites.push({ id: sites.length, name: s.name, zh: s.zh, kind: s.kind, region: s.region, lat: +c.lat.toFixed(4), lng: +c.lng.toFixed(4), km, min: Math.min(...grid), max: Math.max(...grid), grid });
+  sites.push({ id: sites.length, name: s.name, kind: s.kind, region: s.region, lat: +c.lat.toFixed(4), lng: +c.lng.toFixed(4), km, min: Math.min(...grid), max: Math.max(...grid), grid });
 }
 fs.writeFileSync(path.join(here, '..', 'data.json'), JSON.stringify({ n: N, z: Z, sites }));
 console.log('sites', sites.length, 'bytes', fs.statSync(path.join(here, '..', 'data.json')).size);

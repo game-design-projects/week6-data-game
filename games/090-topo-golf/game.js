@@ -125,22 +125,22 @@ export default {
     num: 90,
     slug: 'topo-golf',
     title: 'Topo Golf',
-    tagline: '把地球上一块真实山地缩成一块推杆果岭：读坡、推球，再猜它到底在世界的哪里。',
+    tagline: 'A real patch of Earth\'s terrain shrunk to a putting green. Read the slopes, sink the putt, then guess where in the world it is.',
     category: 'levels',
     data: 'snapshot',
     howTo: [
-      '画面是一块真实地形的等高线晕渲图：浅色是高处，深色是低处，小箭头指向下坡，球会顺着坡往低处滚。',
-      '在果岭上拖动再松手：往反方向拉出弓弦，拉得越长力度越大，球朝拖动的反方向滚出。最多 3 杆，坡会让直推的球拐弯。',
-      '进洞越早得分越高（100 / 75 / 55）；没进洞则按最近距离给最多 40 分。',
-      '推完揭晓这块地形的海拔范围和宽度。宽度随纬度变窄，地图上会画出对应的纬度线；你再在线上挑一个经度标出位置，最多 100 分。',
+      'The board is a shaded contour map of real terrain: light is high, dark is low, and the little arrows point downhill. The ball rolls downhill.',
+      'Drag on the green and release: pull back like a slingshot, and the longer the pull, the harder the putt. The ball rolls opposite to your drag. You get 3 strokes, and slopes bend a straight putt.',
+      'The sooner you sink it, the more you score (100 / 75 / 55). If you miss, you get up to 40 points for getting close.',
+      'After the putt, the terrain\'s elevation range and width are revealed. Width shrinks with latitude, so the map draws the matching latitude lines. Pick a spot on a line to place it, for up to 100 points.',
     ],
-    scoring: '推杆 0–100（第 1/2/3 杆进洞 100/75/55；未进洞按最近距离最多 40）+ 定位 100 × e^(−距离/2500 km)，总分 200。',
+    scoring: 'Putting 0–100 (sunk on stroke 1/2/3 = 100/75/55; if not sunk, up to 40 by closest distance) + location 100 × e^(−distance/2500 km), 200 in total.',
     sources: [
-      { name: 'AWS Terrain Tiles (Terrarium)', url: 'https://registry.opendata.aws/terrain-tiles/', note: '由 SRTM、ETOPO1、GMTED 等 DEM 合成；每块取 zoom 11 的一个瓦片（约 19.6 km × cos 纬度宽），降采样为 32×32 网格' },
-      { name: 'Mapzen terrain tile docs (Terrarium 编码)', url: 'https://github.com/tilezen/joerd/blob/master/docs/formats.md' },
-      { name: 'Esri World Shaded Relief / Gray Canvas 底图', url: 'https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba9e5db8acf2a6bc3' },
+      { name: 'AWS Terrain Tiles (Terrarium)', url: 'https://registry.opendata.aws/terrain-tiles/', note: 'Blended from SRTM, ETOPO1, GMTED and other DEMs; each site is one zoom-11 tile (about 19.6 km × cos(latitude) wide), downsampled to a 32×32 grid' },
+      { name: 'Mapzen terrain tile docs (Terrarium encoding)', url: 'https://github.com/tilezen/joerd/blob/master/docs/formats.md' },
+      { name: 'Esri World Shaded Relief / Gray Canvas basemaps', url: 'https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba9e5db8acf2a6bc3' },
     ],
-    dataNote: '88 个著名山地/峡谷/火山的真实高程，数据为快照（AWS 地形瓦片是静态文件，不随日期变化，所以没有「今日数据」可取）。为了能打球，每块地形的高差都被压缩到同一个约 4.5 格的高度并做了 3 次平滑，所以坡度是「缩放后」的（陡缓无法跨地点比较，真实高差看揭晓的海拔数字），但山脊、谷地和坡向是真实地形的形状。球洞与起点由当天的种子随机放置，并保证至少存在一种一杆进洞的打法。答案坐标取瓦片中心，距著名地标约 10 km 以内，远小于 2500 km 的计分尺度。',
+    dataNote: 'Real elevations for 88 famous mountains, canyons and volcanoes, as a snapshot (AWS terrain tiles are static files, so there is no "today\'s data"). To make putting playable, every site\'s relief is squeezed to the same height of about 4.5 cells and smoothed 3 times, so slopes are scaled: steepness cannot be compared between sites (see the revealed elevations for real relief), but ridges, valleys and slope directions keep the real terrain\'s shape. The hole and start are placed at random from the day\'s seed, and at least one hole-in-one shot is guaranteed to exist. The answer is the tile centre, within about 10 km of the landmark, far below the 2,500 km scoring scale.',
   },
 
   puzzle({ data, rng, pick }) {
@@ -211,8 +211,8 @@ export default {
     const dist = (q) => Math.hypot(q[0] - p.hole[0], q[1] - p.hole[1]);
     st.best = d0;
 
-    ctx.stage.append(ui.panel({ kicker: '第一步 · 推杆', title: '读坡，推进洞' },
-      ui.h('p', { class: 'small muted', style: { margin: 0 } }, '浅色高、深色低，细线是等高线，小箭头指向下坡，球会顺着坡拐弯。白球在哪就从哪出发，向后拉再松手发球，最多 3 杆。')));
+    ctx.stage.append(ui.panel({ kicker: 'Step 1 · Putt', title: 'Read the slope, sink the putt' },
+      ui.h('p', { class: 'small muted', style: { margin: 0 } }, 'Light is high, dark is low, thin lines are contours, and little arrows point downhill, so the ball curves with the slope. Start from the white ball: pull back and release to putt. 3 strokes max.')));
 
     const putt = await new Promise((resolve) => {
       const finish = () => { s.stop(); resolve({ score: puttScore(st.holedAt, st.best, d0), max: 100, holed: st.holedAt, strokes: st.strokes, best: st.best }); };
@@ -265,7 +265,7 @@ export default {
           g.fillStyle = '#fff'; g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 1.5;
           g.beginPath(); g.arc(st.pos[0] * k, st.pos[1] * k, Math.max(4, k * 0.45), 0, 7); g.fill(); g.stroke();
           const power = st.drag ? Math.round(Math.min(1, Math.hypot(st.drag.x - st.pos[0] * k, st.drag.y - st.pos[1] * k) / maxPx()) * 100) : 0;
-          s.hud.textContent = st.holedAt ? '进洞！' : `第 ${Math.min(3, st.strokes + (st.anim ? 0 : 1))}/3 杆 · 距洞 ${dist(st.pos).toFixed(1)} 格${st.drag ? ` · 力度 ${power}%` : ''}`;
+          s.hud.textContent = st.holedAt ? 'Holed!' : `Stroke ${Math.min(3, st.strokes + (st.anim ? 0 : 1))}/3 · ${dist(st.pos).toFixed(1)} cells to hole${st.drag ? ` · power ${power}%` : ''}`;
         },
         onPointer(type, pt) {
           if (st.anim || st.holedAt || st.strokes >= 3) return;
@@ -299,17 +299,17 @@ export default {
     const widthKm = site.km;
     const lat = latFromKm(widthKm);
     ctx.log('topo-golf reveal', { site: site.name, widthKm, latEstimate: lat });
-    ctx.stage.append(ui.panel({ kicker: '第二步 · 揭晓线索', title: `这块地形宽 ${widthKm.toFixed(2)} km` },
+    ctx.stage.append(ui.panel({ kicker: 'Step 2 · The clue', title: `This terrain is ${widthKm.toFixed(2)} km wide` },
       ui.kv([
-        ['最低 / 最高海拔', `${hhmm(site.min)} m / ${hhmm(site.max)} m`],
-        ['高差', `${hhmm(site.max - site.min)} m`],
-        ['宽度 → 纬度', `${EQ_KM.toFixed(2)} km × cos(纬度) = ${widthKm.toFixed(2)} km，所以纬度约 ±${lat}°`]]),
-      ui.h('p', { class: 'small muted', style: { marginBottom: 0 } }, '果岭就是这块地形缩放而来（最亮处 = 最高点）。海拔高、高差大多是大山脉；海拔低但高差大多是峡谷或沿海山地。地图上的虚线是由宽度算出的南北纬线，答案在其中一条上。')));
+        ['Lowest / highest elevation', `${hhmm(site.min)} m / ${hhmm(site.max)} m`],
+        ['Relief', `${hhmm(site.max - site.min)} m`],
+        ['Width → latitude', `${EQ_KM.toFixed(2)} km × cos(latitude) = ${widthKm.toFixed(2)} km, so latitude is about ±${lat}°`]]),
+      ui.h('p', { class: 'small muted', style: { marginBottom: 0 } }, 'The green is this terrain, rescaled (brightest = highest point). High elevation with big relief usually means a major range; low elevation with big relief is usually a canyon or coastal mountains. The dashed lines on the map are the north and south latitudes implied by the width, and the answer lies on one of them.')));
 
     const pin = await ctx.pin({
-      title: '它在世界的哪里？',
-      prompt: `点在 ±${lat}° 两条纬线中的一条上，再用海拔线索判断经度。`,
-      answer: { lat: site.lat, lng: site.lng, label: `${site.zh} ${site.name}（${site.region}）` },
+      title: 'Where in the world is it?',
+      prompt: `Click on one of the two ±${lat}° latitude lines, using the elevation clue to judge longitude.`,
+      answer: { lat: site.lat, lng: site.lng, label: `${site.name} (${site.region})` },
       view: { bounds: [[-80, -175], [80, 175]] },
       scale: 2500,
       setup: async ({ map, L }) => {
@@ -321,24 +321,24 @@ export default {
       },
     });
 
-    const puttDesc = putt.holed ? `第 ${putt.holed} 杆进洞` : `3 杆未进，最近距洞 ${putt.best.toFixed(1)} 格（起点 ${d0.toFixed(1)}）`;
+    const puttDesc = putt.holed ? `sunk on stroke ${putt.holed}` : `missed in 3 strokes, closest ${putt.best.toFixed(1)} cells from the hole (start ${d0.toFixed(1)})`;
     const res = core.combine([
       { score: putt.score, max: 100, emoji: putt.holed ? `⛳${putt.holed}` : '🏌️', summary: puttDesc },
       pin,
     ]);
     const brk = straightShotBreak(h, p.ball, p.hole);
     const dz = ((heightAt(h, p.hole[0], p.hole[1]) - heightAt(h, p.ball[0], p.ball[1])) / RELIEF) * (site.max - site.min);
-    const side = brk.lateral > 0 ? '右' : '左';
-    const breakTxt = brk.holed ? '这一洞坡度很平，直推就能进。'
-      : `球洞比起点${dz >= 0 ? '高' : '低'}约 ${hhmm(Math.abs(dz))} m（真实高差折算）；瞄准球洞直推会被坡带得偏向前进方向的${side}侧约 ${brk.miss.toFixed(1)} 格，要提前往${side === '右' ? '左' : '右'}瞄、顺着等高线读弯。`;
-    const solveTxt = p.solve ? `一种一杆进洞的打法：从直指球洞的方向${p.solve.offsetDeg === 0 ? '不偏' : `${p.solve.offsetDeg > 0 ? '顺时针' : '逆时针'}偏 ${Math.abs(p.solve.offsetDeg)}°`}，力度约 ${Math.round(p.solve.power * 100)}%。` : '';
+    const side = brk.lateral > 0 ? 'right' : 'left';
+    const breakTxt = brk.holed ? 'This hole is nearly flat, so a straight putt goes in.'
+      : `The hole is about ${hhmm(Math.abs(dz))} m ${dz >= 0 ? 'above' : 'below'} the start (scaled to real relief). Aiming straight at it, the slope pulls the ball about ${brk.miss.toFixed(1)} cells to the ${side} of the line of travel, so aim ${side === 'right' ? 'left' : 'right'} and read the break along the contours.`;
+    const solveTxt = p.solve ? ` One hole-in-one line: from the direct line to the hole, ${p.solve.offsetDeg === 0 ? 'no offset' : `${Math.abs(p.solve.offsetDeg)}° ${p.solve.offsetDeg > 0 ? 'clockwise' : 'counter-clockwise'}`}, at about ${Math.round(p.solve.power * 100)}% power.` : '';
     res.detail = ui.panel({ plain: true }, ui.kv([
-      ['地点', `${site.zh} ${site.name}（${site.kind}，${site.region}）`],
-      ['瓦片中心', `${site.lat.toFixed(2)}°, ${site.lng.toFixed(2)}°`],
-      ['海拔范围', `${hhmm(site.min)}–${hhmm(site.max)} m，高差 ${hhmm(site.max - site.min)} m`],
-      ['宽度给出的纬度', `${widthKm.toFixed(2)} km → ±${lat}°；实际纬度 ${site.lat.toFixed(1)}°，${Math.abs(Math.abs(site.lat) - lat) < 1.5 ? '线索与答案吻合' : '线索只是近似'}。瓦片宽度只由纬度决定，这是定位最硬的线索。`],
-      ['推杆', puttDesc],
-      ['这一洞的坡', `${breakTxt}${solveTxt}`]]));
+      ['Place', `${site.name} (${site.kind}, ${site.region})`],
+      ['Tile centre', `${site.lat.toFixed(2)}°, ${site.lng.toFixed(2)}°`],
+      ['Elevation range', `${hhmm(site.min)}–${hhmm(site.max)} m, relief ${hhmm(site.max - site.min)} m`],
+      ['Latitude from width', `${widthKm.toFixed(2)} km → ±${lat}°; actual latitude ${site.lat.toFixed(1)}°, ${Math.abs(Math.abs(site.lat) - lat) < 1.5 ? 'the clue matches the answer' : 'the clue is only approximate'}. Tile width depends only on latitude, the hardest clue for placing it.`],
+      ['Putt', puttDesc],
+      ['This hole\'s slope', `${breakTxt}${solveTxt}`]]));
     return res;
   },
 };
