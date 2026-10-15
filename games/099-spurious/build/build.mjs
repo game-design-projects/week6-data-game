@@ -10,8 +10,7 @@ let seed = 99099; const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0
 const ri = (n) => Math.floor(rnd() * n);
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = ri(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const countries = new Map(JSON.parse(fs.readFileSync(here('raw/countries.json')))[1].filter((c) => c.region.id !== 'NA').map((c) => [c.id, c]));
-const OVERRIDE = { 'Channel Islands': '海峡群岛' };
-const zhName = (c2, en) => { if (OVERRIDE[en]) return OVERRIDE[en]; try { const z = new Intl.DisplayNames(['zh-Hans'], { type: 'region' }).of(c2); return z && z !== c2 ? z : en; } catch { return en; } };
+const enName = (c2, wb) => { try { const n = new Intl.DisplayNames(['en'], { type: 'region' }).of(c2); return n && n !== c2 ? n : wb; } catch { return wb; } };
 
 const mean = (v) => v.reduce((a, b) => a + b, 0) / v.length;
 const zscore = (v) => { const m = mean(v), sd = Math.sqrt(mean(v.map((x) => (x - m) ** 2))); return v.map((x) => (x - m) / sd); };
@@ -75,7 +74,7 @@ const need = new Set(used.flatMap((s) => s.s));
 const lib = {};
 for (const k of need) lib[k] = series.find((x) => x.key === k).v;
 const ccs = [...new Set([...need].map((k) => k.split('|')[1]))].sort();
-const ccNames = Object.fromEntries(ccs.map((cc) => [cc, { n: countries.get(cc).name, z: zhName(countries.get(cc).iso2Code, countries.get(cc).name) }]));
+const ccNames = Object.fromEntries(ccs.map((cc) => [cc, { n: enName(countries.get(cc).iso2Code, countries.get(cc).name) }]));
 const out = { years: YEARS, ind: IND, countries: ccNames, lib, sets: used, puzzles };
 fs.writeFileSync(here('../data.json'), JSON.stringify(out));
 console.log('puzzles', puzzles.length, 'lib', Object.keys(lib).length, fs.statSync(here('../data.json')).size, 'bytes');

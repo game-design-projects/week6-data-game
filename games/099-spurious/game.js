@@ -40,17 +40,17 @@ export default {
     num: 99,
     slug: 'spurious',
     title: 'Spurious',
-    tagline: '六条真实的年度曲线，只有一对相关系数 r > 0.9。把它们找出来。',
+    tagline: 'Six real yearly curves, and only one pair has a correlation above r = 0.9. Find it.',
     category: 'literacy',
     data: 'snapshot',
     howTo: [
-      '每题给出 6 条 2000–2022 年的曲线，来自 6 个不同国家、6 个不同指标，纵轴各自缩放、不标数字。',
-      '其中恰好有一对的相关系数 r 超过 0.9，其余任意两条的 r 都小于 0.8。陷阱：不止一对曲线在“同向爬升”，要看起伏的节奏是否一致。点选你认为的那一对，选满 2 条后提交。',
-      '一天三题，由易到难。揭晓时会告诉你每条曲线到底是什么、去掉共同趋势后它们还相关吗，以及最容易被误选的那一对。',
+      'Each question shows 6 curves for 2000-2022, from 6 different countries and 6 different indicators. Each is scaled on its own, with no axis numbers.',
+      'Exactly one pair has a correlation r above 0.9; every other pair is below 0.8. The trap: more than one pair climbs in the same direction, so look at whether the ups and downs keep the same rhythm. Tap the two curves you think match, then submit.',
+      'Three questions a day, easy to hard. The reveal tells you what each curve really is, whether the pair still correlates once the shared trend is removed, and which decoy pair was most tempting.',
     ],
-    scoring: '每题按 Jaccard 重合度给分：选对两条得 1 分，对一条得 1/3 分，全错 0 分。满分 3 分；纯靠猜平均只有约 0.7 分。',
-    sources: [{ name: 'World Bank Open Data API', url: 'https://data.worldbank.org/', note: '30 个指标 × 各国 2000–2022 年度值，仅保留完整无缺失的序列' }],
-    dataNote: '数据为世界银行公开指标的快照（该数据集按年发布，没有“今天”的数据，故不做实时抓取）。题目由离线脚本（build/build.mjs）从 4000 多条真实序列中搜索得到：目标对 r 在 0.93–0.995 且来自不同国家与指标，其余曲线两两 r < 0.8，并保证至少两条干扰曲线与目标同向变化。目标对之间通常毫无因果，只是共享上升或下降趋势。每天 3 题按难度（最像目标的干扰对、同向干扰数、目标 r）由易到难排列。',
+    scoring: 'Each question is scored by Jaccard overlap: both curves right is 1 point, one right is 1/3, none is 0. Max 3 points; pure guessing averages about 0.7.',
+    sources: [{ name: 'World Bank Open Data API', url: 'https://data.worldbank.org/', note: '30 indicators × every country, yearly values for 2000-2022; only complete series with no gaps are kept' }],
+    dataNote: 'A snapshot of World Bank open indicators (the data is published yearly, so there is no "today" value to fetch live). An offline script (build/build.mjs) searched 4,000+ real series for each puzzle: the target pair has r between 0.93 and 0.995 and comes from different countries and indicators, every other pair has r < 0.8, and at least two decoys trend the same way as the target. The target pair usually has no causal link at all; they just share a rising or falling trend. The 3 daily questions are ordered easy to hard by how close the best decoy pair is, how many decoys trend alike, and the target r.',
   },
 
   puzzle({ data, pick }) {
@@ -59,7 +59,7 @@ export default {
 
   async play(ctx, p) {
     const { ui, data } = ctx;
-    const nm = (k) => { const [ind, cc] = k.split('|'); return `${data.countries[cc].z} · ${data.ind[ind]}`; };
+    const nm = (k) => { const [ind, cc] = k.split('|'); return `${data.countries[cc].n} · ${data.ind[ind]}`; };
     const built = [];
     const charts = [];
     for (const idx of p.rounds) {
@@ -73,28 +73,28 @@ export default {
       ctx.log('round', idx, 'target', set.t.map((i) => LET[i]).join(''), 'r=', a.r.toFixed(3), 'near=', a.near.r.toFixed(2));
     }
     const res = await ctx.rounds({
-      title: '哪两条相关系数 r > 0.9？',
+      title: 'Which two curves correlate at r > 0.9?',
       multi: true,
       minWidth: 150,
       rounds: built.map(({ set, r, rd }, n) => ({
-        prompt: `第 ${n + 1} 题（${['易', '中', '难'][n]}）：选出 r > 0.9 的那一对（选 2 条后提交）`,
+        prompt: `Question ${n + 1} (${['easy', 'medium', 'hard'][n]}): pick the pair with r > 0.9 (choose 2, then submit)`,
         options: set.s.map((k, i) => ({ label: LET[i], body: charts[n][i] })),
         correct: set.t,
-        explain: `答案 ${set.t.map((i) => LET[i]).join(' 和 ')}：${nm(set.s[set.t[0]])} 与 ${nm(set.s[set.t[1]])}，r = ${r.toFixed(2)}。去掉趋势（逐年变化量）后 r = ${rd.toFixed(2)}。`,
+        explain: `Answer: ${set.t.map((i) => LET[i]).join(' and ')}, ${nm(set.s[set.t[0]])} and ${nm(set.s[set.t[1]])}, r = ${r.toFixed(2)}. With the trend removed (year-over-year changes), r = ${rd.toFixed(2)}.`,
       })),
     });
-    const dir = (t) => (t > 0 ? '上升' : '下降');
+    const dir = (t) => (t > 0 ? 'rising' : 'falling');
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.h('div', { class: 'ink2' }, '相关不等于因果：两条曲线只要都在爬升（或都在下滑），r 就会很高。“逐年变化 r”是去掉趋势后的相关，通常骤降到接近 0——这就是伪相关的指纹。'),
+      ui.h('div', { class: 'ink2' }, 'Correlation is not causation: any two curves that both climb (or both slide) will show a high r. The "year-over-year r" is the correlation after removing the trend, and it usually collapses to near 0. That is the fingerprint of a spurious correlation.'),
       ...built.map(({ set, r, rd, near, trend }, n) => {
         const [i, j] = set.t;
         const why = Math.abs(rd) < 0.4
-          ? `两条曲线都在${dir(trend[i])}${Math.sign(trend[i]) === Math.sign(trend[j]) ? '' : '/' + dir(trend[j])}，r = ${r.toFixed(2)}；但把每年的涨跌单独拿出来比，r 只剩 ${rd.toFixed(2)}，说明高相关几乎全来自共同趋势，是伪相关。`
-          : `r = ${r.toFixed(2)}，逐年变化 r 仍有 ${rd.toFixed(2)}：除了共同趋势，连年度起伏也有些同步（多半是巧合或共同的全球冲击）。`;
+          ? `Both curves are ${dir(trend[i])}${Math.sign(trend[i]) === Math.sign(trend[j]) ? '' : ' / ' + dir(trend[j])}, r = ${r.toFixed(2)}. But compare each year\'s ups and downs on their own and r drops to ${rd.toFixed(2)}: the high correlation comes almost entirely from the shared trend, so it is spurious.`
+          : `r = ${r.toFixed(2)}, and the year-over-year r is still ${rd.toFixed(2)}: beyond the shared trend, the yearly wiggles also move together (likely coincidence or a common global shock).`;
         return ui.h('div', { class: 'ds-stack' },
-          ui.h('div', { class: 'ink2' }, `第 ${n + 1} 题：${why} 最容易误选的是 ${LET[near.a]} 与 ${LET[near.b]}（r = ${near.r.toFixed(2)}，仍低于目标）。`),
+          ui.h('div', { class: 'ink2' }, `Question ${n + 1}: ${why} The most tempting decoy was ${LET[near.a]} and ${LET[near.b]} (r = ${near.r.toFixed(2)}, still below the target).`),
           ui.table({
-            columns: [{ key: 'k', label: '曲线' }, { key: 'v', label: '国家 · 指标' }, { key: 't', label: '2000→2022' }],
+            columns: [{ key: 'k', label: 'Curve' }, { key: 'v', label: 'Country · indicator' }, { key: 't', label: '2000→2022' }],
             rows: set.s.map((k, x) => ({
               k: LET[x] + (set.t.includes(x) ? ' ✓' : ''),
               v: nm(k),

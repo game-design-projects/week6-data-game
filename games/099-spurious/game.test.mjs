@@ -34,7 +34,7 @@ test('days 1-120: every puzzle valid', () => {
       for (const k of set.s) {
         const [ind, cc] = k.split('|');
         assert.ok(data.ind[ind], `ind ${ind}`);
-        assert.ok(data.countries[cc]?.z && data.countries[cc]?.n, `country ${cc}`);
+        assert.ok(data.countries[cc]?.n, `country ${cc}`);
         const v = data.lib[k];
         assert.equal(v.length, 23);
         assert.ok(v.every((x) => Number.isFinite(x)), `NaN in ${k}`);
