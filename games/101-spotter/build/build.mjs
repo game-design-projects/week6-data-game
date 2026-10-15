@@ -32,7 +32,7 @@ for (const c of cands) {
 }
 const n = {}; photos.forEach((p) => (n[p.iata] = (n[p.iata] || 0) + 1));
 const out = {
-  airports: AIRPORTS.filter((a) => n[a[0]]).map(([iata, en, zh, country, cont, lat, lng]) => ({ iata, en, zh, country, cont, lat, lng })),
+  airports: AIRPORTS.filter((a) => n[a[0]]).map(([iata, en, name, country, cont, lat, lng]) => ({ iata, en, name, country, cont, lat, lng })),
   photos,
 };
 writeFileSync('../data.json', JSON.stringify(out));

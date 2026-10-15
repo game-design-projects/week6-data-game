@@ -2,10 +2,10 @@
 import { haversineKm, bearingDeg, arrow, fmtKm } from '../../engine/core.js';
 
 const QUARTERS = [
-  { label: '12–2 月', months: [12, 1, 2] },
-  { label: '3–5 月', months: [3, 4, 5] },
-  { label: '6–8 月', months: [6, 7, 8] },
-  { label: '9–11 月', months: [9, 10, 11] },
+  { label: 'Dec–Feb', months: [12, 1, 2] },
+  { label: 'Mar–May', months: [3, 4, 5] },
+  { label: 'Jun–Aug', months: [6, 7, 8] },
+  { label: 'Sep–Nov', months: [9, 10, 11] },
 ];
 export const quarterOf = (date) => QUARTERS.findIndex((q) => q.months.includes(+date.slice(5, 7)));
 /** First word of a type ("Boeing 737-800" -> "Boeing") groups manufacturers for plausible decoys. */
@@ -31,21 +31,21 @@ export default {
     num: 101,
     slug: 'spotter',
     title: 'Spotter',
-    tagline: '一张飞友拍的真实照片：先猜机场，再认航司、机型和拍摄月份。',
+    tagline: 'A real plane-spotter photo: name the airport first, then the airline, the aircraft type and the season.',
     category: 'transit',
     data: 'snapshot',
     howTo: [
-      '看一张飞友在机场拍的真实照片，从列表里猜它是在哪个机场拍的，最多 6 次。每猜错一次多解锁一条线索（大洲、国家、半球、IATA 首字母）。',
-      '每次猜测会显示你猜的机场离答案多远、在哪个方向、是否同国。',
-      '猜完机场后再答三道选择题：这是哪家航司？什么机型？照片拍于哪几个月？',
-      '窍门：机身涂装和尾翼是航司的指纹；发动机数量、机身长度和翼尖小翼是机型的指纹；背景里的植被、积雪、日照角度和地勤车辆透露地点与季节。',
+      'Look at a real photo taken by a plane spotter at an airport and guess which airport it was from the list. You get up to 6 guesses, and each miss unlocks a clue (continent, country, hemisphere, first letter of the IATA code).',
+      'Each guess shows how far it is from the answer, in which direction, and whether it is in the same country.',
+      'After the airport, answer three multiple-choice questions: which airline? Which aircraft type? Which months was the photo taken in?',
+      'Tips: paint scheme and tail are an airline\'s fingerprint; engine count, fuselage length and winglets identify the type; vegetation, snow, sun angle and ground vehicles in the background hint at place and season.',
     ],
-    scoring: '共 200 分：机场 100 分（第 1 次猜中满分，之后每多猜一次少约 17 分，6 次内没猜中为 0），三道选择题合占 100 分（每题约 33 分）。',
+    scoring: '200 points in all: 100 for the airport (full marks on the first guess, about 17 fewer for each extra guess, 0 if not found in 6) and 100 for the three questions (about 33 each).',
     sources: [
-      { name: 'Wikimedia Commons（照片与分类）', url: 'https://commons.wikimedia.org/wiki/Category:Aircraft_by_airport', note: '分类名 “机型 of 航司 at 机场” 即答案；拍摄日期来自照片 EXIF / 描述' },
+      { name: 'Wikimedia Commons (photos and categories)', url: 'https://commons.wikimedia.org/wiki/Category:Aircraft_by_airport', note: 'The category name “type of airline at airport” is the answer; shooting dates come from the photo EXIF or description' },
       { name: 'Wikimedia Commons API', url: 'https://commons.wikimedia.org/w/api.php' },
     ],
-    dataNote: '照片取自 Commons 的 “机型 of 航司 at 机场” 分类，分类即答案来源，由志愿者维护，偶有误标；构建时已用文件名/描述交叉核对，剔除明显误标（标题写着别家航司或别的制造商）、竖构图和缺拍摄月份的照片，机型已合并为系列（如 A320neo 并入 A320），并避免把涂装相近的子品牌（如 Lufthansa / Lufthansa Cargo）同时放进选项。原创意中的“打码注册号 + OpenSky 历史航线”未实现：OpenSky 的历史航班接口需要账号（匿名访问已不可用），浏览器端也无法可靠地给注册号打码，所以替换为“机场 + 航司 + 机型 + 月份”四问；照片上可能看得到注册号，这是真实照片的一部分。答题前不显示原图页面链接，以免从文件名泄露答案。',
+    dataNote: 'Photos come from Commons categories named “type of airline at airport”, which supply the answers. Volunteers maintain them and occasionally mislabel, so at build time each photo was cross-checked against its file name and description, dropping obvious mislabels (a title naming a different airline or manufacturer), portrait shots and photos with no shooting month. Aircraft types are merged into families (A320neo into A320), and look-alike sub-brands (such as Lufthansa and Lufthansa Cargo) are never offered together as options. The original idea of a blurred registration plus OpenSky flight history was not built: OpenSky\'s historical flight API now needs an account, and a browser cannot reliably blur registrations, so the game asks four questions instead: airport, airline, type and month. The registration may be visible in the photo; that is part of a real photo. The original photo page link stays hidden until you finish, so the file name cannot leak the answer.',
   },
 
   puzzle({ data, rng, pick }) {
@@ -65,27 +65,27 @@ export default {
     const ans = byIata.get(ph.iata);
     ctx.log('photo', ph.iata, ph.op, ph.type, ph.date);
 
-    ctx.stage.append(ui.panel({ kicker: '今日照片', title: '这架飞机在哪拍的？' },
+    ctx.stage.append(ui.panel({ kicker: 'Today\'s photo', title: 'Where was this plane photographed?' },
       ui.h('div', { style: { background: 'var(--paper-2, rgba(128,128,128,.12))', borderRadius: '8px', overflow: 'hidden' } },
-        ui.h('img', { src: ph.thumb, alt: '一张飞机照片（出处在答题后显示）', referrerpolicy: 'no-referrer', style: { width: '100%', maxHeight: '62vh', objectFit: 'contain', display: 'block' } })),
-      ui.h('div', { class: 'small muted', style: { marginTop: '6px' } }, '摄影者与原图链接在答题结束后显示。')));
+        ui.h('img', { src: ph.thumb, alt: 'An aircraft photo (source shown after you answer)', referrerpolicy: 'no-referrer', style: { width: '100%', maxHeight: '62vh', objectFit: 'contain', display: 'block' } })),
+      ui.h('div', { class: 'small muted', style: { marginTop: '6px' } }, 'The photographer and the original link appear once you finish.')));
 
     const clues = [
-      '看照片：涂装、地勤车辆、背景地形和植被。',
-      `大洲：${ans.cont}`,
-      `国家 / 地区：${ans.country}`,
-      `半球：${ans.lat >= 0 ? "北半球" : "南半球"}（季节与此相关）`,
-      `机场 IATA 代码以 “${ans.iata[0]}” 开头。`,
+      'Study the photo: paint scheme, ground vehicles, background terrain and vegetation.',
+      `Continent: ${ans.cont}`,
+      `Country / region: ${ans.country}`,
+      `Hemisphere: ${ans.lat >= 0 ? 'Northern' : 'Southern'} (seasons depend on it)`,
+      `The airport's IATA code starts with “${ans.iata[0]}”.`,
     ];
     const ap = await ctx.guess({
-      options: ctx.data.airports.map((a) => ({ id: a.iata, label: a.zh, hint: a.iata, aliases: [a.en, a.iata, a.country] })),
+      options: ctx.data.airports.map((a) => ({ id: a.iata, label: a.name, hint: a.iata, aliases: [a.en, a.iata, a.country] })),
       answer: ans.iata,
       maxGuesses: 6,
-      title: '第一问：哪个机场？',
-      placeholder: '输入机场名或 IATA 代码…',
+      title: 'Which airport?',
+      placeholder: 'Type an airport, city or IATA code…',
       clues,
-      cluesTitle: '线索',
-      columns: ['距离', '方向', '同国'],
+      cluesTitle: 'Clues',
+      columns: ['Distance', 'Direction', 'Country'],
       near: (g, a) => haversineKm(byIata.get(g.id), byIata.get(a.id)) < 1500,
       feedback: (g) => {
         const ga = byIata.get(g.id);
@@ -94,7 +94,7 @@ export default {
         return [
           { text: fmtKm(km), num: true, state: km < 1500 ? 'near' : undefined },
           { text: arrow(bearingDeg(ga, ans)) },
-          ga.country === ans.country ? { text: '同国', state: 'near' } : { text: '不同', state: undefined },
+          ga.country === ans.country ? { text: 'Same', state: 'near' } : { text: 'Other', state: undefined },
         ];
       },
     });
@@ -103,9 +103,9 @@ export default {
     const q = quarterOf(ph.date);
     const rd = await ctx.rounds({
       rounds: [
-        { prompt: '第二问：这是哪家航司的飞机？', options: p.op.opts.map((label) => ({ label })), correct: p.op.correct, explain: `答案：${ph.op}` },
-        { prompt: '第三问：这是什么机型？', options: p.type.opts.map((label) => ({ label })), correct: p.type.correct, explain: `答案：${ph.type}` },
-        { prompt: '第四问：照片拍于哪几个月？', options: QUARTERS.map((x) => ({ label: x.label })), correct: q, explain: `拍摄日期 ${ph.date}` },
+        { prompt: 'Which airline is this?', options: p.op.opts.map((label) => ({ label })), correct: p.op.correct, explain: `Answer: ${ph.op}` },
+        { prompt: 'Which aircraft type is this?', options: p.type.opts.map((label) => ({ label })), correct: p.type.correct, explain: `Answer: ${ph.type}` },
+        { prompt: 'Which months was the photo taken in?', options: QUARTERS.map((x) => ({ label: x.label })), correct: q, explain: `Taken on ${ph.date}` },
       ],
     });
 
@@ -113,16 +113,17 @@ export default {
     res.summary = `${ans.iata} · ${rd.score}/${rd.max}`;
     const mon = +ph.date.slice(5, 7);
     const north = ans.lat >= 0;
-    const NORTH = ['冬', '冬', '春', '春', '春', '夏', '夏', '夏', '秋', '秋', '秋', '冬'];
-    const season = (north ? NORTH[mon - 1] : NORTH[(mon + 5) % 12]) + '季';
+    const NORTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const season = (north ? NORTH[mon - 1] : NORTH[(mon + 5) % 12]);
     res.detail = ui.kv([
-      ['机场', `${ans.zh}（${ans.iata}，${ans.en}，${ans.country}）`],
-      ['航司', ph.op],
-      ['机型', ph.type],
-      ['拍摄日期', `${ph.date}（${north ? '北' : '南'}半球${season}）`],
-      ['出处', ui.h('a', { href: ph.page, target: '_blank', rel: 'noopener' }, `${ph.by} · ${ph.lic} · Wikimedia Commons`)],
-      ['这张照片的线索', `涂装是 ${ph.op}：看它的主要运营地区，就能把 ${ans.zh} 缩到${ans.cont}；${ph.type} 是这家航司的常见机型。${north ? '北' : '南'}半球 ${mon} 月是${season}——画面里的植被、积雪与光线角度要和这个季节对得上。`],
-      ['怎么认机型', '数发动机（2 台或 4 台）、看机身长度与有没有翼尖小翼；波音多为尖锥形尾椎和锯齿状发动机罩，空客多为圆润的机头与大舱门。'],
+      ['Airport', `${ans.name} (${ans.iata}, ${ans.en}, ${ans.country})`],
+      ['Airline', ph.op],
+      ['Aircraft', ph.type],
+      ['Date taken', `${ph.date} (${north ? 'northern' : 'southern'} hemisphere ${season})`],
+      ['Source', ui.h('a', { href: ph.page, target: '_blank', rel: 'noopener' }, `${ph.by} · ${ph.lic} · Wikimedia Commons`)],
+      ['Clues in this photo', `The livery is ${ph.op}: its main operating region narrows ${ans.name} down to ${ans.cont}, and ${ph.type} is a common type for that airline. ${MONTHS[mon - 1]} in the ${north ? 'northern' : 'southern'} hemisphere is ${season}, so the vegetation, snow and sun angle in the picture should fit that season.`],
+      ['Telling types apart', 'Count the engines (2 or 4), check the fuselage length and whether there are winglets. Boeings tend to have a pointed tail cone and scalloped engine cowls; Airbuses tend to have a rounded nose and big cabin doors.'],
     ]);
     return res;
   },

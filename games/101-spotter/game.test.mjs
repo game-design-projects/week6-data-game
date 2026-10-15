@@ -66,7 +66,7 @@ test('pool: every puzzle for days 1-120 is valid', () => {
 test('pool: unique photos, no leak in labels shown before guessing', () => {
   assert.equal(new Set(data.photos.map((p) => p.thumb)).size, data.photos.length);
   // the only pre-guess text is clue copy derived from airport fields; airport labels must not embed airline names
-  for (const a of data.airports) for (const k of ['iata', 'en', 'zh', 'country', 'cont']) assert.ok(a[k], `${a.iata}.${k}`);
+  for (const a of data.airports) for (const k of ['iata', 'en', 'name', 'country', 'cont']) assert.ok(a[k], `${a.iata}.${k}`);
   for (const a of data.airports) assert.ok(Number.isFinite(a.lat) && Number.isFinite(a.lng) && Math.abs(a.lat) <= 90 && Math.abs(a.lng) <= 180);
   // every airport has >= 2 photos? (not required) but every airport must be reachable by distance feedback
   assert.ok(haversineKm(data.airports[0], data.airports[1]) > 0);
