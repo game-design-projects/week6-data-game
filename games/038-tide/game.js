@@ -18,7 +18,7 @@ export function analyse(v) {
   const ineq = (idx) => (idx.length < 2 ? 0 : idx.slice(1).reduce((s, i, k) => s + Math.abs(v[i] - v[idx[k]]), 0) / (idx.length - 1) / (range || 1));
   const unequal = Math.max(ineq(hi), ineq(lo)) > 0.22;
   const kind = perDay < 1.35 ? 'diurnal' : unequal ? 'mixed' : 'semi';
-  const type = { diurnal: '全日潮（每天约 1 次高潮）', mixed: '混合潮（两次高潮或低潮高低不等）', semi: '半日潮（每天约 2 次高潮，高度相近）' }[kind];
+  const type = { diurnal: 'Diurnal (about 1 high tide a day)', mixed: 'Mixed (two highs or lows of unequal height)', semi: 'Semidiurnal (about 2 high tides a day, similar heights)' }[kind];
   return { hi, lo, range, perDay, type, kind };
 }
 
@@ -37,16 +37,16 @@ export function toPuzzle(raw, id, begin) {
 /** Coarse, honest region label for the result card (from state code / coordinates). */
 export function region(st) {
   const s = st.state;
-  if (s === 'AK') return '阿拉斯加';
-  if (s === 'HI') return '夏威夷';
-  if (['WA', 'OR', 'CA'].includes(s)) return '北美太平洋沿岸';
-  if (['TX', 'LA', 'MS', 'AL'].includes(s)) return '墨西哥湾北岸';
-  if (['ME', 'NH', 'MA', 'RI', 'CT', 'NY', 'NJ', 'DE', 'MD', 'VA', 'NC', 'SC', 'GA'].includes(s)) return '北美大西洋沿岸';
-  if (s === 'FL') return '佛罗里达';
-  if (s === 'PR') return '加勒比海';
-  if (st.lng > 60 || st.lng < -130) return '太平洋 / 印度洋岛屿';
-  if (st.lng > -100 && st.lng < -60 && st.lat > 5) return '加勒比海 / 墨西哥湾';
-  return '拉丁美洲太平洋沿岸';
+  if (s === 'AK') return 'Alaska';
+  if (s === 'HI') return 'Hawaii';
+  if (['WA', 'OR', 'CA'].includes(s)) return 'North American Pacific coast';
+  if (['TX', 'LA', 'MS', 'AL'].includes(s)) return 'Northern Gulf of Mexico coast';
+  if (['ME', 'NH', 'MA', 'RI', 'CT', 'NY', 'NJ', 'DE', 'MD', 'VA', 'NC', 'SC', 'GA'].includes(s)) return 'North American Atlantic coast';
+  if (s === 'FL') return 'Florida';
+  if (s === 'PR') return 'Caribbean';
+  if (st.lng > 60 || st.lng < -130) return 'Pacific / Indian Ocean islands';
+  if (st.lng > -100 && st.lng < -60 && st.lat > 5) return 'Caribbean / Gulf of Mexico';
+  return 'Latin American Pacific coast';
 }
 
 /** Hours of the high tides on each of the 3 days (empty array when a day has none). */
@@ -60,21 +60,21 @@ export default {
     num: 38,
     slug: 'tide',
     title: 'Tide',
-    tagline: '三天的潮汐曲线，猜是哪个港口。一天只有一次高潮，就该想到墨西哥湾。',
+    tagline: 'Three days of a harbor\'s tide curve. Guess the port. Only one high tide a day? Think Gulf of Mexico.',
     category: 'science',
     data: 'live',
     howTo: [
-      '图里是某个验潮站从今天起 3 天（72 小时）的逐小时潮位预报，当地标准时间，0 为最低低潮面。',
-      '数一数每天有几次高潮：一天一次（全日潮）常见于墨西哥湾、阿拉斯加部分海岸；一天两次且高度相近是大西洋沿岸的半日潮；两高两低不等是太平洋沿岸的混合潮。',
-      '潮差也是线索：太平洋环礁只有几十厘米，漏斗形海湾可达数米甚至十米。',
-      '在地图上标出验潮站（地图上先不显示地名）。按距离计分，可以再试一次，会提示你偏向哪个方向，第二次最多扣 15%。',
+      'The chart shows hourly tide predictions for a tide station for 3 days (72 hours) starting today, in local standard time, with 0 at the lowest low-water datum.',
+      'Count the high tides per day. One a day (diurnal) is common in the Gulf of Mexico and parts of Alaska; two of similar height (semidiurnal) is the Atlantic coast; two highs and two lows of unequal height (mixed) is the Pacific coast.',
+      'Tidal range is a clue too: Pacific atolls see only tens of centimeters, while funnel-shaped bays can reach several meters, even ten.',
+      'Pin the station on the map (no place names are shown at first). It is scored by distance. You can try once more and get a hint about which direction you missed in; the second try costs at most 15%.',
     ],
-    scoring: '100 × e^(−距离/1500 km)，第二次尝试扣 15%。离得越近分越高：约 1000 km 内算不错，同一海岸线上通常 70 分以上。',
+    scoring: '100 × e^(−distance / 1,500 km), and the second try costs 15%. The closer the better: within about 1,000 km is good, and on the same coastline you usually get 70 or more.',
     sources: [
       { name: 'NOAA CO-OPS Tide Predictions API', url: 'https://api.tidesandcurrents.noaa.gov/api/prod/' },
       { name: 'NOAA CO-OPS Metadata API (stations)', url: 'https://api.tidesandcurrents.noaa.gov/mdapi/prod/' },
     ],
-    dataNote: '曲线是 NOAA 官方调和分析预报（非实测水位）。每天的验潮站固定（从 109 个参考站里按日抽取，最远点采样，覆盖美国沿岸、阿拉斯加、夏威夷及太平洋/加勒比海外站），打开页面时实时向 NOAA CO-OPS Predictions API 取该站当天起 3 天的逐小时预报（调和预报是确定的，所有人看到同一条曲线）。取不到时退回快照：2026-10-01 至 10-03 的同一批预报。之所以让你在地图上标位置而不是从名单里选名字：CO-OPS 的很多参考站名字很冷门（如 Coon Key），按距离计分更公平。',
+    dataNote: 'The curves are NOAA\'s official harmonic-analysis predictions, not measured water levels. Each day\'s station is fixed (drawn by day from 109 reference stations, sampled farthest-point-first to cover the US coasts, Alaska, Hawaii and outlying Pacific and Caribbean stations). When the page opens it fetches that station\'s 3-day hourly predictions live from the NOAA CO-OPS Predictions API (harmonic predictions are deterministic, so everyone sees the same curve). If that fails it falls back to a snapshot: the same set of predictions for Oct 1 to Oct 3, 2026. You pin the location instead of picking a name from a list because many CO-OPS reference stations have obscure names (like Coon Key), and scoring by distance is fairer.',
   },
 
   async load(ctx) {
@@ -103,7 +103,7 @@ export default {
       height: 260,
       marginLeft: 44,
       x: { domain: [0, 71], ticks: [0, 12, 24, 36, 48, 60, 71], tickFormat: (h) => (h % 24 === 0 ? day(h) : hhmm(h)), label: null },
-      y: { label: '潮位 (m)', grid: true, domain: [Math.min(0, ...v) - 0.1, Math.max(...v) + 0.15] },
+      y: { label: 'Tide level (m)', grid: true, domain: [Math.min(0, ...v) - 0.1, Math.max(...v) + 0.15] },
       marks: [
         Plot.ruleX([24, 48], { stroke: c.rule, strokeDasharray: '3 4' }),
         Plot.areaY(rows, { x: 'h', y: 'v', y1: Math.min(...v), fill: c.accent, fillOpacity: 0.14, curve: 'basis' }),
@@ -112,30 +112,30 @@ export default {
         Plot.tip(rows, Plot.pointerX({ x: 'h', y: 'v', title: (d) => `${day(d.h)} ${hhmm(d.h)}\n${d.v.toFixed(2)} m` })),
       ],
     }));
-    ctx.stage.append(ui.panel({ kicker: `${p.begin.slice(5)} 起 3 天 · 逐小时 · 当地标准时间`, title: '这个港口的潮汐' }, chart,
+    ctx.stage.append(ui.panel({ kicker: `3 days from ${p.begin.slice(5)} · hourly · local standard time`, title: 'The tide at this port' }, chart,
       ui.h('div', { class: 'ds-grid', style: { '--min': '130px', marginTop: '12px' } },
-        ui.stat({ label: '最大潮差', value: `${a.range.toFixed(2)} m` }),
-        ui.stat({ label: '高潮次数', value: `${a.hi.length}`, sub: '3 天内（黑点）' }),
-        ui.stat({ label: '首个高潮', value: hhmm(a.hi[0] ?? 0), sub: `${day(0)}` }))));
+        ui.stat({ label: 'Max range', value: `${a.range.toFixed(2)} m` }),
+        ui.stat({ label: 'High tides', value: `${a.hi.length}`, sub: 'in 3 days (black dots)' }),
+        ui.stat({ label: 'First high tide', value: hhmm(a.hi[0] ?? 0), sub: `${day(0)}` }))));
 
     const res = await ctx.pin({
       answer: { lat: st.lat, lng: st.lng, label: st.name },
       view: { center: [0, -150], zoom: 1 },
       scale: 1500,
       attempts: 2,
-      title: '验潮站在哪里？',
+      title: 'Where is the tide station?',
     });
     const hs = dailyHighs(v);
-    const times = hs.map((x, d) => `${day(d * 24)} ${x.length ? x.map((h) => hhmm(h)).join('、') : '无'}`).join('；');
+    const times = hs.map((x, d) => `${day(d * 24)} ${x.length ? x.map((h) => hhmm(h)).join(', ') : 'none'}`).join('; ');
     const where = region(st);
-    const tip = { diurnal: '一天一次高潮：墨西哥湾、南海、阿拉斯加部分海岸的典型特征。', semi: '半日潮占主导：北大西洋沿岸最典型。', mixed: '日不等明显：北美太平洋沿岸典型的混合潮。' }[a.kind];
+    const tip = { diurnal: 'One high tide a day: typical of the Gulf of Mexico, the South China Sea and parts of the Alaska coast.', semi: 'Semidiurnal tides dominate: most typical of the North Atlantic coast.', mixed: 'Strong daily inequality: the classic mixed tide of the North American Pacific coast.' }[a.kind];
     res.detail = ui.kv([
-      ['验潮站', `${st.name}${st.state ? '，' + st.state : ''}（${where}）`],
-      ['坐标', `${st.lat.toFixed(2)}°, ${st.lng.toFixed(2)}°`],
-      ['潮型', a.type],
-      ['线索', `3 天内 ${a.hi.length} 次高潮，最大潮差 ${a.range.toFixed(2)} m。${tip}` +
-        (a.range < 1 ? ' 潮差很小，多半是开阔大洋的岛屿/环礁、半封闭海或北冰洋沿岸。' : a.range > 4 ? ' 潮差很大，多半是漏斗形海湾或高纬度陆架（如阿拉斯加、芬迪湾）。' : '')],
-      ['高潮时刻', `${times}。每天晚约 50 分钟（月亮日 24 小时 50 分），三天里的位移可以帮你判断潮型。`],
+      ['Tide station', `${st.name}${st.state ? ', ' + st.state : ''} (${where})`],
+      ['Coordinates', `${st.lat.toFixed(2)}°, ${st.lng.toFixed(2)}°`],
+      ['Tide type', a.type],
+      ['The clue', `${a.hi.length} high tides in 3 days, with a maximum range of ${a.range.toFixed(2)} m. ${tip}` +
+        (a.range < 1 ? ' A very small range usually means an island or atoll in the open ocean, a semi-enclosed sea or an Arctic coast.' : a.range > 4 ? ' A very large range usually means a funnel-shaped bay or a high-latitude shelf (like Alaska or the Bay of Fundy).' : '')],
+      ['High tide times', `${times}. Each day the tide runs about 50 minutes later (a lunar day is 24 h 50 min), and that drift over the three days can help you judge the tide type.`],
     ]);
     return res;
   },
