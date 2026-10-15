@@ -37,21 +37,21 @@ export default {
     num: 22,
     slug: 'isochrone',
     title: 'Isochrone',
-    tagline: '从某个地铁站出发 30 分钟能到的站点连成一片“等时圈”。看形状，猜出发站在哪。',
+    tagline: 'Every station you can reach in 30 minutes from one subway stop forms an isochrone. Read its shape and pin where it starts.',
     category: 'nyc',
     data: 'computed',
     howTo: [
-      '地图上的圆点是从一个神秘地铁站出发、30 分钟内（含候车、换乘和最多一段步行）能到达的所有地铁站，没有任何标签；起点本身和紧挨着它的同名站不画。',
-      '深色点 15 分钟内可达，浅色点 15–30 分钟，实线/虚线圈是两个时间段的外轮廓。快车线会把等时圈沿线拉成长长的“触手”，慢车和换乘多的方向则很短。',
-      '起点在深色点的中央或某条线的端头、触手的根部——那里会留下一个空位。在地图上点出你认为的出发站。',
-      '按距离计分：0 km 得 100 分，每差约 2 km 分数降到约三分之一。',
+      'The dots on the map are every subway station reachable within 30 minutes (waiting, transfers and at most one walking leg included) from one mystery station. Nothing is labeled, and the origin and its same-name neighbors are not drawn.',
+      'Dark dots are within 15 minutes, light dots 15\u201330 minutes; the solid and dashed outlines enclose the two bands. Express lines stretch the isochrone into long tentacles, while local lines and transfer-heavy directions stay short.',
+      'The origin sits in the middle of the dark cluster, or at the end of a line or the root of a tentacle: look for the gap. Tap the map where you think the origin is.',
+      'Scored by distance: 0 km is 100 points, and the score falls to about a third for every 2 km off.',
     ],
-    scoring: '100 × e^(−距离/2 km)。',
+    scoring: '100 \u00d7 e^(\u2212distance / 2 km).',
     sources: [
       { name: 'MTA NYC Transit subway GTFS (static)', url: 'http://web.mta.info/developers/data/nyct/subway/google_transit.zip' },
       { name: 'MTA developer resources', url: 'https://www.mta.info/developers' },
     ],
-    dataNote: '想法里的“公交 + GTFS + OpenTripPlanner”在浏览器里无法运行（OTP 需要服务器，纽约公交 GTFS 又是数百 MB 级别）。这里改用 MTA 地铁静态 GTFS，在 build/ 里自己做最短路并预先算好：工作日 10–15 点各区间运行时间中位数，每次上车计 4 分钟平均候车，换乘用 transfers.txt 的最短换乘时间，另允许步行（直线距离×1.3，每分钟 80 米，≤600 米）去另一个站，且最多走一段。没有逐班时刻表，也没有实时数据，因此标为“计算”。',
+    dataNote: 'The original idea (bus + GTFS + OpenTripPlanner) cannot run in a browser: OTP needs a server, and the NYC bus GTFS runs to hundreds of MB. Instead we use the MTA subway static GTFS and run our own shortest-path search offline in build/: median weekday 10:00\u201315:00 running times between stops, an average 4-minute wait for each boarding, transfers using the minimum times in transfers.txt, plus at most one walking leg to another station (straight-line distance \u00d7 1.3, 80 m per minute, up to 600 m). There is no per-trip timetable and no live data, hence \u201ccomputed\u201d.',
   },
 
   puzzle({ data, pick }) {
@@ -67,16 +67,16 @@ export default {
     const lng = p.reached.map((s) => s[1]).concat(p.lng);
     const bounds = [[Math.min(...lat) - 0.01, Math.min(...lng) - 0.01], [Math.max(...lat) + 0.01, Math.max(...lng) + 0.01]];
 
-    ctx.stage.append(ui.panel({ kicker: '等时圈', title: '30 分钟能到哪儿' },
+    ctx.stage.append(ui.panel({ kicker: 'Isochrone', title: 'Where can you get in 30 minutes?' },
       ui.h('div', { class: 'ds-grid', style: { '--min': '120px' } },
-        ui.stat({ label: '可达站点', value: p.reached.length }),
-        ui.stat({ label: '15 分钟内', value: near.length }),
-        ui.stat({ label: '15–30 分钟', value: far.length }))));
+        ui.stat({ label: 'Stations reached', value: p.reached.length }),
+        ui.stat({ label: 'Within 15 min', value: near.length }),
+        ui.stat({ label: '15\u201330 min', value: far.length }))));
 
     const markers = [];
     const res = await ctx.pin({
-      title: '出发站在哪？',
-      prompt: '深色 = 15 分钟内，浅色 = 15–30 分钟。起点在圈中央的空位，或在线路端头。',
+      title: 'Where does it start?',
+      prompt: 'Dark = within 15 minutes, light = 15\u201330 minutes. The origin is the gap in the middle of the cluster, or at the end of a line.',
       answer: { lat: p.lat, lng: p.lng, label: p.name },
       view: { bounds },
       scale: 2,
@@ -91,7 +91,7 @@ export default {
       },
       reveal: async () => {
         // station names only appear after the guess
-        for (const [s, m] of markers) m.bindTooltip(`${s[3]} · ${Math.round(s[2])} 分钟`);
+        for (const [s, m] of markers) m.bindTooltip(`${s[3]} \u00b7 ${Math.round(s[2])} min`);
       },
     });
 
@@ -104,13 +104,13 @@ export default {
     const off = cen ? core.haversineKm(p, cen) : null;
     res.detail = ui.panel({ plain: true },
       ui.kv([
-        ['出发站', `${p.name}（${p.routes.join(' ')} 线）`],
-        ['最远可达', f ? `${f.s[3]}，直线 ${core.fmtKm(f.d)}，${Math.round(f.s[2])} 分钟` : '—'],
-        ['线索', (off != null && off < 0.8
-          ? `15 分钟圈（${near.length} 个站）的中心离起点只有 ${core.fmtKm(off)}：起点处在圈的中央，圈里的那个空位就是它。`
-          : `15 分钟圈（${near.length} 个站）的中心离起点 ${core.fmtKm(off ?? 0)}：起点在圈的一端（多半是线路的终点或支线端头），所以圈只朝一个方向展开。`) +
-          ` 离起点最近的点也有 ${core.fmtKm(nearest)}，因为同一站的换乘站不画出来。` +
-          `最远的点 ${f ? f.s[3] : '—'} 在 ${f ? core.fmtKm(f.d) : '—'} 外，圈越细长，说明沿线有快车；圈越圆，说明靠换乘和步行。`],
+        ['Origin', `${p.name} (${p.routes.join(' ')} ${p.routes.length === 1 ? 'train' : 'trains'})`],
+        ['Farthest reached', f ? `${f.s[3]}, ${core.fmtKm(f.d)} as the crow flies, ${Math.round(f.s[2])} min` : '\u2014'],
+        ['The clue', (off != null && off < 0.8
+          ? `The center of the 15-minute cluster (${near.length} stations) is only ${core.fmtKm(off)} from the origin: the origin sits in the middle, and the gap in the cluster is where it hides.`
+          : `The center of the 15-minute cluster (${near.length} stations) is ${core.fmtKm(off ?? 0)} from the origin: the origin is at one end (probably a terminal or branch end), so the cluster only spreads one way.`) +
+          ` Even the nearest dot is ${core.fmtKm(nearest)} away, because the origin\u2019s own transfer stations are not drawn.` +
+          ` The farthest dot, ${f ? f.s[3] : '\u2014'}, is ${f ? core.fmtKm(f.d) : '\u2014'} out. A long thin cluster means express service along the line; a round one means transfers and walking.`],
       ]));
     ctx.log('result', res.score);
     return res;
