@@ -12,29 +12,29 @@ export const TIERS = [[0, 1900], [1900, 1950], [1950, 3000]];
 export const tierOf = (items, [lo, hi]) => items.filter((b) => b.year >= lo && b.year < hi);
 
 const CLASS = {
-  A: '独栋住宅', B: '双户住宅', C: '无电梯公寓', D: '电梯公寓', E: '仓库', F: '厂房', G: '车库', H: '酒店', I: '医疗/社福设施',
-  J: '剧院', K: '商铺', L: '阁楼式工业楼', M: '教堂/宗教建筑', N: '收容机构', O: '办公楼', P: '文化/公共设施', Q: '体育休闲设施',
-  R: '住宅公寓', S: '底商住宅', U: '公用设施', W: '教育设施', Y: '政府机构', Z: '其他',
+  A: 'Single-family house', B: 'Two-family house', C: 'Walk-up apartments', D: 'Elevator apartments', E: 'Warehouse', F: 'Factory', G: 'Garage', H: 'Hotel', I: 'Health / social facility',
+  J: 'Theater', K: 'Retail', L: 'Loft building', M: 'Church / religious', N: 'Institutional housing', O: 'Office building', P: 'Cultural / public facility', Q: 'Recreation facility',
+  R: 'Condominium', S: 'Mixed residential and retail', U: 'Utility', W: 'Educational facility', Y: 'Government', Z: 'Other',
 };
-export const classLabel = (c) => CLASS[(c || '')[0]] || '建筑';
+export const classLabel = (c) => CLASS[(c || '')[0]] || 'Building';
 
 /** Era-specific teaching text used in the result card. */
 export function eraClue(year) {
-  if (year < 1830) return '联邦/殖民风格：低矮的砖石或木构，小窗格、对称立面，纽约这样的老房子极少。';
-  if (year < 1880) return '19 世纪中叶：褐石或砖砌排屋、希腊复兴的门廊、铸铁立面和高而窄的窗，通常不超过 5–6 层。';
-  if (year < 1915) return '1880–1915：钢框架和电梯让楼越盖越高，石灰岩/红砖立面配学院派或罗马式的繁复装饰（檐口、拱窗、雕饰）。';
-  if (year < 1945) return '1915–1945：1916 年分区法逼出阶梯退台的塔楼，装饰艺术风格的竖线条、几何浮雕和棕黄色砖面是标志。';
-  if (year < 1975) return '战后现代主义：去掉装饰，用白砖/浅色砖、通长的窗带和玻璃幕墙，板楼和公共住房塔楼大量出现。';
-  if (year < 2000) return '1975–2000：后现代——抛弃纯盒子，回到色块、拱形与顶部造型，外墙常用深色砖和反光玻璃。';
-  return '2000 年后：大面积玻璃幕墙、不规则体量和金属板，窗墙比极高，很少有传统装饰。';
+  if (year < 1830) return 'Federal or colonial style: low brick, stone or timber, small-paned windows and a symmetrical front. Very few of these survive in New York.';
+  if (year < 1880) return 'Mid-19th century: brownstone or brick row houses, Greek Revival doorways, cast-iron fronts and tall, narrow windows, rarely above 5 or 6 stories.';
+  if (year < 1915) return '1880-1915: steel frames and elevators let buildings climb. Limestone or red-brick fronts with ornate Beaux-Arts or Romanesque detail (cornices, arched windows, carvings).';
+  if (year < 1945) return '1915-1945: the 1916 zoning law forced stepped-back setback towers. Art Deco vertical lines, geometric reliefs and tan-brown brick are the giveaways.';
+  if (year < 1975) return 'Postwar modernism: ornament stripped away, light brick, long ribbon windows and glass curtain walls. Slab towers and public-housing blocks multiply.';
+  if (year < 2000) return '1975-2000: postmodernism gives up the plain box for color blocks, arches and shaped tops, often in dark brick and reflective glass.';
+  return 'After 2000: big glass curtain walls, irregular massing and metal panels, a very high window-to-wall ratio and almost no traditional ornament.';
 }
 
 export function floorClue(b) {
   if (!b.fl) return '';
-  if (b.fl >= 30) return `${b.fl} 层的超高层只有钢框架时代才可能出现，它的高度本身就把年份限定在 1890 年之后。`;
-  if (b.fl >= 12) return `${b.fl} 层的高楼需要钢框架和电梯，基本是 1890 年之后的产物。`;
-  if (b.fl <= 4) return `只有 ${b.fl} 层：低层砖石建筑在 19 世纪最常见，但也可能是后来的低层公共或住宅楼。`;
-  return `${b.fl} 层的中层楼，需要和立面材料、窗型一起判断。`;
+  if (b.fl >= 30) return `A ${b.fl}-story skyscraper is only possible in the steel-frame era, so its height alone puts it after 1890.`;
+  if (b.fl >= 12) return `A ${b.fl}-story tower needs a steel frame and elevators, so it is almost certainly post-1890.`;
+  if (b.fl <= 4) return `Only ${b.fl} ${b.fl === 1 ? 'story' : 'stories'}: low masonry buildings were the norm in the 19th century, but this could also be a later low-rise.`;
+  return `A mid-rise of ${b.fl} stories; judge it by the facade material and window style.`;
 }
 
 export default {
@@ -42,23 +42,23 @@ export default {
     num: 21,
     slug: 'year-built',
     title: 'Year Built',
-    tagline: '三张纽约建筑的照片，凭窗户、材料和装饰猜它们是哪一年建成的。',
+    tagline: 'Three photos of New York buildings. Read the windows, materials and ornament to guess the year each was built.',
     category: 'nyc',
     data: 'snapshot',
     howTo: [
-      '每天三栋纽约建筑：一栋 1900 年前、一栋 1900–1949、一栋 1950 年后。名字先藏起来，只告诉你它在哪个区。',
-      '看窗户、材料、装饰和轮廓，拖动滑块或输入建成年份（1750–2025）。',
-      '计分：每栋 100·e^(−误差/30)，误差 0 年 100 分，30 年约 37 分，100 年几乎 0 分；三栋相加，满分 300。',
+      'Three NYC buildings a day: one from before 1900, one from 1900-1949 and one from 1950 on. Names stay hidden; you only get the borough.',
+      'Study the windows, materials, ornament and silhouette, then drag the slider or type the year it was built (1750-2025).',
+      'Scoring: each building earns 100·e^(-error/30). Exactly right is 100, 30 years off is about 37, 100 years off is nearly 0. Three buildings, 300 points max.',
     ],
-    scoring: '每栋 100·e^(−误差年数/30)，三栋相加，满分 300。',
+    scoring: 'Each building scores 100·e^(-years off/30); three buildings, 300 max.',
     sources: [
-      { name: 'Wikidata SPARQL（建成年份 P571、坐标、照片 P18）', url: 'https://query.wikidata.org/' },
-      { name: 'Wikimedia Commons（照片与授权）', url: 'https://commons.wikimedia.org/' },
-      { name: 'NYC PLUTO 地块数据（NYC Open Data，用于核对年份、层数和用途）', url: 'https://data.cityofnewyork.us/City-Government/Primary-Land-Use-Tax-Lot-Output-PLUTO-/64uk-42ks' },
+      { name: 'Wikidata SPARQL (year built P571, coordinates, image P18)', url: 'https://query.wikidata.org/' },
+      { name: 'Wikimedia Commons (photos and licenses)', url: 'https://commons.wikimedia.org/' },
+      { name: 'NYC PLUTO tax-lot data (NYC Open Data; used to cross-check year, floors and use)', url: 'https://data.cityofnewyork.us/City-Government/Primary-Land-Use-Tax-Lot-Output-PLUTO-/64uk-42ks' },
     ],
-    dataNote: '原想法是 Mapillary 街景 + PLUTO。Mapillary API 需要 key，不能放进前端，所以照片改用 Wikimedia Commons 上带建成年份的纽约建筑。'
-      + '为避免维基数据里的“落成/启用年”或错误年份，只保留 PLUTO 中 45 米内某个地块的 yearbuilt 与 Wikidata 年份相差 ≤ 3 年的建筑；PLUTO 的年份仍是行政记录，改建过的楼可能与外观不完全一致。'
-      + '照片是快照，不是实时街景。',
+    dataNote: 'The original idea was Mapillary street imagery plus PLUTO. The Mapillary API needs a key that cannot ship in a front-end, so photos come from Wikimedia Commons buildings that have a year built.'
+      + ' To weed out Wikidata "opened" years and plain errors, we keep only buildings where a PLUTO lot within 45 m has a yearbuilt within 3 years of the Wikidata year. PLUTO years are administrative records, so a heavily renovated building may not match its look.'
+      + ' Photos are a snapshot, not live street views.',
   },
 
   puzzle({ data, pick, rng }) {
@@ -75,34 +75,34 @@ export default {
       const b = p.items[i];
       ctx.log('round', i + 1, b.id);
       const img = ui.h('img', {
-        src: thumb(b.file), alt: '一栋纽约建筑的照片', referrerpolicy: 'no-referrer',
+        src: thumb(b.file), alt: 'Photo of a New York City building', referrerpolicy: 'no-referrer',
         style: { display: 'block', margin: '0 auto', maxWidth: '100%', maxHeight: '420px', objectFit: 'contain', borderRadius: 'var(--radius, 8px)', background: 'var(--paper2)', minHeight: '160px' },
       });
       const holder = ui.h('div', {}, img);
       img.addEventListener('error', () => {
         ctx.log.warn('image failed', b.id);
-        holder.replaceChildren(ui.callout('照片没加载出来（Wikimedia Commons 暂时不可用）。可以凭所在区和直觉先猜一个年份。', 'warn'));
+        holder.replaceChildren(ui.callout('The photo did not load (Wikimedia Commons may be down). Go on the borough and your gut for a first guess.', 'warn'));
       });
-      const panel = ui.panel({ kicker: `第 ${i + 1} / ${n} 栋`, title: '这栋楼哪年建成？' }, holder,
-        ui.h('div', { class: 'small muted' }, `📍 ${b.boro || '纽约'}`));
+      const panel = ui.panel({ kicker: `Building ${i + 1} of ${n}`, title: 'What year was this built?' }, holder,
+        ui.h('div', { class: 'small muted' }, `📍 ${b.boro || 'New York'}`));
       ctx.stage.append(panel);
       const r = await ctx.estimate({
         answer: b.year, min: MIN_YEAR, max: MAX_YEAR, step: 1, initial: 1900, format: (v) => String(Math.round(v)),
-        scoring: yearScore, title: '建成年份', prompt: '拖动滑块或直接输入年份。',
+        scoring: yearScore, title: 'Year built', prompt: 'Drag the slider or type a year.',
       });
       const g = Math.round(r.guess);
       const off = Math.abs(g - b.year);
-      panel.append(ui.callout(`${b.name} · ${b.year} 年`, off <= 10 ? 'good' : off <= 40 ? 'warn' : 'bad'));
+      panel.append(ui.callout(`${b.name} · ${b.year}`, off <= 10 ? 'good' : off <= 40 ? 'warn' : 'bad'));
       r.detail = ui.h('div', { class: 'ds-stack' },
         ui.kv([
-          ['建筑', b.name],
-          ['位置', b.addr ? `${b.boro} · ${b.addr}` : b.boro],
-          ['建成', `${b.year} 年（Wikidata）· ${b.py} 年（PLUTO 地块记录）`],
-          ['你猜', `${g} 年（差 ${off} 年，${Math.round(100 * yearScore(g, b.year))} 分）`],
-          ['用途与层数', `${classLabel(b.cls)}${b.fl ? ` · ${b.fl} 层` : ''}`],
-          ['照片', `${b.author} · ${b.lic}`],
+          ['Building', b.name],
+          ['Location', b.addr ? `${b.boro} · ${b.addr}` : b.boro],
+          ['Built', `${b.year} (Wikidata) · ${b.py} (PLUTO lot record)`],
+          ['Your guess', `${g} (${off} ${off === 1 ? 'year' : 'years'} off, ${Math.round(100 * yearScore(g, b.year))} pts)`],
+          ['Use and height', `${classLabel(b.cls)}${b.fl ? ` · ${b.fl} ${b.fl === 1 ? 'story' : 'stories'}` : ''}`],
+          ['Photo', `${b.author} · ${b.lic}`],
         ]),
-        ui.h('div', { class: 'small' }, `怎么看出来：${eraClue(b.year)}${floorClue(b) ? ' ' + floorClue(b) : ''}`));
+        ui.h('div', { class: 'small' }, `How to tell: ${eraClue(b.year)}${floorClue(b) ? ' ' + floorClue(b) : ''}`));
       results.push(r);
     }
     const res = ctx.combine(results);

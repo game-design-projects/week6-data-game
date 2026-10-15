@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import { candidates } from './lib.mjs';
 const UA = 'daily-data-games/1.0 (NYU class project)';
 export const TOL = 3;
-const BORO = { MN: '曼哈顿', BK: '布鲁克林', QN: '皇后区', BX: '布朗克斯', SI: '史坦顿岛' };
+const BORO = { MN: 'Manhattan', BK: 'Brooklyn', QN: 'Queens', BX: 'The Bronx', SI: 'Staten Island' };
 
 export function matchPluto(b, lots) {
   const near = (lots || []).map((l) => ({ ...l, py: +l.yearbuilt, d: Math.hypot((+l.latitude - b.lat) * 111, (+l.longitude - b.lng) * 84) }))

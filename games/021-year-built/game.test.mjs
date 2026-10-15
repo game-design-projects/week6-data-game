@@ -57,17 +57,17 @@ test('puzzles for days 1-120 are valid', () => {
 
 test('nothing visible before the guess carries the answer', () => {
   const src = fs.readFileSync(new URL('./game.js', import.meta.url), 'utf8');
-  assert.ok(src.includes("alt: '一栋纽约建筑的照片'"));
-  for (const b of data.items) assert.ok(['曼哈顿', '布鲁克林', '皇后区', '布朗克斯', '史坦顿岛'].includes(b.boro), b.id);
+  assert.ok(src.includes("alt: 'Photo of a New York City building'"));
+  for (const b of data.items) assert.ok(['Manhattan', 'Brooklyn', 'Queens', 'The Bronx', 'Staten Island'].includes(b.boro), b.id);
   assert.ok(!/ctx\.log\('round', i \+ 1, b\.(name|year)/.test(src));
 });
 
 test('learnable clues exist for every era and floor count', () => {
   for (const y of [1750, 1850, 1900, 1930, 1960, 1990, 2015]) assert.ok(eraClue(y).length > 20);
   assert.equal(floorClue({ fl: 0 }), '');
-  assert.match(floorClue({ fl: 40 }), /40 层/);
-  assert.equal(classLabel('D4'), '电梯公寓');
-  assert.equal(classLabel(''), '建筑');
+  assert.match(floorClue({ fl: 40 }), /40-story/);
+  assert.equal(classLabel('D4'), 'Elevator apartments');
+  assert.equal(classLabel(''), 'Building');
 });
 
 test('matchPluto keeps only lots whose year agrees with Wikidata', () => {
