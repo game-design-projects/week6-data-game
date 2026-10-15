@@ -123,7 +123,7 @@ soldier
 battle
 victory
 enemy
-telegram
+
 newspaper
 magazine
 novel
@@ -135,7 +135,7 @@ camera
 film
 movie
 electron
-proton
+
 neutron
 gene
 dna
@@ -183,8 +183,8 @@ teacher
 student
 professor
 slave
-negro
-colored
+
+
 black
 african
 stress
@@ -209,7 +209,7 @@ rome
 vienna
 frontier
 wilderness
-pioneer
+
 settler
 gasoline
 electric
@@ -230,7 +230,7 @@ recession
 inflation
 unemployment
 sir
-madam
+
 leisure
 vacation
 tourist
