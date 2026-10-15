@@ -15,23 +15,23 @@ test('spread keeps counts apart', () => {
   for (let i = 0; i < s.length; i++) for (let j = i + 1; j < s.length; j++) assert.ok(Math.abs(s[i].n - s[j].n) >= 3);
 });
 test('tier buckets', () => {
-  assert.match(tier(250), /全球/);
-  assert.match(tier(5), /本地/);
+  assert.match(tier(250), /worldwide/i);
+  assert.match(tier(5), /local/i);
 });
 test('wpCodes counts only Wikipedias', () => {
   const sl = { enwiki: 1, dewiki: 1, be_x_oldwiki: 1, commonswiki: 1, wikidatawiki: 1, enwikiquote: 1, specieswiki: 1, frwiktionary: 1 };
   assert.deepEqual(wpCodes(sl).sort(), ['be-x-old', 'de', 'en']);
 });
 test('buildItem shapes an entity', () => {
-  const e = { labels: { en: { value: 'Foo' }, zh: { value: '福' } }, descriptions: { en: { value: 'a foo' } }, sitelinks: { enwiki: 1, zhwiki: 1, commonswiki: 1 } };
+  const e = { labels: { en: { value: 'Foo' } }, descriptions: { en: { value: 'a foo' } }, sitelinks: { enwiki: 1, zhwiki: 1, commonswiki: 1 } };
   const it = buildItem('Q1', e);
-  assert.deepEqual(it, { id: 'Q1', name: 'Foo', zh: '福', desc: 'a foo', n: 2, top: 2, miss: TOP.filter((c) => c !== 'en' && c !== 'zh') });
+  assert.deepEqual(it, { id: 'Q1', name: 'Foo', desc: 'a foo', n: 2, top: 2, miss: TOP.filter((c) => c !== 'en' && c !== 'zh') });
   assert.equal(buildItem('Q2', { labels: {}, sitelinks: {} }), null);
 });
 test('explain is specific', () => {
-  assert.match(explain({ name: 'X', n: 250, miss: [] }), /最大的 10 个维基百科全都有/);
-  assert.match(explain({ name: 'X', n: 40, miss: ['ar', 'ja'] }), /阿拉伯语、日语/);
-  assert.match(explain({ name: 'X', n: 20, miss: ['en', 'de', 'fr', 'es', 'ru', 'ja'] }), /很小的圈子/);
+  assert.match(explain({ name: 'X', n: 250, miss: [] }), /all 10 of the largest Wikipedias/);
+  assert.match(explain({ name: 'X', n: 40, miss: ['ar', 'ja'] }), /Arabic, Japanese/);
+  assert.match(explain({ name: 'X', n: 20, miss: ['en', 'de', 'fr', 'es', 'ru', 'ja'] }), /small circle/);
 });
 
 test('pool: days 1-120 all valid', () => {
@@ -47,7 +47,7 @@ test('pool: days 1-120 all valid', () => {
       assert.ok(it.name && it.desc, `${it.id} text`);
       assert.ok(Number.isInteger(it.n) && it.n >= 12 && it.n <= 400, `${it.id} n`);
       assert.ok(Array.isArray(it.miss) && it.top === 10 - it.miss.length, `${it.id} top`);
-      for (const s of [it.name, it.desc, it.zh]) assert.ok(!/undefined|NaN|null/.test(s ?? ''), `${it.id} bad text`);
+      for (const s of [it.name, it.desc]) assert.ok(!/undefined|NaN|null/.test(s ?? ''), `${it.id} bad text`);
       // no count in visible text before the guess
       assert.ok(!new RegExp(`\\b${it.n}\\b`).test(it.desc) || /atomic number|\d{4}/.test(it.desc), `${it.id} desc leaks count`);
     }

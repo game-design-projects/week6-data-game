@@ -23,10 +23,9 @@ export function buildItem(id, e) {
   const name = e.labels?.en?.value;
   if (!name || /^Q\d+$/.test(name)) return null;
   const codes = wpCodes(e.sitelinks);
-  const zh = (e.labels?.['zh-hans'] || e.labels?.zh)?.value;
   const desc = cleanDesc(e.descriptions?.en?.value);
   return {
-    id, name, zh: zh && zh !== name ? zh : '', desc, n: codes.length,
+    id, name, desc, n: codes.length,
     top: TOP.filter((c) => codes.includes(c)).length,
     miss: TOP.filter((c) => !codes.includes(c)),
   };
@@ -37,7 +36,7 @@ if (process.argv[1].endsWith('build.mjs')) {
   const ent = {};
   for (const f of fs.readdirSync('raw/ent').sort()) Object.assign(ent, JSON.parse(fs.readFileSync('raw/ent/' + f, 'utf8')).res.entities);
   const cats = [];
-  for (const [key, [, , zh]] of Object.entries(CATS)) {
+  for (const [key, [, , label]] of Object.entries(CATS)) {
     const seen = new Set();
     const items = [];
     for (const id of ids[key] || []) {
@@ -53,7 +52,7 @@ if (process.argv[1].endsWith('build.mjs')) {
     }
     items.sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }));
     console.log(key, ids[key]?.length, '->', items.length, 'n range', Math.min(...items.map((i) => i.n)), Math.max(...items.map((i) => i.n)));
-    if (items.length >= 40) cats.push({ key, zh, items: items.slice(0, 150) });
+    if (items.length >= 40) cats.push({ key, label, items: items.slice(0, 150) });
   }
   fs.writeFileSync('../data.json', JSON.stringify({ fetched: new Date().toISOString().slice(0, 10), top: TOP, cats }));
   console.log('cats', cats.length, fs.statSync('../data.json').size, 'bytes');

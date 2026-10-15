@@ -1,5 +1,5 @@
 // #50 Sitelinks — how many Wikipedia language editions cover a topic?
-const LANG_ZH = { en: '英语', de: '德语', fr: '法语', es: '西班牙语', ru: '俄语', ja: '日语', zh: '中文', it: '意大利语', pt: '葡萄牙语', ar: '阿拉伯语' };
+const LANG_ZH = { en: 'English', de: 'German', fr: 'French', es: 'Spanish', ru: 'Russian', ja: 'Japanese', zh: 'Chinese', it: 'Italian', pt: 'Portuguese', ar: 'Arabic' };
 
 /** Pick `k` items whose counts are clearly apart (so the ranking is fair); relax the gap if the category is narrow. */
 export function spread(items, k, rng) {
@@ -17,46 +17,46 @@ export function spread(items, k, rng) {
 
 /** Short teaching line from the count alone. */
 export function tier(n) {
-  if (n >= 200) return '全球级知名度：几乎每个主要语言（包括很多小语种）都有条目。';
-  if (n >= 100) return '国际知名：上百个语言版本都认为值得写。';
-  if (n >= 60) return '跨地区知名：主要语种几乎都有，小语种开始缺席。';
-  if (n >= 30) return '区域知名：欧洲或亚洲的大语种有条目，多数小语种没有。';
-  return '本地话题：只有少数语言写过，多半限于当地或某个圈子。';
+  if (n >= 200) return 'Worldwide fame: nearly every major language, and many small ones, has an article.';
+  if (n >= 100) return 'Internationally known: well over a hundred editions thought it worth writing.';
+  if (n >= 60) return 'Known across regions: almost all major languages cover it, while smaller ones start to drop out.';
+  if (n >= 30) return 'Regionally known: big European or Asian languages have it, most small ones do not.';
+  return 'A local topic: only a few languages have written it up, mostly tied to one place or community.';
 }
 
 /** Puzzle-specific explanation: which of the 10 biggest Wikipedias cover the item. */
 export function explain(it) {
   const miss = it.miss || [];
-  const head = `「${it.name}」被 ${it.n} 个语言版本的维基百科收录`;
-  if (!miss.length) return `${head}（约占全部语言版本的 ${Math.round((it.n / TOTAL) * 100)}%），最大的 10 个维基百科全都有。${tier(it.n)}`;
-  const names = miss.map((c) => LANG_ZH[c] || c).join('、');
-  if (miss.length >= 6) return `${head}，最大的 10 个维基百科里有 ${miss.length} 个没有（缺${names}）：连大语种都没人写，说明话题只在很小的圈子里知名。`;
-  return `${head}，最大的 10 个维基百科里缺${names}：${tier(it.n)}`;
+  const head = `“${it.name}” has articles in ${it.n} language editions of Wikipedia`;
+  if (!miss.length) return `${head} (about ${Math.round((it.n / TOTAL) * 100)}% of all editions), including all 10 of the largest Wikipedias. ${tier(it.n)}`;
+  const names = miss.map((c) => LANG_ZH[c] || c).join(', ');
+  if (miss.length >= 6) return `${head}, but ${miss.length} of the 10 largest Wikipedias lack it (${names}). Even big languages skipped it, so the topic is known only in a small circle.`;
+  return `${head}; the 10 largest Wikipedias are missing it in ${names}. ${tier(it.n)}`;
 }
 
 const TOTAL = 340; // approx. number of Wikipedia language editions
-const fmt = (v) => `${Math.round(v)} 种`;
+const fmt = (v) => `${Math.round(v)} editions`;
 
 export default {
   meta: {
     num: 50,
     slug: 'sitelinks',
     title: 'Sitelinks',
-    tagline: '一个话题被多少种语言的维基百科收录？排 5 个话题，再估一个数字。',
+    tagline: 'How many languages of Wikipedia cover a topic? Rank 5 topics, then estimate one number.',
     category: 'words',
     data: 'snapshot',
     howTo: [
-      '今天有 5 个同类话题（城市、电影、化学元素……），按「有多少种语言的维基百科收录了它」从多到少排序，最多 3 次机会，每次只告诉你几个位置对了。',
-      '然后估另一个话题（换了类别）的语言版本数，滑块是对数刻度：差 2 倍约得 37 分，差 20% 约得 77 分。',
-      '数字只统计维基百科的语言版本（共约 340 种），不含维基共享资源、维基语录等姊妹项目。',
-      '直觉：世界性的话题 200+ 种语言；本国人才熟悉的话题通常只有三四十种；最大的 10 个维基百科是否都有，是很好的线索。',
+      'Today you get 5 topics of one kind (cities, films, chemical elements...). Rank them by how many language editions of Wikipedia have an article on them, most to fewest. You have up to 3 tries, and each one only tells you how many positions are right.',
+      'Then estimate the edition count for one more topic from a different category. The slider is logarithmic: off by 2x scores about 37 points, off by 20% about 77.',
+      'Only Wikipedia language editions count (about 340 in all), not sister projects such as Commons or Wikiquote.',
+      'Rule of thumb: global topics have 200+ languages, topics only a nation knows usually have thirty or forty, and whether the 10 largest Wikipedias all cover it is a great clue.',
     ],
-    scoring: '排序 100 分（按位置对错，重试扣分），估数 100 分（对数误差，差 2 倍约 37 分），总分 200。',
+    scoring: 'Ranking 100 points (by correct positions, retries cost points), estimate 100 points (log error, off by 2x is about 37), 200 in total.',
     sources: [
-      { name: 'Wikidata API（wbgetentities，sitelinks）', url: 'https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities', note: 'CC0' },
-      { name: 'Wikidata Query Service（候选条目）', url: 'https://query.wikidata.org/', note: 'CC0' },
+      { name: 'Wikidata API (wbgetentities, sitelinks)', url: 'https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities', note: 'CC0' },
+      { name: 'Wikidata Query Service (candidate items)', url: 'https://query.wikidata.org/', note: 'CC0' },
     ],
-    dataNote: '数据是 Wikidata 的快照（见 data.json 的 fetched 日期）：每类从 Wikidata 随机抽取已有较多语言版本的条目，统计各条目里以 "wiki" 结尾的站点（去掉共享资源、物种、元维基等非百科站点）。语言版本数会随时间缓慢增长；浏览器端的 Wikidata API 虽然支持跨域，但今天的题目不需要实时数据，所以固定使用快照，保证所有人拿到同一道题。条目名与简介沿用英文原文。',
+    dataNote: 'A Wikidata snapshot (see the fetched date in data.json): for each category, items with many language editions are sampled at random, and for each we count the sites ending in "wiki" (dropping non-encyclopedia sites such as Commons, Species and Meta). Edition counts creep up over time. The Wikidata API allows cross-origin calls, but today\'s puzzle needs no live data, so a fixed snapshot keeps everyone on the same puzzle. Names and descriptions are the English originals.',
   },
 
   puzzle({ data, rng, pick }) {
@@ -65,16 +65,16 @@ export default {
     // estimate target: an item from a DIFFERENT category, so the ranking reveal cannot leak its count
     const other = rng.pick(data.cats.filter((c) => c.key !== cat.key));
     const target = rng.pick(other.items);
-    return { cat: cat.zh, items, tcat: other.zh, target };
+    return { cat: cat.label, items, tcat: other.label, target };
   },
 
   async play(ctx, p) {
     const { ui } = ctx;
     ctx.log('sitelinks puzzle', p.cat, p.items.map((i) => `${i.name}=${i.n}`).join(', '), '| target', p.target.name, p.target.n);
-    const sub = (i) => [i.zh, i.desc].filter(Boolean).join(' · ');
+    const sub = (i) => i.desc || '';
     const r1 = await ctx.order({
-      title: `排名：这 5 个${p.cat}，谁的语言版本最多？`,
-      prompt: '从多到少排列（拖动或用 ↑↓）。数字统计的是维基百科的语言版本数。',
+      title: `Ranking: which of these 5 ${p.cat} has the most language editions?`,
+      prompt: 'Order from most to fewest (drag or use ↑↓). Counts are Wikipedia language editions.',
       items: p.items.map((i) => ({ id: i.id, label: i.name, sub: sub(i), value: i.n })),
       direction: 'desc',
       attempts: 3,
@@ -82,8 +82,8 @@ export default {
     });
     const t = p.target;
     const r2 = await ctx.estimate({
-      title: `估数：「${t.name}」有多少种语言版本？`,
-      prompt: `${p.tcat}：${sub(t)}`,
+      title: `Estimate: how many language editions cover “${t.name}”?`,
+      prompt: `${p.tcat[0].toUpperCase() + p.tcat.slice(1)}: ${sub(t)}`,
       answer: t.n, min: 10, max: 400, log: true, step: 1, initial: 60,
       format: fmt, scoring: 'log', scale: 0.3,
     });
@@ -92,12 +92,12 @@ export default {
     const hi = sorted[0], lo = sorted[sorted.length - 1];
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.table({
-        columns: [{ key: 'name', label: p.cat }, { key: 'n', label: '语言版本数', num: true }, { key: 'miss', label: '占全部版本', num: true, fmt: (_, r) => `${Math.round((r.n / TOTAL) * 100)}%` }],
+        columns: [{ key: 'name', label: p.cat[0].toUpperCase() + p.cat.slice(1) }, { key: 'n', label: 'Editions', num: true }, { key: 'miss', label: 'Share of all', num: true, fmt: (_, r) => `${Math.round((r.n / TOTAL) * 100)}%` }],
         rows: sorted,
       }),
-      ui.callout(`排名线索：${hi.name} ${hi.n} 种，${lo.name} 只有 ${lo.n} 种，相差 ${(hi.n / lo.n).toFixed(1)} 倍。${explain(hi)}`),
-      ui.callout(`估数答案：${explain(t)}`),
-      ui.h('div', { class: 'small muted' }, '线索：条目是否世界性、有没有跨文化的翻译需求，比体量本身更能预测语言数。'));
+      ui.callout(`Ranking clue: ${hi.name} has ${hi.n} editions, ${lo.name} only ${lo.n}, a ${(hi.n / lo.n).toFixed(1)}x gap. ${explain(hi)}`),
+      ui.callout(`Estimate answer: ${explain(t)}`),
+      ui.h('div', { class: 'small muted' }, 'Tip: whether a topic travels across cultures predicts its language count better than its sheer size.'));
     return res;
   },
 };
