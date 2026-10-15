@@ -8,27 +8,27 @@ export const segPaces = (sp) => sp.map((t, i) => (t - (sp[i - 1] ?? 0)) / 5);
 export const evenProjection = (t25) => t25 * (42.195 / 25);
 /** slowdown of the last 17.2K vs the first 25K, in % (positive = faded) */
 export const fadePct = (t25, fin) => ((fin - t25) / (t25 * (17.195 / 25)) - 1) * 100;
-const YEAR = { 2015: '2015 年：低温、逆风、有雨', 2016: '2016 年：晴天高温（约 21℃），公认的“热浪年”', 2017: '2017 年：偏热（约 22℃），无云' };
+const YEAR = { 2015: '2015: cold, headwind and rain', 2016: '2016: sunny and hot (about 21\u00b0C / 70\u00b0F), the famous \u201cheat year\u201d', 2017: '2017: on the warm side (about 22\u00b0C / 72\u00b0F), cloudless' };
 
 export default {
   meta: {
     num: 66,
     slug: 'splits',
     title: 'Splits',
-    tagline: '一位真实马拉松选手前 25 公里的分段成绩，预测他的完赛时间。看出谁会掉速，就是你的技巧。',
+    tagline: 'A real marathoner\'s splits for the first 25 km. Predict the finish time. Spotting who will fade is the skill.',
     category: 'society',
     data: 'snapshot',
     howTo: [
-      '图里是波士顿马拉松（2015–2017）某位真实选手每 5 公里的配速（每公里用时），只给到 25 公里。',
-      '最省事的做法是“匀速外推”：按 25K 的平均配速（图中虚线）跑完全程。但大多数人后程会掉速。',
-      '结合年龄、性别、前半程是否越跑越快、当年天气，拖动滑块估计完赛时间。',
-      '误差越小分数越高：偏差 4% 约得 45 分，偏差 10% 约得 14 分；比虚线更准才算看懂了掉速。',
+      'The chart shows a real Boston Marathon runner\'s pace (time per km) for each 5K segment, 2015-2017 races, up to the 25 km mark only.',
+      'The lazy approach is an even-pace projection: hold the 25K average pace (the dashed line) to the finish. But most runners slow down late in the race.',
+      'Use age, gender, whether the first half was speeding up or slowing down, and that year\'s weather, then drag the slider to estimate the finish time.',
+      'The smaller the error the higher the score: 4% off earns about 45 points, 10% off about 14. Beating the dashed line means you read the fade.',
     ],
-    scoring: '100 × e^(−相对误差 / 5%)。',
+    scoring: '100 \u00d7 e^(\u2212relative error / 5%).',
     sources: [
-      { name: 'Boston Marathon 2015–2017 official results (BAA)', url: 'https://www.baa.org/races/boston-marathon/results', note: '经 GitHub 镜像 nispano/Data-Analysis-of-the-Boston-Marathon-Results-2015-2017 获取 CSV' },
+      { name: 'Boston Marathon 2015–2017 official results (BAA)', url: 'https://www.baa.org/races/boston-marathon/results', note: 'CSV obtained through the GitHub mirror nispano/Data-Analysis-of-the-Boston-Marathon-Results-2015-2017' },
     ],
-    dataNote: '原想用纽约路跑（NYRR）成绩，但其官网结果只能手动查询、无法脚本获取，故改用同类的波士顿马拉松官方成绩（BAA）。从 7.9 万条有完整 5K–40K 分段记录的成绩中，按“后程掉速程度 × 年份”分层抽取 144 位（排除掉速超过 40% 的伤退/走路型成绩，那种无法预测）。为保护隐私不显示姓名。每年的天气是公开报道的概况，不属于数据集。数据为静态快照：官方成绩不提供允许跨域的接口，因此没有实时数据。',
+    dataNote: 'The idea called for NYRR results, but the NYRR site only allows manual lookups that cannot be scripted, so official Boston Marathon results (BAA) are used instead. From 79,000 results with complete 5K-40K splits, 144 runners were sampled stratified by late-race fade \u00d7 year (results that slowed by more than 40%, such as injured or walking finishers, are excluded since they cannot be predicted). Names are not shown, for privacy. Each year\'s weather is a publicly reported summary, not part of the dataset. The data is a static snapshot: official results offer no CORS-enabled API, so there is no live data.',
   },
 
   puzzle({ data, pick }) {
@@ -50,7 +50,7 @@ export default {
       marginLeft: 48,
       marginTop: 24,
       x: { label: null, domain: bars.map((b) => b.seg) },
-      y: { label: '配速 分/公里', domain: [lo - (hi - lo) * 0.6 - 0.05, hi + (hi - lo) * 0.5 + 0.05], tickFormat: (v) => pace(v * 60) },
+      y: { label: 'Pace, min/km', domain: [lo - (hi - lo) * 0.6 - 0.05, hi + (hi - lo) * 0.5 + 0.05], tickFormat: (v) => pace(v * 60) },
       marks: [
         Plot.ruleY([ev / 42.195 / 60], { stroke: c.bad, strokeDasharray: '4 3' }),
         Plot.lineY(bars, { x: 'seg', y: 'v', stroke: c.accent, strokeWidth: 2 }),
@@ -59,16 +59,16 @@ export default {
       ],
     }));
 
-    ctx.stage.append(ui.panel({ kicker: '前 25 公里', title: `${r.g === 'M' ? '男' : '女'}，${r.age} 岁，${r.cc}` },
+    ctx.stage.append(ui.panel({ kicker: 'First 25 km', title: `${r.g === 'M' ? 'Man' : 'Woman'}, age ${r.age}, ${r.cc}` },
       chart,
       ui.h('div', { class: 'ds-row small mono ink2', style: { gap: '14px', marginTop: '6px', flexWrap: 'wrap' } },
-        ui.h('span', `25K 用时 ${hms(t25)}`),
-        ui.h('span', { style: { color: 'var(--bad)' } }, `- - 虚线 = 25K 平均配速 ${pace(t25 / 25)}`)),
-      ui.h('div', { class: 'small muted', style: { marginTop: '6px' } }, `赛事：波士顿马拉松 ${YEAR[r.y]}。终点前有著名的“心碎坡”（Heartbreak Hill，约 33K）。`)));
+        ui.h('span', `25K time ${hms(t25)}`),
+        ui.h('span', { style: { color: 'var(--bad)' } }, `- - dashed line = 25K average pace ${pace(t25 / 25)}`)),
+      ui.h('div', { class: 'small muted', style: { marginTop: '6px' } }, `Race: Boston Marathon, ${YEAR[r.y]}. The famous Heartbreak Hill comes around 33K, before the finish.`)));
 
     const res = await ctx.estimate({
-      title: '他几点冲线？',
-      prompt: '估计完赛时间（净时间）。',
+      title: 'What time does he or she finish?',
+      prompt: 'Estimate the finish time (net time).',
       answer: r.fin / 60,
       min: Math.floor((t25 * 1.5) / 60),
       max: Math.ceil((t25 * 2.4) / 60),
@@ -87,14 +87,14 @@ export default {
     const gGuess = res.guess * 60;
     const errG = Math.abs(gGuess - r.fin) / r.fin * 100, errE = Math.abs(ev - r.fin) / r.fin * 100;
     res.detail = ui.kv([
-      ['真实完赛', hms(r.fin)],
-      ['你的估计', `${hms(gGuess)}（误差 ${errG.toFixed(1)}%）· ${errG < errE ? '比匀速外推更准' : '没有比匀速外推更准'}`],
-      ['匀速外推', `${hms(ev)}（误差 ${errE.toFixed(1)}%，${r.fin >= ev ? '低估' : '高估'}了 ${hms(Math.abs(r.fin - ev))}）`],
-      ['后程掉速', `${f >= 0 ? '+' : ''}${f.toFixed(1)}%（后 17.2K 对比前 25K 的平均配速）`],
-      ['后程配速', `25–30K ${pace(tail[0])} · 30–35K ${pace(tail[1])} · 35–40K ${pace(tail[2])} · 末段 ${pace(tail[3])}`],
-      ['规律', `前 25K 里 20–25K 比首个 5K ${firstTrend > 1 ? `慢了 ${firstTrend.toFixed(0)}%，掉速已经开始` : firstTrend < -1 ? `快了 ${(-firstTrend).toFixed(0)}%，越跑越快` : '几乎一样，节奏稳定'}；` +
-        (f > 8 ? `后程最慢的是 ${segName}（${pace(tail[worst])}），整体明显掉速——匀速外推会严重低估。` : f > 2 ? `后程温和掉速（最慢 ${segName} ${pace(tail[worst])}），约 3–8% 是业余选手的常态。` : '后程几乎匀速甚至更快（负分段），多见于经验丰富的选手。') +
-        (r.y === 2016 ? ' 这一年炎热，掉速的人更多。' : r.y === 2015 ? ' 这一年逆风有雨，整体偏慢。' : '')],
+      ['Actual finish', hms(r.fin)],
+      ['Your estimate', `${hms(gGuess)} (${errG.toFixed(1)}% off) \u00b7 ${errG < errE ? 'better than the even projection' : 'not better than the even projection'}`],
+      ['Even projection', `${hms(ev)} (${errE.toFixed(1)}% off, ${r.fin >= ev ? 'under' : 'over'}estimating by ${hms(Math.abs(r.fin - ev))})`],
+      ['Late fade', `${f >= 0 ? '+' : ''}${f.toFixed(1)}% (average pace of the last 17.2K versus the first 25K)`],
+      ['Late paces', `25-30K ${pace(tail[0])} \u00b7 30-35K ${pace(tail[1])} \u00b7 35-40K ${pace(tail[2])} \u00b7 final stretch ${pace(tail[3])}`],
+      ['Pattern', `Within the first 25K, 20-25K was ${firstTrend > 1 ? `${firstTrend.toFixed(0)}% slower than the first 5K, so the fade had already started` : firstTrend < -1 ? `${(-firstTrend).toFixed(0)}% faster than the first 5K, a runner getting stronger` : 'about the same as the first 5K, a steady rhythm'}. ` +
+        (f > 8 ? `The slowest late segment was ${segName} (${pace(tail[worst])}), a clear fade: an even projection badly underestimates.` : f > 2 ? `A mild late fade (slowest ${segName} at ${pace(tail[worst])}); 3-8% is normal for amateurs.` : 'Nearly even or faster late (a negative split), typical of experienced runners.') +
+        (r.y === 2016 ? ' That year was hot, and more runners faded.' : r.y === 2015 ? ' That year had a headwind and rain, so times were slow overall.' : '')],
     ]);
     return res;
   },
