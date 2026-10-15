@@ -18,13 +18,14 @@ const STATES = {
   TX: ['得克萨斯', 31.5, -99.3, 'S'], UT: ['犹他', 39.3, -111.7, 'W'], VA: ['弗吉尼亚', 37.5, -78.8, 'S'], VT: ['佛蒙特', 44.1, -72.7, 'NE'],
   WA: ['华盛顿州', 47.4, -120.5, 'W'], WI: ['威斯康星', 44.6, -89.9, 'MW'], WV: ['西弗吉尼亚', 38.6, -80.6, 'S'], WY: ['怀俄明', 43.0, -107.6, 'W'],
 };
+const EN = Object.fromEntries('AL Alabama,AR Arkansas,AZ Arizona,CA California,CO Colorado,CT Connecticut,DE Delaware,FL Florida,GA Georgia,IA Iowa,ID Idaho,IL Illinois,IN Indiana,KS Kansas,KY Kentucky,LA Louisiana,MA Massachusetts,MD Maryland,ME Maine,MI Michigan,MN Minnesota,MO Missouri,MS Mississippi,MT Montana,NC North Carolina,ND North Dakota,NE Nebraska,NH New Hampshire,NJ New Jersey,NM New Mexico,NV Nevada,NY New York,OH Ohio,OK Oklahoma,OR Oregon,PA Pennsylvania,RI Rhode Island,SC South Carolina,SD South Dakota,TN Tennessee,TX Texas,UT Utah,VA Virginia,VT Vermont,WA Washington,WI Wisconsin,WV West Virginia,WY Wyoming'.split(',').map((x) => [x.slice(0, 2), x.slice(3)]));
 // curated lexical questions with a short Chinese prompt (id = Harvard question number)
 const Q = {
   50: '称呼两个以上的人（"你们"）', 58: '在自家门廊/院子里卖旧物', 64: '那种夹冷切肉的长三明治', 65: '夏夜发光的小虫', 66: '溪里的小龙虾',
   67: '腿极长的蜘蛛状虫子', 73: '体育课穿的橡胶底运动鞋', 74: '一碰就卷成球的灰色小虫', 75: '超市里推的购物车', 76: '十字路口的斜对面',
   81: '冷到起的鸡皮疙瘩', 84: '几条路汇合的环形路口', 97: '垃圾桶', 98: '"不小心"', 99: '与高速平行的小路', 100: '修剪草坪的动词', 103: '学校里能喝水的饮水设施',
   104: '地下公共铁路系统', 105: '含糖碳酸饮料的通称', 106: '用卫生纸缠满别人家的房子', 109: '装杂货的纸袋', 110: '万圣节前一夜', 111: '面包的两头', 117: '建筑半地下/地下的那一层',
-  119: '餐厅买了带回家吃', 120: '抢车的前排座位时喊', 62: '高速公路中间的隔离带', 61: '街道中间的绿化带', 49: '"我把她的尸体 ___ 出泳池"', 85: '女生扎头发的东西',
+  119: '餐厅买了带回家吃', 120: '抢车的前排座位时喊', 62: '高速公路中间的隔离带', 61: '街道中间的绿化带', 49: '"我把重箱子 ___ 上楼"（drag 的过去式）', 85: '女生扎头发的东西',
   72: '家具下的灰尘团', 80: '出太阳时下的雨', 93: '排队（in line / on line）', 101: '上交作业', 41: '水龙头（spigot / spicket）', 26: 'route 的读音', 89: '凉拌卷心菜 coleslaw 能说 slaw 吗',
   86: '你用 cruller 这个词吗', 28: 'cot 和 caught 读音相同吗', 51: '"Are you coming with?" 能单独成句吗', 60: '人行道和马路之间的草带', 29: 'almond 的读音',
 };
@@ -50,6 +51,8 @@ const post = (c, picks) => { // naive Bayes posterior of state c among all state
   return { p: Math.exp(L(c) - mx) / z, rank: 1 + all.filter((v) => v > L(c)).length };
 };
 const puzzles = [];
+const combos = (arr, k, start = 0, cur = [], out = []) => { if (cur.length === k) { out.push(cur.slice()); return out; } for (let i = start; i < arr.length; i++) { cur.push(arr[i]); combos(arr, k, i + 1, cur, out); cur.pop(); } return out; };
+const MAX_SETS = 4;
 for (const c of codes) {
   const cand = [];
   for (const id of Object.keys(qs)) {
@@ -58,21 +61,28 @@ for (const c of codes) {
     if (best) cand.push(best);
   }
   cand.sort((a, b) => b.s - a.s);
-  for (let set = 0; set < 3; set++) {
-    const pick = cand.slice(set * 5, set * 5 + 5);
-    if (pick.length < 5) continue;
-    const pr = post(c, pick.map((x) => [x.qid, x.k]));
-    if (pr.rank > 6) continue;
-    pick.forEach((x) => used.add(x.qid));
-    puzzles.push({ st: c, set, clues: pick.map((x) => [x.qid, x.k]), rank: pr.rank, post: +pr.p.toFixed(3) });
+  const top = cand.slice(0, 10);
+  if (top.length < 5) continue;
+  // every 5-subset of the 10 best clues whose true state ranks in the top 4 of 48; greedy pick with low overlap
+  const opts = combos(top, 5).map((pick) => ({ pick, pr: post(c, pick.map((x) => [x.qid, x.k])), sum: pick.reduce((a, x) => a + x.s, 0) }))
+    .filter((x) => x.pr.rank <= 4 && x.pr.p >= 0.08)
+    .sort((a, b) => b.sum - a.sum);
+  const chosen = [];
+  for (const o of opts) {
+    if (chosen.length >= MAX_SETS) break;
+    if (chosen.every((q) => q.pick.filter((x) => o.pick.includes(x)).length <= 3)) chosen.push(o);
   }
+  chosen.forEach((o, set) => {
+    o.pick.forEach((x) => used.add(x.qid));
+    puzzles.push({ st: c, set, clues: o.pick.map((x) => [x.qid, x.k]), rank: o.pr.rank, post: +o.pr.p.toFixed(3) });
+  });
 }
 const questions = {};
 for (const id of used) {
   const q = qs[id];
   questions[id] = { zh: q.zh, en: q.en.slice(0, 120), opts: Object.fromEntries(q.opts.filter((o) => puzzles.some((p) => p.clues.some(([a, k]) => a === +id && k === o.k)) || true).map((o) => [o.k, { t: o.t, nat: +o.nat.toFixed(3), p: Object.fromEntries(codes.map((c) => [c, Math.round(o.p[c] * 1000) / 10])) }])) };
 }
-const states = Object.fromEntries(codes.map((c) => [c, { zh: STATES[c][0], lat: STATES[c][1], lng: STATES[c][2], reg: STATES[c][3] }]));
+const states = Object.fromEntries(codes.map((c) => [c, { zh: STATES[c][0], en: EN[c], lat: STATES[c][1], lng: STATES[c][2], reg: STATES[c][3] }]));
 const out = { n: 123456 && 0, states, questions, puzzles };
 delete out.n;
 fs.writeFileSync('../data.json', JSON.stringify(out));
