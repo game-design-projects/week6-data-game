@@ -27,7 +27,7 @@ export function lookalikes(data, picks, skip, n = 2) {
 
 /** Clue lines to scan for answer leaks: everything the player sees before guessing. */
 export function clueTexts(data, p) {
-  return [...p.clues.map(([q, k]) => `${data.questions[q].zh} ${data.questions[q].opts[k].t}`)];
+  return [...p.clues.map(([q, k]) => `${data.questions[q].label} ${data.questions[q].opts[k].t}`)];
 }
 
 /** How many answers are visible after `n` guesses have been made (2 at the start, +1 per wrong guess, max 5). */
@@ -38,21 +38,21 @@ export default {
     num: 48,
     slug: 'dialect-pin',
     title: 'Dialect Pin',
-    tagline: '把方言测验倒过来玩：看一个人怎么回答 soda 还是 pop，猜他在美国哪个州长大。',
+    tagline: 'The dialect quiz played backwards: read how someone says soda or pop, and guess which US state they grew up in.',
     category: 'words',
     data: 'snapshot',
     howTo: [
-      '哈佛方言调查问了美国人上百个用词问题：汽水叫 soda 还是 pop？斜对面叫 kitty-corner 还是 catty-corner？',
-      '一开始你只看到一位说话人的 2 个回答。每猜错一次，多揭开一个回答，最多 6 次。',
-      '每次猜测会告诉你该州离答案多远、在哪个方向，以及「像不像」：只看已揭开的回答，这个州的人这样说的可能性占 48 州的多少。猜过的州会涂在下方地图上，揭晓后地图才显示地名。',
-      '诀窍：找「某个地区独有」的说法，比如 y\'all、buggy、bubbler、rolling，它们比 sneakers 或 soda 这类到处都有的词有用得多。',
+      'The Harvard Dialect Survey asked Americans over a hundred questions about word choice: is it soda or pop? Kitty-corner or catty-corner?',
+      'At first you see just 2 answers from one speaker. Each wrong guess reveals one more answer, up to 6 guesses.',
+      'Each guess tells you how far that state is from the answer, in which direction, and its "fit": looking only at the answers revealed so far, how likely people in that state are to talk this way, as a share of the 48 states. Guessed states are shaded on the map below, and place names appear only after the reveal.',
+      'Trick: look for phrases unique to one region, like y\'all, buggy, bubbler or rolling. They help far more than words used everywhere, like sneakers or soda.',
     ],
-    scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分，6 次都没猜中 0 分。',
+    scoring: '100 points for a first-guess hit, about 17 fewer for each extra guess, and 0 if all 6 miss.',
     sources: [
-      { name: 'Harvard Dialect Survey（Bert Vaux & Scott Golder, 2003）', url: 'http://www4.uwm.edu/FLL/linguistics/dialect/maps.html', note: '各州回答比例' },
-      { name: 'asucbi/BDSR2 上的各州结果文本镜像', url: 'https://github.com/asucbi/BDSR2/tree/main/proc/hds', note: '本游戏实际下载处（原站目前难以访问）' },
+      { name: 'Harvard Dialect Survey (Bert Vaux & Scott Golder, 2003)', url: 'http://www4.uwm.edu/FLL/linguistics/dialect/maps.html', note: 'Answer shares by state' },
+      { name: 'State result text mirror at asucbi/BDSR2', url: 'https://github.com/asucbi/BDSR2/tree/main/proc/hds', note: 'Where this game actually downloads from (the original site is hard to reach)' },
     ],
-    dataNote: '这是 2003 年的静态调查，没有提供实时接口（原站 uwm.edu 不稳定，也无 CORS/API），所以用快照。数据是各州回答比例，不是某个真人的完整问卷。「说话人」是用该州最有辨识度的 5 个说法拼出的一个典型代表（比该州比例≥12%、且至少是全国均值 1.7 倍的选项）。原调查没有阿拉斯加、夏威夷和华盛顿特区，也有 5 个州因说法太接近全国平均而不出题。每个州最多 4 套线索，共 145 题（轮完前不重复）；每套线索合起来要让真实州在 48 州里排进前 4。题目只选用词类问题，读音类题的音标在镜像中丢失。',
+    dataNote: 'This is a static 2003 survey with no live API (the original uwm.edu site is flaky and has no CORS or API), so it is a snapshot. The data are answer shares by state, not one real person\'s full questionnaire. The "speaker" is a typical stand-in built from a state\'s 5 most distinctive phrasings (options used by at least 12% of the state and at least 1.7 times the national average). The survey has no Alaska, Hawaii or Washington, DC, and 5 states are skipped because their phrasing is too close to the national average. Each state has up to 4 clue sets, 145 puzzles in all (no repeats until the pool runs out); each set must put the true state in the top 4 of 48. Only word-choice questions are used, since the phonetic symbols of pronunciation questions are lost in the mirror.',
   },
 
   puzzle({ data, pick }) {
@@ -67,25 +67,25 @@ export default {
     const Q = D.questions;
     const ans = S[p.st];
     const line = ([q, k]) => ui.h('div', { style: { marginBottom: '4px' } },
-      ui.h('span', { class: 'muted small' }, Q[q].zh, '：'), ' ', ui.h('b', `“${Q[q].opts[k].t}”`));
+      ui.h('span', { class: 'muted small' }, Q[q].label, ':'), ' ', ui.h('b', `“${Q[q].opts[k].t}”`));
     const clues = [
-      ui.h('div', { class: 'ds-stack' }, ui.h('div', { class: 'small muted' }, '一位说话人这样回答：'), line(p.clues[0]), line(p.clues[1])),
+      ui.h('div', { class: 'ds-stack' }, ui.h('div', { class: 'small muted' }, 'One speaker answered:'), line(p.clues[0]), line(p.clues[1])),
       ...p.clues.slice(2).map(line),
-      `地区：美国${{ NE: '东北部', S: '南部', MW: '中西部', W: '西部' }[ans.reg]}。`,
+      `Region: ${{ NE: 'the Northeast', S: 'the South', MW: 'the Midwest', W: 'the West' }[ans.reg]} of the US.`,
     ];
-    const options = Object.entries(S).map(([c, s]) => ({ id: c, label: s.zh, hint: `${s.en} · ${c}`, aliases: [c, s.en] }));
+    const options = Object.entries(S).map(([c, s]) => ({ id: c, label: s.en, hint: c, aliases: [c] }));
     let calls = 0;
     const tried = [];
     const mapper = makeMap(ctx, S);
     const gp = ctx.guess({
-      title: '他在哪个州长大？',
-      placeholder: '输入州名，如 TX 或 Texas…',
+      title: 'Which state did they grow up in?',
+      placeholder: 'Type a state, e.g. TX or Texas…',
       options,
       answer: p.st,
       maxGuesses: 6,
       clues,
-      cluesTitle: '说话人的回答',
-      columns: ['距离', '方向', '像不像'],
+      cluesTitle: 'What the speaker said',
+      columns: ['Distance', 'Direction', 'Fit'],
       near: (g, a) => haversineKm(S[g.id], S[a.id]) < 450,
       feedback: (g) => {
         calls++;
@@ -110,20 +110,20 @@ export default {
     const weak = lifts.reduce((a, b) => (b.lift < a.lift ? b : a));
     const rows = p.clues.map(([q, k], i) => {
       const o = Q[q].opts[k];
-      const top = Object.entries(o.p).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c, v]) => `${S[c].zh} ${v}%`).join('、');
-      return { q: Q[q].zh, a: o.t, mine: `${o.p[p.st]}%`, nat: `${(o.nat * 100).toFixed(0)}%`, lift: `×${lifts[i].lift.toFixed(1)}`, top };
+      const top = Object.entries(o.p).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c, v]) => `${S[c].en} ${v}%`).join(', ');
+      return { q: Q[q].label, a: o.t, mine: `${o.p[p.st]}%`, nat: `${(o.nat * 100).toFixed(0)}%`, lift: `×${lifts[i].lift.toFixed(1)}`, top };
     });
-    const like = lookalikes(D, p.clues, p.st, 2).map(([c, v]) => `${S[c].zh}（${Math.round(v * 100)}%）`).join('、');
+    const like = lookalikes(D, p.clues, p.st, 2).map(([c, v]) => `${S[c].en} (${Math.round(v * 100)}%)`).join(', ');
     const bq = Q[best.q];
     const wq = Q[weak.q];
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.h('div', { class: 'ink2' }, `答案：${ans.zh}（${ans.en}，${p.st}）。判断一个州，看的是回答占比比全国均值高多少倍（“倍数”一列）：`),
+      ui.h('div', { class: 'ink2' }, `Answer: ${ans.en} (${p.st}). What identifies a state is how many times more common an answer is there than the national average (the "Lift" column):`),
       ui.table({
-        columns: [{ key: 'q', label: '问题' }, { key: 'a', label: '回答' }, { key: 'mine', label: ans.zh, num: true }, { key: 'nat', label: '州均值', num: true }, { key: 'lift', label: '倍数', num: true }, { key: 'top', label: '最高的三个州' }],
+        columns: [{ key: 'q', label: 'Question' }, { key: 'a', label: 'Answer' }, { key: 'mine', label: ans.en, num: true }, { key: 'nat', label: 'State avg', num: true }, { key: 'lift', label: 'Lift', num: true }, { key: 'top', label: 'Top 3 states' }],
         rows,
       }),
-      ui.callout(`本题最大的破绽是“${bq.zh}”答“${bq.opts[best.k].t}”：${ans.zh}有 ${(best.mine * 100).toFixed(0)}% 的人这样说，是全国均值的 ${best.lift.toFixed(1)} 倍；最没用的是“${wq.zh}”答“${wq.opts[weak.k].t}”（仅 ×${weak.lift.toFixed(1)}）。`),
-      ui.callout(`5 个回答合起来，${ans.zh}的可能性占 48 州的 ${Math.round(posterior(D, p.clues)[p.st] * 100)}%，排名第 ${p.rank}；最容易混淆的邻居是${like}。`));
+      ui.callout(`The biggest giveaway: for “${bq.label}”, the answer “${bq.opts[best.k].t}”. ${(best.mine * 100).toFixed(0)}% of ${ans.en} says it, ${best.lift.toFixed(1)}x the national average. The least useful: “${wq.label}”, “${wq.opts[weak.k].t}” (only ×${weak.lift.toFixed(1)}).`),
+      ui.callout(`Taken together, the 5 answers give ${ans.en} a ${Math.round(posterior(D, p.clues)[p.st] * 100)}% share among the 48 states, ranked #${p.rank}. The closest lookalikes: ${like}.`));
     ctx.log('done', { st: p.st, score: res.score });
     return res;
   },
@@ -159,7 +159,7 @@ function makeMap(ctx, S) {
     async mount(guessPromise) {
       try {
         await ctx.sleep(0);
-        const box = ctx.ui.panel({ kicker: '地图', title: '你猜过的州' });
+        const box = ctx.ui.panel({ kicker: 'Map', title: 'States you guessed' });
         ctx.stage.append(box);
         const m = await ctx.ui.createMap({ bounds: [[24.3, -125.5], [49.8, -66.2]], height: 340, minZoom: 3, maxZoom: 6 });
         box.append(m.el);

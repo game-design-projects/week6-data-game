@@ -40,7 +40,7 @@ test('pool: puzzle() over days 1-120 is valid and leak-free', () => {
     seen.add(JSON.stringify(p));
     for (const [q, k] of p.clues) {
       const o = data.questions[q]?.opts[k];
-      assert.ok(o && o.t && data.questions[q].zh, 'option+prompt exist');
+      assert.ok(o && o.t && data.questions[q].label, 'option+prompt exist');
       assert.ok(o.p[p.st] >= 12 && Number.isFinite(o.nat) && o.nat > 0);
     }
     for (const t of clueTexts(data, p).map((x) => x.toLowerCase())) {
@@ -50,7 +50,7 @@ test('pool: puzzle() over days 1-120 is valid and leak-free', () => {
   }
   assert.ok(seen.size >= 60, `pool size ${seen.size}`);
   for (const [c, s] of Object.entries(S)) {
-    assert.ok(s.zh && s.en && Number.isFinite(s.lat) && Number.isFinite(s.lng) && ['NE', 'S', 'MW', 'W'].includes(s.reg), c);
+    assert.ok(s.en && Number.isFinite(s.lat) && Number.isFinite(s.lng) && ['NE', 'S', 'MW', 'W'].includes(s.reg), c);
     assert.ok(s.lat > 24 && s.lat < 50 && s.lng < -66 && s.lng > -125, c);
   }
 });
