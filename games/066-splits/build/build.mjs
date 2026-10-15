@@ -29,18 +29,22 @@ for (const y of [2015, 2016, 2017]) {
     if (sp.some((v) => v == null) || [t30, t35, t40, fin].some((v) => v == null)) continue;
     const full = [...sp.slice(0, 4), sp[5], t30, t35, t40, fin]; // 5,10,15,20,25,30,35,40,finish
     if (!full.every((v, i) => i === 0 || v > full[i - 1])) continue;
+    // drop timing-mat glitches: every 5K segment must be within 0.6-1.6x of the runner's overall pace
+    const avg = fin / 42.195;
+    if (!full.every((v, i) => { const d = (v - (full[i - 1] ?? 0)) / (i === 8 ? 2.195 : 5); return d > 0.6 * avg && d < 1.6 * avg; })) continue;
     const age = +r[ix('Age')];
     all.push({ y, g: r[ix('M/F')], age, cc: r[ix('Country')], half: sp[4], sp: full.slice(0, 5), rest: full.slice(5), fin });
   }
 }
 // fade ratio: second 17.195K pace vs first 25K pace
 for (const a of all) a.fade = (a.fin - a.sp[4]) / (a.sp[4] * (17.195 / 25)); // 1 = even pace
-// stratify: 6 fade buckets x 3 years, ~5 each => ~90
-const edges = [0.97, 1.02, 1.07, 1.15, 1.3, 9];
+// stratify: 6 fade buckets x 3 years, 8 each => 144
+// the open-ended top bucket is capped at +40% fade: beyond that (injury, walking) nobody can predict the finish
+const edges = [0.97, 1.02, 1.07, 1.15, 1.3, 1.4];
 const picked = [];
 for (const y of [2015, 2016, 2017]) for (let b = 0; b < edges.length; b++) {
   const pool = all.filter((a) => a.y === y && a.fade >= (edges[b - 1] ?? 0) && a.fade < edges[b] && a.fin < 6 * 3600);
-  for (let k = 0; k < 6 && pool.length; k++) picked.push(...pool.splice(Math.floor(rnd() * pool.length), 1));
+  for (let k = 0; k < 8 && pool.length; k++) picked.push(...pool.splice(Math.floor(rnd() * pool.length), 1));
 }
 const runners = picked.map((a, i) => ({ id: i, y: a.y, g: a.g, age: a.age, cc: a.cc, sp: a.sp, rest: a.rest, fin: a.fin }));
 fs.writeFileSync(path.join(dir, '../data.json'), JSON.stringify({ n: all.length, runners }));
