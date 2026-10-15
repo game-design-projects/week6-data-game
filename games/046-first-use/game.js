@@ -11,29 +11,29 @@ export function yearScore(guess, answer, free = 2, scale = 60) {
   return Math.exp(-err / scale);
 }
 
-/** "1560 年代" for decade entries, "1862 年" for exact ones. */
-export const fmtYear = (item) => (item.d ? `${item.y - 5} 年代` : `${item.y} 年`);
+/** "1560s" for decade entries, "1862" for exact ones. */
+export const fmtYear = (item) => (item.d ? `${item.y - 5}s` : String(item.y));
 
-const IBERIAN = /西班牙语|葡萄牙语|纳瓦特尔|加勒比|阿拉瓦克/;
-const CLASSICAL = /拉丁语|希腊语/;
+const IBERIAN = /Spanish|Portuguese|Nahuatl|Carib|Arawak/;
+const CLASSICAL = /Latin|Greek/;
 
 /** One sentence tying this puzzle's origin language and date to a general pattern in how English grew. */
 export function pattern(item) {
   const { o, y } = item;
-  if (IBERIAN.test(o) && y < 1800) return '西班牙、葡萄牙商船把美洲和亚洲的作物、器物带回欧洲，名字也跟着借进英语——这类词集中在 16–17 世纪。';
-  if (/意大利语/.test(o)) return y < 1700 ? '文艺复兴时期意大利的科学、建筑、音乐和航海词汇大量流入英语，16–17 世纪是高峰。' : '18 世纪起英国人游学意大利，音乐、饮食和旅行相关的意大利词汇随之进入英语。';
-  if (/法语/.test(o)) return y < 1700 ? '法语长期是英语最大的借词来源，16–17 世纪又有大批学术、宫廷和军事词汇从法语转入。' : '18–19 世纪借自法语的词多与时尚、餐饮、外交和艺术沙龙有关。';
-  if (CLASSICAL.test(o)) return y < 1700 ? '文艺复兴学者直接从拉丁语、希腊语搬词进英语，学术和医学词汇在 16–17 世纪大量出现。' : y < 1900 ? '19 世纪科学分科迅速增多，新学科和新物质常用拉丁、希腊词根现造名字。' : '20 世纪的医学和化学新名词仍沿用拉丁、希腊词根来造。';
-  if (/德语|荷兰语|低地德语|挪威语|古诺尔斯语/.test(o)) return y < 1700 ? '航海、贸易和战争把低地国家与北欧的词汇带进了英语，多是与船、钱、日用品有关的词。' : '19–20 世纪德语在化学、心理学、医学等科学领域贡献了大量术语。';
-  if (/日语/.test(o)) return '日语借词在 18 世纪起零星出现，真正增多要到 19 世纪末开放通商之后，现代流行文化词更晚。';
-  if (/印地|梵语/.test(o)) return '英国东印度公司和殖民统治期间（18–19 世纪），印度的宗教与日常用语陆续借入英语。';
-  if (/西非/.test(o)) return '来自非洲语言的词多经加勒比和美国南方的奴隶社会进入英语，书面记录往往要到 19 世纪。';
-  if (/来源不明/.test(o)) return '来源不明的口语、俚语词，书面记录往往比口头出现晚得多，年代难以靠词形推断——要靠它指代的事物和语体来猜。';
-  if (/人名/.test(o)) return '以人名命名的新事物，往往在这个人活跃的那几十年里立刻有了名字。';
-  if (y >= 1950) return '二战后的科技（电子、计算机、网络）不断用合成词、缩略词和商标造新词，这类词几乎都出自 20 世纪下半叶。';
-  if (y >= 1900) return '20 世纪初的新发明和大众文化（交通、电影、广播、营养学）用拼合、缩写的方式快速造出新词。';
-  if (y >= 1800) return '工业革命带来的新事物和新休闲方式，常用现成的英语词拼合或缩略而成。';
-  return '这类词在英语内部拼合、派生或缩略而成，不靠借词，所以年代主要跟着它所指的新事物出现的时间走。';
+  if (IBERIAN.test(o) && y < 1800) return 'Spanish and Portuguese ships carried crops and goods from the Americas and Asia to Europe, and their names came into English with them. Words like this cluster in the 16th and 17th centuries.';
+  if (/Italian/.test(o)) return y < 1700 ? 'Renaissance Italy poured science, architecture, music and seafaring vocabulary into English, peaking in the 16th and 17th centuries.' : 'From the 18th century, British travelers who toured Italy brought home Italian words for music, food and travel.';
+  if (/French/.test(o)) return y < 1700 ? 'French has long been English\u2019s biggest lender, and the 16th and 17th centuries brought another wave of scholarly, courtly and military words.' : 'Words borrowed from French in the 18th and 19th centuries mostly concern fashion, dining, diplomacy and the arts.';
+  if (CLASSICAL.test(o)) return y < 1700 ? 'Renaissance scholars lifted words straight from Latin and Greek, so academic and medical vocabulary appears in bulk in the 16th and 17th centuries.' : y < 1900 ? 'In the 19th century the sciences multiplied, and new fields and substances were usually named with Latin or Greek roots.' : 'New 20th-century medical and chemical terms were still built from Latin and Greek roots.';
+  if (/German|Dutch|Norwegian|Old Norse/.test(o)) return y < 1700 ? 'Sailing, trade and war brought words from the Low Countries and Scandinavia into English, mostly about ships, money and everyday goods.' : 'In the 19th and 20th centuries German supplied English with a great many terms in chemistry, psychology and medicine.';
+  if (/Japanese/.test(o)) return 'Japanese loanwords trickle in from the 18th century, and only multiply after the country opened to trade in the late 19th century; modern pop-culture words came later still.';
+  if (/Hindi|Sanskrit/.test(o)) return 'Under the East India Company and the Raj (18th and 19th centuries), Indian religious and everyday words were borrowed into English.';
+  if (/West African/.test(o)) return 'Words from African languages mostly entered English through slave societies in the Caribbean and the American South, and often reached print only in the 19th century.';
+  if (/unknown/.test(o)) return 'Slang and spoken words of unknown origin usually appear in print long after people started saying them, so the shape of the word tells you little; guess from the thing it names and the register.';
+  if (/person/.test(o)) return 'A thing named after a person usually gets its name within the decades when that person was active.';
+  if (y >= 1950) return 'Postwar technology (electronics, computing, networks) coins new words through compounds, acronyms and brand names, almost all from the second half of the 20th century.';
+  if (y >= 1900) return 'New inventions and mass culture of the early 20th century (transport, film, radio, nutrition) quickly produced words by blending and clipping.';
+  if (y >= 1800) return 'The new things and leisure habits of the Industrial Revolution were often named by joining or shortening existing English words.';
+  return 'Words like this are built inside English by compounding, derivation or clipping rather than borrowed, so the date mostly follows the arrival of the thing they name.';
 }
 
 export default {
@@ -41,51 +41,51 @@ export default {
     num: 46,
     slug: 'first-use',
     title: 'First Use',
-    tagline: '给你一个英语单词和中文释义，猜它最早见于书面英语的年份。',
+    tagline: 'Here is an English word and its meaning. Guess the year it first appeared in written English.',
     category: 'words',
     data: 'snapshot',
     howTo: [
-      '屏幕上是一个英语单词、它的中文释义和词源语言。想想这件事物是什么时候才有的、这个词是从哪种语言借来的。',
-      '拖动滑块或直接输入年份（1500–2020），每天最多 3 次机会；每次提交后提示“更早”或“更晚”。',
-      '词典对较早的词只记录到“某某年代”，这类词落在那十年内都算命中；其余词误差 2 年以内算命中。',
-      '计分：命中得满分，之后每差 60 年左右分数降到约 37%；每多用一次机会 −10%。',
+      'You see an English word, a short definition and the language it came from. Think about when the thing itself came into being and which language lent the word.',
+      'Drag the slider or type a year (1500\u20132020). You get up to 3 tries, with an \u201cearlier\u201d or \u201clater\u201d hint after each.',
+      'For older words the dictionary only records a decade (\u201c1560s\u201d); anywhere in that decade counts as a hit. For the rest, within 2 years counts as a hit.',
+      'Scoring: a hit earns full marks, then the score drops to about 37% for every 60 years off; each extra try costs 10%.',
     ],
-    scoring: '100 × e^(−(|误差|−容差)/60)，容差 2 年（十年期词条为整个十年）；每多用一次机会 −10%。',
+    scoring: '100 \u00d7 e^(\u2212(|error| \u2212 tolerance)/60), with a tolerance of 2 years (the whole decade for decade-only entries); each extra try costs 10%.',
     sources: [
-      { name: 'Online Etymology Dictionary（etymonline.com）', url: 'https://www.etymonline.com/', note: '每个词条开头的年份即该词（该义项）最早的书面证据' },
-      { name: 'yosevu/etymonline（GitHub 上的词条数据镜像）', url: 'https://github.com/yosevu/etymonline', note: '本游戏使用其中的 index.json' },
+      { name: 'Online Etymology Dictionary (etymonline.com)', url: 'https://www.etymonline.com/', note: 'the year that opens each entry is the earliest written evidence of the word (in that sense)' },
+      { name: 'yosevu/etymonline (GitHub mirror of the entries)', url: 'https://github.com/yosevu/etymonline', note: 'this game uses its index.json' },
     ],
-    dataNote: '原想用 Merriam-Webster 的 First Known Use，但它没有开放 API 且禁止抓取，所以改用 Online Etymology Dictionary 的词条首年。从 etymonline 数据里手工挑出 130 个释义明确、词义没有大变化的词，中文释义为人工撰写；1500 年以前的词条只写到“14 世纪晚期”这类世纪精度，无法出成“猜年份”题，所以没有收录。个别年份与 MW/OED 可能差几年——各词典对“最早”的判定不同。',
+    dataNote: 'We wanted Merriam-Webster\u2019s First Known Use, but it has no open API and forbids scraping, so we use the first year in each Online Etymology Dictionary entry. 130 words with clear, stable meanings were hand-picked from the etymonline data, and the short definitions are hand-written. Entries before 1500 are only dated to the century (\u201clate 14c.\u201d), which cannot make a guess-the-year puzzle, so they are left out. A few years may differ from MW or the OED by a few years; dictionaries disagree on what counts as earliest.',
   },
 
   puzzle({ data, pick }) {
     const x = pick(data.words);
-    return { w: x.w, zh: x.zh, p: x.p, y: x.y, d: x.d, o: x.o, ex: x.ex };
+    return { w: x.w, gloss: x.gloss, p: x.p, y: x.y, d: x.d, o: x.o, ex: x.ex };
   },
 
   async play(ctx, item) {
     const { ui, core } = ctx;
     ctx.log('word', item.w, item.y, item.d ? 'decade' : 'exact', item.o);
-    const POS = { n: '名词', v: '动词', adj: '形容词', adv: '副词' };
+    const POS = { n: 'noun', v: 'verb', adj: 'adjective', adv: 'adverb' };
 
-    ctx.stage.append(ui.panel({ kicker: '英语单词', title: item.w },
-      ui.h('p', { class: 'ink2' }, `${POS[item.p] ? POS[item.p] + ' · ' : ''}${item.zh}`),
-      ui.h('div', { class: 'ds-row' }, ui.badge(`词源：${item.o}`), ui.badge(`${item.w.length} 个字母`))));
+    ctx.stage.append(ui.panel({ kicker: 'English word', title: item.w },
+      ui.h('p', { class: 'ink2' }, `${POS[item.p] ? POS[item.p] + ' \u00b7 ' : ''}${item.gloss}`),
+      ui.h('div', { class: 'ds-row' }, ui.badge(`Origin: ${item.o}`), ui.badge(`${item.w.length} letters`))));
 
     const res = await ctx.estimate({
-      title: '它最早出现在哪一年？',
+      title: 'In what year did it first appear?',
       answer: item.y, min: MIN_YEAR, max: MAX_YEAR, step: 1, initial: 1800,
-      format: (v) => `${Math.round(v)} 年`,
+      format: (v) => String(Math.round(v)),
       attempts: 3, tolerance: freeZone(item),
       scoring: (g, a) => yearScore(g, a, freeZone(item)),
     });
 
     const same = ctx.data.words.filter((x) => x.w !== item.w && Math.abs(x.y - item.y) <= 20).slice(0, 5);
     res.detail = ui.kv([
-      ['答案', `${item.w}（${item.zh}）：${fmtYear(item)}${item.d ? '（词典只记到十年）' : ''}`],
-      ['规律', pattern(item)],
-      ['词典原文', item.ex],
-      ['同期的词', same.length ? same.map((x) => `${x.w} (${x.d ? `${x.y - 5}s` : x.y})`).join('、') : '—'],
+      ['Answer', `${item.w} (${item.gloss}): ${fmtYear(item)}${item.d ? ' (the dictionary only dates it to the decade)' : ''}`],
+      ['Pattern', pattern(item)],
+      ['Entry', item.ex],
+      ['Same era', same.length ? same.map((x) => `${x.w} (${x.d ? `${x.y - 5}s` : x.y})`).join(', ') : '\u2014'],
     ]);
     ctx.log('result', res.score, res.guess);
     return res;
