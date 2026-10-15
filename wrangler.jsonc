@@ -1,0 +1,8 @@
+// Static site on Cloudflare Workers (assets only, no worker script), served at
+// https://daily-data.<account-subdomain>.workers.dev. Build dist/ first: scripts/dist.sh
+{
+  "name": "daily-data",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "assets": { "directory": "./dist" }
+}
