@@ -10,6 +10,9 @@ export function pairs(data) {
   return out;
 }
 
+/** 2012-03-04 -> "Mar 4, 2012" */
+const fmtDate = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
+
 const boundsOf = (g) => {
   const lats = g.nodes.map((n) => n[0]), lngs = g.nodes.map((n) => n[1]);
   return [[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]];
@@ -20,21 +23,21 @@ export default {
     num: 87,
     slug: 'snowplow',
     title: 'Snowplow',
-    tagline: '一场真实的降雪，一片真实的街区路网。规划铲雪路线，把所有主干道清完，越快越好。',
+    tagline: 'A real snowstorm over a real street grid. Plan your plow route to clear every main road, as fast as you can.',
     category: 'transit',
     data: 'snapshot',
     howTo: [
-      '你从车库（白色大圆点）出发。橙色粗线是必须铲的主干道（OSM 的 primary / secondary / tertiary），灰线是没铲的居民街。',
-      '点地图上的任意路口（小圆点），铲雪车会沿「当前最省时」的路线开过去。第一次开过橙色路段会把雪铲掉（变蓝，较慢），之后再开就是畅通路面（快）。',
-      '雪越深，铲雪越慢，居民街也越难走。已铲好的主干道是最快的回程通道，规划好顺序和方向，少走冤枉路。',
-      '全部橙色路段铲完即收工，用时和参考路线比。重来一次扣 5 分。',
+      'You start at the garage (the big white dot). The thick orange lines are the main roads you must plow (OSM primary / secondary / tertiary); the gray lines are unplowed residential streets.',
+      'Tap any junction on the map (the small dots) and the plow drives there by the currently fastest route. The first pass over an orange segment plows it (it turns blue; slow), and after that it is clear pavement (fast).',
+      'The deeper the snow, the slower the plowing and the harder residential streets are to drive. Plowed main roads are the fastest way back, so plan the order and direction to avoid wasted trips.',
+      'The job is done when every orange segment is plowed; your time is compared with a reference route. Each restart costs 5 points.',
     ],
-    scoring: `用时等于（或快于）参考路线 → 100 分；每慢 1% 扣 2 分，慢 ${ZERO_AT * 100}% → 0 分；每重来一次 −${RESET_COST} 分。`,
+    scoring: `Matching (or beating) the reference route scores 100; every 1% slower costs 2 points, ${ZERO_AT * 100}% slower scores 0; each restart costs ${RESET_COST} points.`,
     sources: [
-      { name: 'OpenStreetMap 路网（Overpass API）', url: 'https://overpass-api.de/', note: '© OpenStreetMap contributors, ODbL；忽略单行线与转弯限制' },
-      { name: 'NOAA GHCN-Daily 日降雪量（NCEI Access Data Service）', url: 'https://www.ncei.noaa.gov/access/services/data/v1?dataset=daily-summaries', note: '各城市主气象站历史上最大的单日降雪（2000–2026）' },
+      { name: 'OpenStreetMap road network (Overpass API)', url: 'https://overpass-api.de/', note: '\u00a9 OpenStreetMap contributors, ODbL; one-way streets and turn restrictions are ignored' },
+      { name: 'NOAA GHCN-Daily daily snowfall (NCEI Access Data Service)', url: 'https://www.ncei.noaa.gov/access/services/data/v1?dataset=daily-summaries', note: 'The biggest single-day snowfalls at each city\'s main weather station (2000\u20132026)' },
     ],
-    dataNote: '街区是 15 座美国城市里的真实路网片段（约 400–900 m 见方），路段已合并简化；每个街区配该城市历史上的 10 场大雪，共约 180 道题，只保留「随手就近开」明显比最优慢的组合。行驶速度是游戏设定的模型：清过的路 40 km/h；铲雪 = 22 − 0.9×降雪英寸 km/h（最低 5）；未铲居民街 = 32 − 降雪英寸 km/h（最低 8）。参考路线由离线的 Held-Karp 动态规划 + 局部搜索得出，是已知的好解，不保证全局最优，所以你有机会追平甚至超过它。数据是快照：已试 NOAA NCEI（无 CORS 头，且「昨天」的数据未必有降雪）与 Overpass（公共实例限流、不适合每位玩家实时拉取），因此未做实时加载。',
+    dataNote: 'The neighborhoods are real street-network patches (about 400\u2013900 m across) from 15 US cities, with segments merged and simplified. Each city is paired with its 10 biggest historical snowstorms, giving about 180 puzzles; only combinations where a naive nearest-road driver is clearly slower than the best route are kept. Driving speeds are a game model: plowed roads 40 km/h; plowing = 22 \u2212 0.9 \u00d7 inches of snow km/h (minimum 5); unplowed residential streets = 32 \u2212 inches of snow km/h (minimum 8). The reference route comes from an offline Held-Karp dynamic program plus local search: a known-good solution, not guaranteed optimal, so you can tie or even beat it. The data is a snapshot: NOAA NCEI (no CORS headers, and yesterday may have no snow) and Overpass (the public instance rate-limits and is unsuitable for every player to hit live) were both tried, so nothing is loaded live.',
   },
 
   puzzle({ data, pick }) {
@@ -55,16 +58,16 @@ export default {
     const f1 = (v) => v.toFixed(1);
     log('puzzle', { area: g.id, storm: p.storm, nodes: g.nodes.length, req: nReq, ref: p.ref.time });
 
-    ctx.stage.append(ui.panel({ kicker: `${city.name} · ${p.storm.d}`, title: `${core.fmtNum(D, 1)} 英寸的暴雪` },
+    ctx.stage.append(ui.panel({ kicker: `${city.name} \u00b7 ${fmtDate(p.storm.d)}`, title: `${core.fmtNum(D, 1)}-inch snowstorm` },
       ui.h('div', { class: 'ds-grid', style: { '--min': '110px' } },
-        ui.stat({ label: '铲雪 km/h', value: f1(sp.plow), sub: '橙色主干道，首次经过' }),
-        ui.stat({ label: '畅通路面 km/h', value: String(sp.free), sub: '已铲好的主干道' }),
-        ui.stat({ label: '未铲居民街 km/h', value: f1(sp.res), sub: `需清主干道 ${nReq} 段` }))));
+        ui.stat({ label: 'Plowing km/h', value: f1(sp.plow), sub: 'orange main roads, first pass' }),
+        ui.stat({ label: 'Clear road km/h', value: String(sp.free), sub: 'plowed main roads' }),
+        ui.stat({ label: 'Unplowed street km/h', value: f1(sp.res), sub: `${nReq} main segments to clear` }))));
 
     const stats = ui.h('div', { class: 'ds-row mono small', style: { gap: '16px', flexWrap: 'wrap' } });
     const mapBox = ui.h('div');
-    const btn = ui.button(`重来（−${RESET_COST} 分）`, { variant: 'ghost', small: true });
-    ctx.stage.append(ui.panel({ kicker: '点路口开过去', title: '铲雪路线', aside: btn }, stats, mapBox));
+    const btn = ui.button(`Restart (\u2212${RESET_COST} pts)`, { variant: 'ghost', small: true });
+    ctx.stage.append(ui.panel({ kicker: 'Tap a junction to drive there', title: 'Plow route', aside: btn }, stats, mapBox));
 
     const B = boundsOf(g);
     const fit = (map, h) => { map.options.zoomSnap = 0.25; map.invalidateSize(); map.fitBounds(B, { padding: [h ? 22 : 18, h ? 22 : 18], maxZoom: 18 }); };
@@ -88,7 +91,7 @@ export default {
       st.trail.forEach(([, , ei]) => { if (!g.edges[ei][3] && !used.has(ei)) { used.add(ei); lines[ei].setStyle({ color: c.ink, weight: 4, dashArray: '2 6', opacity: 1 }); } });
       truck.setLatLng(g.nodes[st.pos]);
       const left = g.edges.filter((e, i) => e[3] && !st.cleared[i]).length;
-      stats.replaceChildren(ui.h('span', `⏱ ${f1(st.time)} 分钟`), ui.h('span', `已铲 ${nReq - left}/${nReq}`), ui.h('span', { class: 'muted' }, `参考 ${f1(p.ref.time)}`), ui.h('span', { class: 'muted' }, `重来 ${resets}`));
+      stats.replaceChildren(ui.h('span', `\u23f1 ${f1(st.time)} min`), ui.h('span', `plowed ${nReq - left}/${nReq}`), ui.h('span', { class: 'muted' }, `reference ${f1(p.ref.time)}`), ui.h('span', { class: 'muted' }, `restarts ${resets}`));
     }
     function reset() {
       st = newState(g);
@@ -144,24 +147,24 @@ export default {
 
     const sideDiff = final.sideMin - R.sideMin, mainDiff = final.mainMin - R.mainMin;
     const why = ratio <= 1.001
-      ? `你的空驶（${f1(dead)} 分钟）不比参考多。铲 ${nReq} 段主干道本身就要 ${f1(p.ref.plowMin)} 分钟，这是下限，剩下的时间全看空驶。`
+      ? `Your deadheading (${f1(dead)} min) is no more than the reference. Plowing the ${nReq} main segments alone takes ${f1(p.ref.plowMin)} min, the floor; everything else is deadheading.`
       : sideDiff > 0.3
-        ? `你多花了约 ${f1(sideDiff)} 分钟在没铲的居民街上（${f1(final.sideMin)} 对参考的 ${f1(R.sideMin)}）。这场雪里居民街只有 ${f1(sp.res)} km/h，而铲好的主干道是 ${sp.free} km/h，每次回程都该先看看能不能借道已铲的主干道。`
+        ? `You spent about ${f1(sideDiff)} extra minutes on unplowed residential streets (${f1(final.sideMin)} vs. the reference's ${f1(R.sideMin)}). In this storm they run only ${f1(sp.res)} km/h while plowed main roads run ${sp.free} km/h, so on every trip back check whether you can cut through the plowed main roads.`
         : mainDiff > 0.3
-          ? `你在已铲主干道上多绕了约 ${f1(mainDiff)} 分钟的回头路。参考路线的做法是让上一段的终点正好接上下一段的起点（编号 1→${nReq}），铲的方向比顺序更重要。`
-          : `你的空驶比参考多约 ${f1(dead - refDead)} 分钟，主要是铲每段的方向和顺序不同：参考路线让每一段的终点尽量贴着下一段的起点，几乎不掉头。`;
+          ? `You spent about ${f1(mainDiff)} extra minutes doubling back along plowed main roads. The reference ends each segment right where the next begins (numbered 1\u2192${nReq}); the direction you plow matters more than the order.`
+          : `Your deadheading is about ${f1(dead - refDead)} minutes more than the reference, mostly from the direction and order of each segment: the reference ends each segment as close as possible to the start of the next and almost never turns around.`;
     return {
       score, max: 100, win: score >= 60,
-      summary: `${f1(final.time)} 分钟`,
-      emoji: `🚜 Snowplow №${ctx.day} · ${city.name} ${core.fmtNum(D, 1)}″\n${bar} ${f1(final.time)} / ${f1(p.ref.time)} 分钟`,
+      summary: `${f1(final.time)} min`,
+      emoji: `🚜 Snowplow №${ctx.day} · ${city.name} ${core.fmtNum(D, 1)}″\n${bar} ${f1(final.time)} / ${f1(p.ref.time)} min`,
       detail: ui.panel({ plain: true },
         ui.kv([
-          ['你的用时', `${f1(final.time)} 分钟（铲雪 ${f1(final.plowMin)} + 空驶 ${f1(dead)}：居民街 ${f1(final.sideMin)}、已铲主干道 ${f1(final.mainMin)}）`],
-          ['参考路线', `${f1(p.ref.time)} 分钟（铲雪 ${f1(p.ref.plowMin)} + 空驶 ${f1(refDead)}：居民街 ${f1(R.sideMin)}、已铲主干道 ${f1(R.mainMin)}）`],
-          ['比较', ratio <= 1.001 ? '你追平或超过了参考路线。' : `比参考慢 ${core.fmtNum((ratio - 1) * 100, 0)}%${resets ? `，另重来 ${resets} 次扣 ${resets * RESET_COST} 分` : ''}。`],
-          ['规律', why],
-          ['数据', `${city.name}气象站 ${p.storm.d} 日降雪 ${core.fmtNum(D, 1)} 英寸（NOAA GHCN-Daily）；路网来自 OpenStreetMap。`],
-          ['参考路线图', '参考路线：圆圈里的数字是铲雪顺序，黑色虚线是在没铲的居民街上空驶，蓝线是借道已铲好的主干道回程。'],
+          ['Your time', `${f1(final.time)} min (plowing ${f1(final.plowMin)} + deadheading ${f1(dead)}: residential ${f1(final.sideMin)}, plowed main roads ${f1(final.mainMin)})`],
+          ['Reference', `${f1(p.ref.time)} min (plowing ${f1(p.ref.plowMin)} + deadheading ${f1(refDead)}: residential ${f1(R.sideMin)}, plowed main roads ${f1(R.mainMin)})`],
+          ['Comparison', ratio <= 1.001 ? 'You tied or beat the reference route.' : `${core.fmtNum((ratio - 1) * 100, 0)}% slower than the reference${resets ? `, plus ${resets * RESET_COST} points for ${resets} restart${resets === 1 ? '' : 's'}` : ''}.`],
+          ['Pattern', why],
+          ['Data', `${core.fmtNum(D, 1)} inches of snow at the ${city.name} weather station on ${fmtDate(p.storm.d)} (NOAA GHCN-Daily); street network from OpenStreetMap.`],
+          ['Reference map', 'The numbers in circles are the plowing order, black dashes are deadheading on unplowed residential streets, and blue lines are trips back along plowed main roads.'],
         ]), rbox),
     };
   },
