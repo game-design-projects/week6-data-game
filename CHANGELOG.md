@@ -18,6 +18,7 @@
 - 每个游戏的 `game.test.mjs` 会校验 120 天内出的每一道题（答案可选、干扰项不重复、无空值、数值合理），并在整个题库里扫描答案泄露。
 - `check.mjs --date=YYYY-MM-DD`（检查往期）和 `--dark`（深色主题截图）；新增手机宽度的结果页截图；页面支持 `?theme=dark|light`。
 - `tests/presets.test.mjs`：在无头 Chrome 里测分组、估数、画布预设的行为。
+- 发布到 Cloudflare Workers 静态资源：`scripts/dist.sh` 从已提交的文件生成 `dist/`（去掉构建脚本、原始数据、测试和文档），`wrangler.jsonc` 配置 workers.dev 域名。线上地址 https://daily-data.lishuyustevenli.workers.dev/ 。
 
 ### Changed
 - 地图底图：8 级及以下改用无文字的 Esri 地形晕渲，9 级及以上用灰色街道底图；Esri 灰色底图在 3–8 级会直接画出国家名和海名。

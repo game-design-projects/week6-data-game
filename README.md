@@ -11,6 +11,12 @@
 node scripts/serve.mjs 8787      # → http://localhost:8787/
 ```
 
+线上地址：<https://daily-data.lishuyustevenli.workers.dev/>（Cloudflare Workers 静态资源）。发布：
+
+```bash
+scripts/dist.sh && npx wrangler deploy   # dist/ 由已提交的文件生成，不含 build/、测试和文档
+```
+
 ## 结构
 
 ```
