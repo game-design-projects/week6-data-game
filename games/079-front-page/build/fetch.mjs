@@ -1,16 +1,18 @@
-// Fetch top stories per UTC day from the HN Algolia API into build/raw/ (cached).
+// Fetch every >=15-point story per UTC day from the HN Algolia API into build/raw/ (cached).
+// Window: the 120 UTC days ending 2 days before today (same lag the live game uses).
 import fs from 'node:fs';
-const DAYS = 80, RAW = new URL('./raw/', import.meta.url).pathname;
-const end = Math.floor(Date.now() / 86400000) * 86400; // today 00:00 UTC
-for (let i = 1; i <= DAYS; i++) {
-  const t1 = end - (i - 1) * 86400, t0 = t1 - 86400;
-  const day = new Date(t0 * 1000).toISOString().slice(0, 10);
+import { apiUrl } from '../game.js';
+const DAYS = 120, RAW = new URL('./raw/', import.meta.url).pathname;
+fs.mkdirSync(RAW, { recursive: true });
+const today = new Date().toISOString().slice(0, 10);
+for (let i = 2; i < 2 + DAYS; i++) {
+  const day = new Date(Date.parse(today + 'T00:00:00Z') - i * 86400000).toISOString().slice(0, 10);
   const f = `${RAW}${day}.json`;
   if (fs.existsSync(f)) continue;
-  const q = encodeURIComponent(`created_at_i>=${t0},created_at_i<${t1},points>=15`);
-  const url = `https://hn.algolia.com/api/v1/search?tags=story&numericFilters=${q}&hitsPerPage=1000`;
-  const r = await fetch(url, { headers: { 'User-Agent': 'daily-data-games/1.0 (class project)' } });
-  fs.writeFileSync(f, await r.text());
+  const r = await fetch(apiUrl(day), { headers: { 'User-Agent': 'daily-data-games/1.0 (class project)' } });
+  const txt = await r.text();
+  if (!r.ok) { console.error(day, r.status); break; }
+  fs.writeFileSync(f, txt);
   console.log(day, r.status);
-  await new Promise((r) => setTimeout(r, 400));
+  await new Promise((r) => setTimeout(r, 500));
 }
