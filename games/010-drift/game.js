@@ -1,4 +1,4 @@
-// #10 Drift — 看一枚真实漂流浮标前 10 天的轨迹，推断它第 90 天漂到了哪里。
+// #10 Drift — read the first 10 days of a real drifting buoy's track and work out where it is on day 90.
 const R = 6371, RAD = Math.PI / 180;
 
 /** Great-circle km between [lat,lng] points. */
@@ -30,13 +30,13 @@ export function viewFor(track) {
 export const inBounds = (b, p) => p[0] >= b[0][0] && p[0] <= b[1][0] && p[1] >= b[0][1] && p[1] <= b[1][1];
 const angDiff = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
 const latBand = (lat) => {
-  const a = Math.abs(lat), hemi = lat >= 0 ? '北' : '南';
-  if (a < 12) return '赤道附近：信风驱动的赤道流，整体偏向西，而赤道逆流会把浮标往东送。';
-  if (a < 40) return `${hemi}半球副热带：浮标被${lat >= 0 ? '顺时针' : '逆时针'}的大环流裹着转，大洋西侧有湾流、黑潮这类强劲的西边界流，东侧慢而散。`;
-  if (lat < 0) return '南纬 40° 以南：西风带与南极绕极流，浮标总体向东漂，速度快。';
-  return '北纬 40° 以北：西风与亚极地环流，漂移方向容易随涡旋变化。';
+  const a = Math.abs(lat), hemi = lat >= 0 ? 'northern' : 'southern';
+  if (a < 12) return 'Near the equator: trade winds drive the equatorial current, which runs mostly west, while the equatorial countercurrent carries buoys east.';
+  if (a < 40) return `Subtropics of the ${hemi} hemisphere: buoys get swept around a ${lat >= 0 ? 'clockwise' : 'counterclockwise'} gyre, with strong western boundary currents (the Gulf Stream, the Kuroshio) on the western side of the ocean and slow, diffuse flow on the eastern side.`;
+  if (lat < 0) return 'South of 40°S: the westerlies and the Antarctic Circumpolar Current push buoys east, fast.';
+  return 'North of 40°N: the westerlies and subpolar gyres, where drift direction can change with eddies.';
 };
-const DIRS = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
+const DIRS = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
 export const compass = (deg) => DIRS[Math.round(deg / 45) % 8];
 
 export default {
@@ -44,21 +44,21 @@ export default {
     num: 10,
     slug: 'drift',
     title: 'Drift',
-    tagline: '一枚真实海洋漂流浮标前 10 天的轨迹已经画好。顺着洋流往下推，标出它第 90 天的位置。',
+    tagline: 'The first 10 days of a real ocean drifter\'s track are drawn. Follow the current and mark where it will be on day 90.',
     category: 'geo',
     data: 'snapshot',
     howTo: [
-      '地图上是一枚 NOAA 全球漂流浮标（GDP）最初 10 天的轨迹，每个小圆点间隔 1 天，空心圆是起点，旁边标“第 10 天”的是线索终点。',
-      '浮标没有动力，完全随洋流走。看轨迹的方向、弯曲和速度，想想它在哪个大洋、哪个纬度带，是否会被环流带着拐弯。',
-      '在地图上点出你认为它第 90 天所在的位置，可以拖动调整。',
-      '按距离计分：0 km 得 100 分，每差一个“尺度”（300–1000 km，快的浮标更宽松）分数降到约三分之一。揭晓后会画出真实轨迹，并和“直线外推”对比。',
+      'The map shows the first 10 days of a NOAA Global Drifter Program (GDP) buoy. Each small dot is one day, the hollow circle is the start, and the dot labeled “Day 10” is the end of your clue.',
+      'The buoy has no engine and goes wherever the current takes it. Read the track\'s direction, curvature and speed, and think about which ocean and latitude band it is in and whether a gyre will bend its path.',
+      'Drop a pin where you think it is on day 90. You can drag it to adjust.',
+      'Scoring is by distance: 0 km is 100 points, and every “scale” of error (300–1,000 km; faster buoys get more slack) drops it to about a third. After the reveal, the real track is drawn and compared with a straight-line extrapolation.',
     ],
-    scoring: '100 × e^(−距离/尺度)，尺度 300–1000 km，随前 10 天的速度而定（越快越宽容），题目里会写明。',
+    scoring: '100 × e^(−distance / scale), with a scale of 300–1,000 km set by the buoy\'s speed over the first 10 days (faster is more forgiving). The scale is shown in the puzzle.',
     sources: [
-      { name: 'NOAA Global Drifter Program (AOML) — 6 小时质控轨迹', url: 'https://erddap.aoml.noaa.gov/gdp/erddap/tabledap/drifter_6hour_qc.html', note: '取每日 00:00 UTC 的位置' },
+      { name: 'NOAA Global Drifter Program (AOML): 6-hour quality-controlled tracks', url: 'https://erddap.aoml.noaa.gov/gdp/erddap/tabledap/drifter_6hour_qc.html', note: 'Positions at 00:00 UTC each day' },
       { name: 'Global Drifter Program', url: 'https://www.aoml.noaa.gov/phod/gdp/' },
     ],
-    dataNote: '题库是预先下载的真实浮标轨迹快照（2019–2024 年间 91 天窗口，每枚浮标只出现一次）。GDP 的 ERDDAP 接口没有 CORS 头，浏览器无法实时读取，且质控轨迹有数月延迟；已排除跨越日界线以及 90 天内漂移不足 150 km 的浮标。',
+    dataNote: 'The pool is a pre-downloaded snapshot of real buoy tracks (91-day windows between 2019 and 2024, each buoy used once). The GDP ERDDAP server sends no CORS headers, so a browser cannot read it live, and quality-controlled tracks lag by several months. Buoys that cross the date line, or that drift less than 150 km in 90 days, were excluded.',
   },
 
   puzzle({ data, pick }) {
@@ -73,31 +73,31 @@ export default {
     const brg = bearing(t[0], t[10]);
     ctx.log('puzzle', { id: p.id, start: p.start, d10: Math.round(d10) });
 
-    ctx.stage.append(ui.panel({ kicker: `浮标 #${p.id} · ${p.start} 起`, title: '线索：前 10 天' },
+    ctx.stage.append(ui.panel({ kicker: `Buoy #${p.id} · from ${p.start}`, title: 'The clue: the first 10 days' },
       ui.h('div', { class: 'ds-grid', style: { '--min': '150px' } },
-        ui.stat({ label: '10 天位移', value: core.fmtKm(d10) }),
-        ui.stat({ label: '平均速度', value: `${(d10 / 10).toFixed(0)} km/天` }),
-        ui.stat({ label: '大致朝向', value: compass(brg) }),
-        ui.stat({ label: '起点纬度', value: `${t[0][0].toFixed(1)}°` }))));
+        ui.stat({ label: '10-day displacement', value: core.fmtKm(d10) }),
+        ui.stat({ label: 'Average speed', value: `${(d10 / 10).toFixed(0)} km/day` }),
+        ui.stat({ label: 'Heading', value: compass(brg) }),
+        ui.stat({ label: 'Starting latitude', value: `${t[0][0].toFixed(1)}°` }))));
 
     const b = viewFor(t), scale = scaleFor(d10);
     const res = await ctx.pin({
-      title: '第 90 天，它在哪里？',
-      answer: { lat: end[0], lng: end[1], label: '第 90 天' },
+      title: 'Where is it on day 90?',
+      answer: { lat: end[0], lng: end[1], label: 'Day 90' },
       view: { bounds: b },
       scale,
-      prompt: `把图钉放在你认为它第 90 天所在的位置。离真实位置 ${scale} km 约得 37 分。`,
+      prompt: `Place the pin where you think it is on day 90. Being ${scale} km from the real spot scores about 37.`,
       setup: ({ map, L }) => {
         const c = ui.colors();
         L.polyline(hint, { color: c.accent, weight: 3 }).addTo(map);
         hint.forEach((q, i) => L.circleMarker(q, { radius: i === 0 || i === 10 ? 6 : 3, color: c.accent, weight: 2, fillColor: i === 0 ? c.paper : c.accent, fillOpacity: 1 }).addTo(map));
-        L.marker(hint[10], { icon: L.divIcon({ className: '', html: '<b style="color:var(--ink);font-size:12px;white-space:nowrap;text-shadow:0 0 3px var(--paper)">第 10 天</b>', iconAnchor: [-8, 8] }) }).addTo(map);
+        L.marker(hint[10], { icon: L.divIcon({ className: '', html: '<b style="color:var(--ink);font-size:12px;white-space:nowrap;text-shadow:0 0 3px var(--paper)">Day 10</b>', iconAnchor: [-8, 8] }) }).addTo(map);
       },
       reveal: ({ map, L }) => {
         const c = ui.colors();
         L.polyline(t.slice(10), { color: c.ink, weight: 2, dashArray: '2 5' }).addTo(map);
         const ex = extrapolate(t);
-        L.circleMarker(ex, { radius: 5, color: c.muted, weight: 2, fillOpacity: 0.4 }).addTo(map).bindTooltip('直线外推');
+        L.circleMarker(ex, { radius: 5, color: c.muted, weight: 2, fillOpacity: 0.4 }).addTo(map).bindTooltip('Straight-line extrapolation');
         map.fitBounds(L.latLngBounds([...t, ex]).pad(0.15));
       },
     });
@@ -107,20 +107,20 @@ export default {
     const net = km(t[0], end), rest = km(t[10], end), path10 = t.slice(1, 11).reduce((a, q, k) => a + km(t[k], q), 0), restPath = total - path10;
     const b1 = bearing(t[0], t[10]), b2 = bearing(t[10], end), turn = angDiff(b1, b2);
     const early = path10 / 10, late = restPath / 80, straight = net / total;
-    const shape = straight < 0.35 ? `路程 ${core.fmtKm(total)} 但净位移只有 ${core.fmtKm(net)}（${Math.round(straight * 100)}%），典型的涡旋式打转。`
-      : straight > 0.75 ? `路程 ${core.fmtKm(total)}，净位移 ${core.fmtKm(net)}（${Math.round(straight * 100)}%），几乎一路直行。`
-      : `路程 ${core.fmtKm(total)}，净位移 ${core.fmtKm(net)}（${Math.round(straight * 100)}%），走了一条弯弯的路。`;
-    const dir = turn > 90 ? `前 10 天朝${compass(b1)}，之后整体朝${compass(b2)}：方向几乎掉头，直线外推会错得很远。`
-      : turn > 45 ? `前 10 天朝${compass(b1)}，之后整体转向${compass(b2)}。`
-      : `前 10 天朝${compass(b1)}，之后整体仍朝${compass(b2)}，方向基本延续。`;
-    const spd = late > early * 1.3 ? `后 80 天均速 ${late.toFixed(0)} km/天，比前 10 天的 ${early.toFixed(0)} 快。` : late < early * 0.7 ? `后 80 天均速 ${late.toFixed(0)} km/天，比前 10 天的 ${early.toFixed(0)} 慢。` : `后 80 天均速 ${late.toFixed(0)} km/天，与前 10 天（${early.toFixed(0)}）相近。`;
+    const shape = straight < 0.35 ? `It traveled ${core.fmtKm(total)} but its net displacement is only ${core.fmtKm(net)} (${Math.round(straight * 100)}%), a classic eddy-style loop.`
+      : straight > 0.75 ? `It traveled ${core.fmtKm(total)} with a net displacement of ${core.fmtKm(net)} (${Math.round(straight * 100)}%), nearly a straight run.`
+      : `It traveled ${core.fmtKm(total)} with a net displacement of ${core.fmtKm(net)} (${Math.round(straight * 100)}%), taking a winding path.`;
+    const dir = turn > 90 ? `It headed ${compass(b1)} for the first 10 days, then ${compass(b2)} overall: almost a U-turn, so a straight-line extrapolation misses by a lot.`
+      : turn > 45 ? `It headed ${compass(b1)} for the first 10 days, then turned toward the ${compass(b2)} overall.`
+      : `It headed ${compass(b1)} for the first 10 days and kept going ${compass(b2)} overall, so its direction mostly held.`;
+    const spd = late > early * 1.3 ? `Over the last 80 days it averaged ${late.toFixed(0)} km/day, faster than the ${early.toFixed(0)} of the first 10.` : late < early * 0.7 ? `Over the last 80 days it averaged ${late.toFixed(0)} km/day, slower than the ${early.toFixed(0)} of the first 10.` : `Over the last 80 days it averaged ${late.toFixed(0)} km/day, close to the first 10 days (${early.toFixed(0)}).`;
     res.detail = ui.kv([
-      ['真实位置', `${end[0].toFixed(1)}°, ${end[1].toFixed(1)}°（离第 10 天位置 ${core.fmtKm(rest)}）`],
-      ['你的成绩', `${core.fmtKm(res.km)}；直线外推 ${core.fmtKm(exErr)}${exErr > res.km ? '，你比它准' : '，它比你准'}`],
-      ['路径形状', shape],
-      ['方向与速度', `${dir}${spd}`],
-      ['这片海域', latBand(t[0][0])],
-      ['水帆', p.drogued ? '这枚浮标 15 m 深的水帆还在，跟着上层洋流走。' : '这枚浮标的水帆已脱落，更容易被风吹着走。'],
+      ['Actual position', `${end[0].toFixed(1)}°, ${end[1].toFixed(1)}° (${core.fmtKm(rest)} from its day-10 spot)`],
+      ['Your result', `${core.fmtKm(res.km)} off; straight-line extrapolation ${core.fmtKm(exErr)} off${exErr > res.km ? ', so you beat it' : ', so it beat you'}`],
+      ['Path shape', shape],
+      ['Direction and speed', `${dir} ${spd}`],
+      ['This stretch of ocean', latBand(t[0][0])],
+      ['Drogue', p.drogued ? 'This buoy still has its drogue (a sea anchor at 15 m depth), so it follows the upper-ocean current.' : 'This buoy has lost its drogue, so the wind pushes it around more.'],
     ]);
     return res;
   },

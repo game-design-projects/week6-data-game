@@ -7,7 +7,7 @@ test('bearing east / north', () => {
   assert.ok(Math.abs(bearing([0, 0], [0, 1]) - 90) < 0.01);
   assert.ok(Math.abs(bearing([0, 0], [1, 0])) < 0.01);
 });
-test('compass', () => { assert.equal(compass(0), '北'); assert.equal(compass(359), '北'); assert.equal(compass(90), '东'); });
+test('compass', () => { assert.equal(compass(0), 'north'); assert.equal(compass(359), 'north'); assert.equal(compass(90), 'east'); });
 test('extrapolate is linear', () => {
   const t = Array.from({ length: 91 }, (_, i) => [i * 0.1, i * 0.2]);
   const e = extrapolate(t);
