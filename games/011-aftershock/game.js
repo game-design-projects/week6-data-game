@@ -44,20 +44,20 @@ export default {
     num: 11,
     slug: 'aftershock',
     title: 'Aftershock',
-    tagline: '这一天全球的地震都在图上，唯独最大的那次被藏起来了。找出它的位置，再猜它有多大。',
+    tagline: 'Every earthquake in the world that day is on the map except the biggest one. Find where it struck, then guess how big it was.',
     category: 'geo',
     data: 'live',
     wide: true,
     howTo: [
-      '地图上每个圆点是昨天（UTC）全球的一次 M2.5 以上地震，圆越大震级越高。当天最大的一次已被隐藏。',
-      '大地震前后常有一串小震（前震、余震）。找到异常密集、却缺了「主角」的那一簇，在那里落点。',
-      '落点后再猜它的震级：看周围小震的最大值和数量——主震总比余震大，通常大 1 级左右。',
+      'Each dot on the map is one M2.5+ earthquake somewhere in the world yesterday (UTC); the bigger the circle, the bigger the quake. The day\u2019s biggest quake has been hidden.',
+      'Big quakes are usually surrounded by smaller ones (foreshocks and aftershocks). Look for an unusually dense cluster that is missing its \u201cstar\u201d, and drop your pin there.',
+      'Then guess its magnitude: check the biggest of the small quakes around it and how many there are. A mainshock is always bigger than its aftershocks, usually by about 1 magnitude.',
     ],
-    scoring: '位置 100 × e^(−距离/1200 km)；震级 100 × e^(−误差/0.6)；总分取两者平均。',
+    scoring: 'Location: 100 \u00d7 e^(\u2212distance / 1,200 km). Magnitude: 100 \u00d7 e^(\u2212error / 0.6). The total is the average of the two.',
     sources: [
-      { name: 'USGS Earthquake Catalog (FDSN event API)', url: 'https://earthquake.usgs.gov/fdsnws/event/1/', note: 'M2.5+，按 UTC 日历日分组；仅选取最大震 ≥ M4.8 且比第二名至少大 0.2 级的日子' },
+      { name: 'USGS Earthquake Catalog (FDSN event API)', url: 'https://earthquake.usgs.gov/fdsnws/event/1/', note: 'M2.5+, grouped by UTC calendar day; only days whose biggest quake is at least M4.8 and at least 0.2 above the runner-up are used' },
     ],
-    dataNote: '谜题取自 USGS 目录中「昨天（UTC）」整日的地震，次日起数据已定稿，所有玩家看到同一天；为保证公平不用滚动的「过去 24 小时」。若昨天没有明显的最大震（< M4.8 或与第二名相差 < 0.2 级）或网络失败，则从 2026-04 至 2026-10 的快照中按日抽取一天。',
+    dataNote: 'Puzzles come from the whole of yesterday (UTC) in the USGS catalog, which is final from the next day on, so every player sees the same day; a rolling \u201cpast 24 hours\u201d would not be fair. If yesterday has no clear biggest quake (below M4.8, or less than 0.2 above the second) or the request fails, a day is drawn from the snapshot of April to October 2026.',
   },
 
   async load(ctx) {
@@ -76,14 +76,14 @@ export default {
   async play(ctx, p) {
     const { ui, core } = ctx;
     ctx.log('puzzle', p.date, 'quakes', p.others.length, 'hidden', p.top.id);
-    ctx.stage.append(ui.panel({ kicker: `UTC ${p.date}`, title: '被藏起来的最大地震' },
+    ctx.stage.append(ui.panel({ kicker: `UTC ${p.date}`, title: 'The hidden biggest quake' },
       ui.h('div', { class: 'ds-grid', style: { '--min': '140px' } },
-        ui.stat({ label: '当天地震数', value: String(p.others.length + 1), sub: 'M2.5 及以上' }),
-        ui.stat({ label: '可见最大', value: `M${p.others[0][2].toFixed(1)}`, sub: '隐藏的更大' }))));
+        ui.stat({ label: 'Quakes that day', value: String(p.others.length + 1), sub: 'M2.5 and up' }),
+        ui.stat({ label: 'Biggest visible', value: `M${p.others[0][2].toFixed(1)}`, sub: 'the hidden one is bigger' }))));
 
     let revealed = false;
     const pinRes = await ctx.pin({
-      title: '1 · 它在哪里？',
+      title: '1 \u00b7 Where is it?',
       answer: { lat: p.top.lat, lng: p.top.lng, label: `M${p.top.mag} · ${p.top.place}` },
       view: { bounds: [[-55, -175], [72, 175]] },
       scale: 1200,
@@ -108,10 +108,10 @@ export default {
     const nearG = nearby(p.others, g.lat, g.lng, 300, core.haversineKm);
     const maxG = nearG.reduce((a, q) => Math.max(a, q[2]), 0);
     const magRes = await ctx.estimate({
-      title: '2 · 它有多大？',
+      title: '2 \u00b7 How big is it?',
       prompt: nearG.length
-        ? `你的落点 300 km 内有 ${nearG.length} 次可见小震，最大 M${maxG.toFixed(1)}。主震通常比最大的余震高 1 级左右（Båth 定律）。`
-        : '你的落点 300 km 内没有可见小震——孤立的大震没有余震线索，只能凭板块边界猜。',
+        ? `Within 300 km of your pin there ${nearG.length === 1 ? 'is 1 visible smaller quake' : `are ${nearG.length} visible smaller quakes`}, the biggest M${maxG.toFixed(1)}. A mainshock is usually about 1 magnitude above its largest aftershock (B\u00e5th\u2019s law).`
+        : 'No visible quakes within 300 km of your pin. An isolated big quake leaves no aftershock clue, so go by where the plate boundaries are.',
       answer: p.top.mag, min: 4, max: 9.5, step: 0.1, initial: 6,
       format: (v) => `M${Number(v).toFixed(1)}`,
       scoring: (gg, a) => magScore(gg, a) / 100,
@@ -121,12 +121,12 @@ export default {
     const maxNear = near.reduce((a, q) => Math.max(a, q[2]), 0);
     const res = ctx.combine([pinRes, magRes]);
     res.detail = ui.kv([
-      ['答案', `M${p.top.mag} · ${p.top.place}（UTC ${p.date} ${p.top.time}）`],
-      ['你的结果', `位置偏差 ${core.fmtKm(pinRes.km)}，震级猜 M${Number(magRes.guess).toFixed(1)}（差 ${Math.abs(magRes.guess - p.top.mag).toFixed(1)} 级）`],
-      ['线索', near.length
-        ? `${p.top.place} 周围 300 km 内有 ${near.length} 次小震，最大 M${maxNear.toFixed(1)}，比主震低 ${(p.top.mag - maxNear).toFixed(1)} 级——那一簇缺了「主角」的密集点就是它的余震/前震。`
-        : `${p.top.place} 周围 300 km 内没有一次可见小震：这次是孤立的大震，只能靠板块边界（俯冲带、洋中脊）的位置判断，震级则只能按全球统计推测。`],
-      ['规律', '大地震的余震数量随震级指数增长，最大余震约比主震小 1.2 级（Båth 定律），所以一簇异常密集的小震往往指向被藏起来的主震，簇里最大的点加 1 级多就是它的震级。'],
+      ['Answer', `M${p.top.mag} \u00b7 ${p.top.place} (UTC ${p.date} ${p.top.time})`],
+      ['Your result', `Location off by ${core.fmtKm(pinRes.km)}; you guessed M${Number(magRes.guess).toFixed(1)} (${Math.abs(magRes.guess - p.top.mag).toFixed(1)} off)`],
+      ['The clue', near.length
+        ? `Within 300 km of ${p.top.place} there ${near.length === 1 ? 'was 1 smaller quake' : `were ${near.length} smaller quakes`}, the biggest M${maxNear.toFixed(1)}, ${(p.top.mag - maxNear).toFixed(1)} below the mainshock. The dense cluster missing its \u201cstar\u201d was its aftershocks and foreshocks.`
+        : `There was not a single visible smaller quake within 300 km of ${p.top.place}: an isolated big quake. You could only go by where it sits on a plate boundary (subduction zone, mid-ocean ridge) and guess the magnitude from global statistics.`],
+      ['The pattern', 'The number of aftershocks grows exponentially with magnitude, and the largest aftershock is typically about 1.2 below the mainshock (B\u00e5th\u2019s law). So an unusually dense cluster of small quakes usually points to the hidden mainshock, and the biggest dot in the cluster plus a bit more than 1 is its magnitude.'],
     ]);
     return res;
   },
