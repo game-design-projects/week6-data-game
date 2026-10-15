@@ -72,21 +72,21 @@ export default {
     num: 9,
     slug: 'great-circle',
     title: 'Great Circle',
-    tagline: '在墨卡托地图上画出两座城市之间的最短航线。你的线和真正的大圆航线之间的面积越小，分数越高。',
+    tagline: 'Draw the shortest flight path between two cities on a Mercator map. The smaller the area between your line and the true great circle, the higher your score.',
     category: 'geo',
     data: 'computed',
     howTo: [
-      '地图上标出了今天的起点和终点（部分航线会跨过太平洋的日界线）。点击地图添加航点，线依次穿过它们，可「撤销」或「清空」。',
-      '墨卡托地图把高纬度地区拉得很大：最短航线（大圆）在图上不是直线，而是向离极点更近的一侧拱起，起终点纬度越高、东西跨度越大，弧越明显。',
-      '提交后会显示真实大圆航线，并比较两条线的实际飞行距离，以及大圆最北（南）能到哪里。',
-      '计分：两条线在地图上围成的面积（折算为平均偏离）。以「直接连线」的偏离为基准：什么都不画只有约 13 分，偏离降到直线的一半约 37 分，贴着大圆得 100 分。来回折线不会抵消，两侧的面积都计入。',
+      'The map marks today\'s start and end (some routes cross the Pacific date line). Click the map to add waypoints; the line passes through them in order, and you can Undo or Clear.',
+      'A Mercator map stretches high latitudes: the shortest route (the great circle) is not a straight line on it but bows toward the pole, and the higher the latitudes and the wider the east-west span, the stronger the arc.',
+      'After you submit, the true great circle is shown, comparing the actual flight distance of both lines and how far north (or south) the great circle reaches.',
+      'Scoring: the area enclosed between the two lines on the map (converted to a mean gap). The straight connecting line is the baseline: drawing nothing earns only about 13, halving the straight line\'s gap earns about 37, and hugging the great circle earns 100. Zig-zags do not cancel out; the area on both sides counts.',
     ],
-    scoring: '100 × e^(−你的平均偏离 ÷ (0.5 × 直线的平均偏离))；平均偏离 = 两线围成的面积（偶奇规则）÷ 起终点的东西跨度，单位为墨卡托度。',
+    scoring: '100 × e^(−your mean gap ÷ (0.5 × the straight line\'s mean gap)); mean gap = the area between the two lines (even-odd rule) ÷ the east-west span of the endpoints, in Mercator degrees.',
     sources: [
-      { name: 'GeoNames cities15000', url: 'https://download.geonames.org/export/dump/', note: '城市坐标与人口（cities15000.zip、countryInfo.txt）' },
-      { name: 'Great-circle distance', url: 'https://en.wikipedia.org/wiki/Great-circle_distance', note: '大圆航线由球面插值在浏览器内计算' },
+      { name: 'GeoNames cities15000', url: 'https://download.geonames.org/export/dump/', note: 'City coordinates and population (cities15000.zip, countryInfo.txt)' },
+      { name: 'Great-circle distance', url: 'https://en.wikipedia.org/wiki/Great-circle_distance', note: 'Great-circle routes are computed in the browser by spherical interpolation' },
     ],
-    dataNote: '只有城市坐标来自 GeoNames 快照（城市没有"今日"数据，因此不联网取数）；起终点对按条件筛选：跨国、3,500–13,500 km、东西跨度 25°–170°（含跨日界线的航线）、直线与大圆的平均偏离 ≥ 3 墨卡托度。航线路径为球面几何计算，不考虑风、空域限制，所以角标为「计算」。',
+    dataNote: 'Only the city coordinates come from a GeoNames snapshot (cities have no "today" data, so nothing is fetched live). Pairs are filtered to: different countries, 3,500–13,500 km apart, 25°–170° of east-west span (including routes across the date line), and a mean gap between straight line and great circle of at least 3 Mercator degrees. Routes are pure spherical geometry with no wind or airspace restrictions, hence the "computed" badge.',
   },
 
   puzzle({ data, pick }) {
@@ -104,14 +104,14 @@ export default {
     const wps = [];
     log('route', { from: p.a.name, to: p.b.name, km: p.km, base: +base.toFixed(2) });
 
-    ctx.stage.append(ui.panel({ kicker: '今日航线', title: `${p.a.name} → ${p.b.name}` },
+    ctx.stage.append(ui.panel({ kicker: 'Today\'s route', title: `${p.a.name} → ${p.b.name}` },
       ui.kv([
-        ['起点', `${p.a.name}（${p.a.country}）`],
-        ['终点', `${p.b.name}（${p.b.country}）`],
-        ['大圆距离', `${core.fmtKm(p.km)}（提交后揭晓路线）`],
+        ['From', `${p.a.name} (${p.a.country})`],
+        ['To', `${p.b.name} (${p.b.country})`],
+        ['Distance', `${core.fmtKm(p.km)} (the route is revealed after you submit)`],
       ])));
 
-    const box = ui.panel({ title: '画出最短航线' });
+    const box = ui.panel({ title: 'Draw the shortest route' });
     ctx.stage.append(box);
     const lat0 = (p.a.lat + p.b.lat) / 2, lng0 = (p.a.lng + p.b.lng) / 2;
     const pad = Math.max(8, (p.b.lng - p.a.lng) * 0.15);
@@ -128,9 +128,9 @@ export default {
     const line = L.polyline([A, B], { color: col.accent, weight: 4 }).addTo(map);
     const dots = L.layerGroup().addTo(map);
     const status = ui.h('div', { class: 'ink2 small' });
-    const undo = ui.button('撤销', { variant: 'ghost', small: true });
-    const clear = ui.button('清空', { variant: 'ghost', small: true });
-    const submit = ui.button('提交航线', { variant: 'accent' });
+    const undo = ui.button('Undo', { variant: 'ghost', small: true });
+    const clear = ui.button('Clear', { variant: 'ghost', small: true });
+    const submit = ui.button('Submit route', { variant: 'accent' });
     box.append(m.el, ui.h('div', { class: 'ds-row between', style: { marginTop: '12px', flexWrap: 'wrap', gap: '8px' } },
       status, ui.h('div', { class: 'ds-row', style: { gap: '8px' } }, undo, clear, submit)));
 
@@ -139,7 +139,7 @@ export default {
       line.setLatLngs(path());
       dots.clearLayers();
       wps.forEach((w) => L.circleMarker(w, { radius: 7, color: col.accent, fillColor: col.paper, fillOpacity: 1, weight: 3 }).addTo(dots));
-      status.textContent = wps.length ? `${wps.length} 个航点 · 当前飞行距离 ${core.fmtKm(pathKm(path()))}` : '点击地图添加航点（现在是起点→终点的直线）';
+      status.textContent = wps.length ? `${wps.length} ${wps.length === 1 ? 'waypoint' : 'waypoints'} · flight distance so far ${core.fmtKm(pathKm(path()))}` : 'Click the map to add waypoints (for now it is the straight line from start to end)';
       undo.disabled = clear.disabled = !wps.length;
     };
     map.on('click', (e) => {
@@ -179,21 +179,20 @@ export default {
     m.setLabels(true);
 
     const v = vertex(gc);
-    const hemi = v[0] >= 0 ? '北' : '南';
     const maxEnd = Math.max(Math.abs(p.a.lat), Math.abs(p.b.lat));
     const bars = Math.round(score / 10);
     return {
       score, max: 100,
       win: score >= 80,
       emoji: `✈️ ${'🟩'.repeat(bars)}${'⬜'.repeat(10 - bars)}`,
-      summary: `平均偏离 ${mean.toFixed(1)}°（直线为 ${base.toFixed(1)}°）`,
+      summary: `Mean gap ${mean.toFixed(1)}° (straight line: ${base.toFixed(1)}°)`,
       detail: ui.panel({ plain: true },
         ui.kv([
-          ['大圆航线（绿）', core.fmtKm(p.km)],
-          ['你的航线（虚线）', `${core.fmtKm(myKm)}（比大圆多 ${core.fmtKm(Math.max(0, myKm - p.km))}）`],
-          ['地图直线（墨卡托）', `${core.fmtKm(straightKm)}（比大圆多 ${core.fmtKm(straightKm - p.km)}）`],
-          ['你偏离了多少', `平均 ${mean.toFixed(2)}°，相当于直线偏离的 ${Math.round((mean / base) * 100)}%`],
-          ['为什么', `${p.a.name}（${Math.abs(p.a.lat).toFixed(0)}°${p.a.lat >= 0 ? 'N' : 'S'}）到 ${p.b.name}（${Math.abs(p.b.lat).toFixed(0)}°${p.b.lat >= 0 ? 'N' : 'S'}）的大圆在 ${Math.abs(norm(v[1])).toFixed(0)}°${norm(v[1]) >= 0 ? 'E' : 'W'} 附近到达最${hemi}端 ${Math.abs(v[0]).toFixed(0)}°${v[0] >= 0 ? 'N' : 'S'}${Math.abs(v[0]) > maxEnd + 0.5 ? `，比两端城市还高 ${(Math.abs(v[0]) - maxEnd).toFixed(0)}°` : ''}。墨卡托图把高纬度放大，所以最短路线在图上向${hemi}极拱起；东西跨度 ${(p.b.lng - p.a.lng).toFixed(0)}° 越大、两端纬度越高，弧越明显。`],
+          ['Great circle', core.fmtKm(p.km)],
+          ['Your route', `${core.fmtKm(myKm)} (${core.fmtKm(Math.max(0, myKm - p.km))} longer)`],
+          ['Map line', `${core.fmtKm(straightKm)} (${core.fmtKm(straightKm - p.km)} longer)`],
+          ['Your gap', `${mean.toFixed(2)}° on average, ${Math.round((mean / base) * 100)}% of the straight line\'s gap`],
+          ['Why', `The great circle from ${p.a.name} (${Math.abs(p.a.lat).toFixed(0)}°${p.a.lat >= 0 ? 'N' : 'S'}) to ${p.b.name} (${Math.abs(p.b.lat).toFixed(0)}°${p.b.lat >= 0 ? 'N' : 'S'}) peaks at ${Math.abs(v[0]).toFixed(0)}°${v[0] >= 0 ? 'N' : 'S'}, near ${Math.abs(norm(v[1])).toFixed(0)}°${norm(v[1]) >= 0 ? 'E' : 'W'}${Math.abs(v[0]) > maxEnd + 0.5 ? `, ${(Math.abs(v[0]) - maxEnd).toFixed(0)}° beyond either city` : ''}. Mercator stretches high latitudes, so the shortest route bows toward the ${v[0] >= 0 ? 'north' : 'south'} pole on the map; the wider the span and the higher the latitudes, the stronger the arc.`],
         ])),
     };
   },
