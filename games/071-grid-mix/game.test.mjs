@@ -27,7 +27,7 @@ test('puzzle is deterministic', () => {
   assert.deepEqual(g.puzzle({ data, pick }), g.puzzle({ data, pick }));
 });
 
-import { explain, TZ_ZH, FUEL_ZH } from './game.js';
+import { explain, TZ_NAME, FUEL_NAME } from './game.js';
 
 test('pool: 120 days of puzzles are all valid', async () => {
   const core = await import('../../engine/core.js');
@@ -44,13 +44,13 @@ test('pool: 120 days of puzzles are all valid', async () => {
   for (const b of data.bas) {
     assert.ok(b.id && b.name && b.area, b.id);
     assert.ok(Number.isFinite(b.mean) && b.mean >= 1000 && b.mean < 200000, b.id);
-    assert.ok(TZ_ZH[b.off], `${b.id} off ${b.off}`);
+    assert.ok(TZ_NAME[b.off], `${b.id} off ${b.off}`);
     assert.ok(Object.keys(b.typ).length >= 1);
   }
   assert.equal(new Set(data.bas.map((b) => b.id)).size, data.bas.length);
   const nameSet = new Set(data.bas.map((b) => b.name));
   assert.equal(nameSet.size, data.bas.length);
-  for (const f of data.fuels) assert.ok(FUEL_ZH[f]);
+  for (const f of data.fuels) assert.ok(FUEL_NAME[f]);
   for (let day = 1; day <= 120; day++) {
     const pick = core.makePick ? core.makePick(data.puzzles.length, day, 'grid-mix') : (a) => a[day % a.length];
     const pz = g.puzzle({ data, day, pick });
@@ -86,7 +86,7 @@ test('scoring extremes via default guess scoring', () => {
 test('explain: duck curve and nuclear base are named', () => {
   const m = { coal: Array(24).fill(0), gas: Array(24).fill(100), nuclear: Array(24).fill(50), oil: Array(24).fill(0), hydro: Array(24).fill(0), wind: Array(24).fill(0), other: Array(24).fill(0), solar: Array.from({ length: 24 }, (_, i) => (i >= 8 && i <= 16 ? 80 : 0)) };
   const { notes } = explain(m, { name: 'X', typ: { gas: 60 } }, 10);
-  assert.ok(notes.some((n) => n.includes('太阳能')));
-  assert.ok(notes.some((n) => n.includes('平直')));
-  assert.ok(notes.some((n) => n.includes('常年平均')));
+  assert.ok(notes.some((n) => n.includes('Solar')));
+  assert.ok(notes.some((n) => n.includes('flat band')));
+  assert.ok(notes.some((n) => n.includes('long-run average')));
 });

@@ -4,16 +4,16 @@ const FILES = ['EIA930_BALANCE_2025_Jul_Dec.csv', 'EIA930_BALANCE_2026_Jan_Jun.c
 // raw 1-based column numbers; adjusted = raw + 32
 const FUELS = { coal: [17], gas: [18], nuclear: [19], oil: [20], hydro: [21], solar: [23, 24], wind: [25, 26], other: [22, 27, 28, 29, 30, 31, 32] };
 const BA = {
-  PJM: ['PJM 互联', '大西洋中部/中西部'], MISO: ['MISO 中部', '中西部'], ERCO: ['ERCOT 德州', '德克萨斯'], SWPP: ['西南电力池', '中部平原'],
-  SOCO: ['南方公司', '东南部'], CISO: ['加州 CAISO', '加利福尼亚'], TVA: ['田纳西河谷管理局', '田纳西'], FPL: ['佛州电力 FPL', '佛罗里达'],
-  NYIS: ['纽约 NYISO', '纽约'], ISNE: ['新英格兰 ISO', '新英格兰'], DUK: ['杜克能源（卡罗来纳）', '卡罗来纳'], BPAT: ['邦纳维尔电力局', '西北部'],
-  SRP: ['盐河工程 SRP', '西南部'], CPLE: ['杜克能源进步（东）', '卡罗来纳'], PACE: ['太平洋电力（东）', '西北部/山区'], FPC: ['杜克能源佛州', '佛罗里达'],
-  PSCO: ['科罗拉多公共服务', '山区'], NEVP: ['内华达能源', '山区'], WACM: ['WAPA 科罗拉多-密苏里', '山区'], LGEE: ['路易斯维尔电力', '中西部'],
-  SCEG: ['南卡 SCE&G', '卡罗来纳'], AZPS: ['亚利桑那公共服务', '西南部'], AECI: ['联合电力合作社', '中西部'], TEC: ['坦帕电力', '佛罗里达'],
-  LDWP: ['洛杉矶水电局', '加利福尼亚'], NWMT: ['西北能源（蒙大拿）', '山区'], FMPP: ['佛州市政电力池', '佛罗里达'], GRID: ['Gridforce 能源管理', '西北部'],
-  SC: ['南卡 Santee Cooper', '卡罗来纳'],
+  PJM: ['PJM Interconnection', 'Mid-Atlantic / Midwest'], MISO: ['MISO (Midcontinent ISO)', 'Midwest'], ERCO: ['ERCOT', 'Texas'], SWPP: ['Southwest Power Pool', 'Central Plains'],
+  SOCO: ['Southern Company', 'Southeast'], CISO: ['California ISO (CAISO)', 'California'], TVA: ['Tennessee Valley Authority', 'Tennessee'], FPL: ['Florida Power & Light', 'Florida'],
+  NYIS: ['New York ISO (NYISO)', 'New York'], ISNE: ['ISO New England', 'New England'], DUK: ['Duke Energy Carolinas', 'Carolinas'], BPAT: ['Bonneville Power Administration', 'Northwest'],
+  SRP: ['Salt River Project', 'Southwest'], CPLE: ['Duke Energy Progress East', 'Carolinas'], PACE: ['PacifiCorp East', 'Northwest / Mountain'], FPC: ['Duke Energy Florida', 'Florida'],
+  PSCO: ['Public Service Co. of Colorado', 'Mountain'], NEVP: ['NV Energy', 'Mountain'], WACM: ['WAPA Colorado-Missouri', 'Mountain'], LGEE: ['Louisville Gas & Electric', 'Midwest'],
+  SCEG: ['South Carolina Electric & Gas', 'Carolinas'], AZPS: ['Arizona Public Service', 'Southwest'], AECI: ['Associated Electric Cooperative', 'Midwest'], TEC: ['Tampa Electric', 'Florida'],
+  LDWP: ['Los Angeles Dept. of Water & Power', 'California'], NWMT: ['NorthWestern Energy (Montana)', 'Mountain'], FMPP: ['Florida Municipal Power Pool', 'Florida'], GRID: ['Gridforce Energy Management', 'Northwest'],
+  SC: ['Santee Cooper', 'Carolinas'],
 };
-const REG = { MIDA: '大西洋中部', MIDW: '中西部', TEX: '德克萨斯', CENT: '中部平原', SE: '东南部', CAL: '加利福尼亚', TEN: '田纳西', FLA: '佛罗里达', NY: '纽约', NE: '新英格兰', CAR: '卡罗来纳', NW: '西北/山区', SW: '西南部' };
+const REG = { MIDA: 'Mid-Atlantic', MIDW: 'Midwest', TEX: 'Texas', CENT: 'Central Plains', SE: 'Southeast', CAL: 'California', TEN: 'Tennessee', FLA: 'Florida', NY: 'New York', NE: 'New England', CAR: 'Carolinas', NW: 'Northwest / Mountain', SW: 'Southwest' };
 const num = (s) => (s === '' || s === undefined ? NaN : Number(s));
 const rows = {}; const meta = {};
 for (const f of FILES) {
