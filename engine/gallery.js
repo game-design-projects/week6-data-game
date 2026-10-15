@@ -7,7 +7,7 @@ import { CATEGORIES, DATA_KINDS } from './shell.js';
 const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
 
 export async function gallery() {
-  store.applyTheme();
+  store.applyTheme(store.urlTheme());
   const root = document.getElementById('app');
   const today = todayISO();
   const day = dayNumber(today);

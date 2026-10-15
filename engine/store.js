@@ -55,6 +55,11 @@ export function setTheme(t) {
   set(`${NS}:theme`, t);
   applyTheme(t);
 }
+/** ?theme=light|dark forces a theme for one page view (screenshots, sharing) without saving it. */
+export function urlTheme() {
+  const t = new URLSearchParams(location.search).get('theme');
+  return t === 'light' || t === 'dark' ? t : undefined;
+}
 export function applyTheme(t = getTheme()) {
   if (t === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = t;
