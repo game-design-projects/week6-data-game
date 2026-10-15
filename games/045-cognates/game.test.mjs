@@ -23,7 +23,7 @@ test('pickLangs skips missing languages', () => {
   assert.ok(pickLangs(c, rng).every((k) => c.l[k]));
 });
 test('pickLangs hides leaky labels in the far tiers', () => {
-  const c = { en: 'tomato', l: { zh: '番茄', ja: 'トマト', id: 'tomat', tr: 'domates', fi: 'tomaatti', ru: 'помидор', pl: 'pomidor', fr: 'tomate', es: 'tomate', it: 'pomodoro' } };
+  const c = { en: 'tomato', l: { zh: '\u756a\u8304', ja: '\u30c8\u30de\u30c8', id: 'tomat', tr: 'domates', fi: 'tomaatti', ru: 'помидор', pl: 'pomidor', fr: 'tomate', es: 'tomate', it: 'pomodoro' } };
   const out = pickLangs(c, { sample: (a, n) => a.slice(0, n) });
   assert.ok(!out.slice(0, 4).some((k) => leaky(c.l[k], 'tomato')), out.join());
 });
@@ -35,7 +35,7 @@ test('similarity: identical 1, accents ignored, non-Latin null', () => {
   assert.ok(similarity('con gái', 'daughter') < 0.4);
 });
 test('analyse ranks by similarity and flags clue positions', () => {
-  const c = { en: 'daughter', l: { de: 'tochter', nl: 'dochter', fr: 'fille', zh: '女儿' } };
+  const c = { en: 'daughter', l: { de: 'tochter', nl: 'dochter', fr: 'fille', zh: '\u5973\u513f' } };
   const A = analyse(c, ['zh', 'fr', 'nl']);
   assert.equal(A.rows[0].k, 'nl');
   assert.equal(A.rows.find((r) => r.k === 'zh').sim, null);

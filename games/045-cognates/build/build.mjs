@@ -51,6 +51,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const files = fs.readdirSync(raw).filter((f) => f.startsWith('wd2-')).sort().map((f) => path.join(raw, f));
   const concepts = build(files);
   const out = path.join(here, '..', 'data.json');
-  fs.writeFileSync(out, JSON.stringify({ concepts }));
+  fs.writeFileSync(out, JSON.stringify({ concepts }).replace(/[\u3000-\u303f\u3400-\u9fff\uf900-\ufaff\uff00-\uffef\u3040-\u30ff]/g, (m) => '\\u' + m.charCodeAt(0).toString(16).padStart(4, '0')));
   console.log(concepts.length, 'concepts', fs.statSync(out).size, 'bytes');
 }
