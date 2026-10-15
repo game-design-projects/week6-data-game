@@ -13,8 +13,8 @@ for (const [n, s] of acc) {
   const tot = s.reduce((a, b) => a + b, 0);
   if (tot < 3000 || s.filter((x) => x > 0).length < weeks.length - 4) continue; // need full coverage
   const r = byName.get(n);
-  out.push({ id: n, name: n, stars: r.stars, lang: r.lang, created: r.created, desc: r.desc, topics: r.topics.slice(0, 6), total: tot, s });
+  out.push({ id: n, stars: r.stars, lang: r.lang, created: r.created, desc: r.desc, topics: r.topics.slice(0, 6), total: tot, s });
 }
 out.sort((a, b) => b.stars - a.stars);
-writeFileSync('../data.json', JSON.stringify({ weeks, repos: out, asOf: '2026-10' }));
+writeFileSync('../data.json', JSON.stringify({ weeks, repos: out, asOf: '2026-10', window: [weeks[0], weeks[weeks.length - 1]] }));
 console.log(out.length, 'repos', weeks.length, 'weeks');
