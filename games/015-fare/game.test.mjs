@@ -9,9 +9,9 @@ const data = JSON.parse(fs.readFileSync(new URL('./data.json', import.meta.url),
 test('roughFare', () => assert.equal(roughFare(2), 10));
 test('whenParts', () => {
   const w = whenParts('2023-03-04T08:15');
-  assert.equal(w.wd, '周六'); assert.equal(w.hhmm, '08:15'); assert.equal(w.slot, '早高峰前后');
+  assert.equal(w.wd, 'Sat'); assert.equal(w.hhmm, '08:15'); assert.equal(w.slot, 'Morning');
 });
-test('fmtMin', () => { assert.equal(fmtMin(25), '25 分钟'); assert.equal(fmtMin(75), '1 小时 15 分'); });
+test('fmtMin', () => { assert.equal(fmtMin(25), '25 min'); assert.equal(fmtMin(75), '1 h 15 min'); });
 
 test('pool: puzzles for days 1-120 are valid', () => {
   assert.ok(data.trips.length >= 60, 'pool >= 60 trips');
@@ -66,8 +66,8 @@ test('scoring extremes (log scale 0.3)', () => {
 test('explain is specific to the trip', () => {
   const slow = { t: '2023-03-04T08:15', mi: 2, min: 25, fare: 20, pu: 1, do: 2, pax: 1 };
   const fast = { t: '2023-03-04T03:15', mi: 12, min: 20, fare: 42, pu: 1, do: 2, pax: 1 };
-  assert.match(explain(slow, 1.4), /按时间计费/);
-  assert.match(explain(fast, 9), /主要按里程/);
+  assert.match(explain(slow, 1.4), /time charging/);
+  assert.match(explain(fast, 9), /mostly distance/);
   assert.match(explain(fast, 9), /\$45\.00/);
   assert.ok(crowMiles([40.75, -73.98], [40.76, -73.98]) > 0.6);
 });
