@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import game, { buildQuestions, parseQuestion, bestPath, scoreFor, zhName, enName, IND, MAX_Q } from './game.js';
+import game, { buildQuestions, parseQuestion, bestPath, scoreFor, enName, IND, MAX_Q } from './game.js';
 const data = JSON.parse(fs.readFileSync(new URL('./data.json', import.meta.url)));
 const all = data.countries;
 
@@ -49,34 +49,36 @@ test('a good player can win: greedy path is short for every country', () => {
 test('free text routes to queries or asks to rephrase', () => {
   const ok = (t) => { const r = parseQuestion(t, all); assert.ok(r.ok, `${t} → ${r.msg}`); return r.q; };
   const bad = (t) => { const r = parseQuestion(t, all); assert.equal(r.ok, false, t); assert.ok(r.msg); return r; };
-  const q1 = ok('人口超过 5000 万吗？');
+  const q1 = ok('Is the population over 50 million?');
   assert.equal(q1.test({ v: { pop: 6e7 } }), true);
   assert.equal(q1.test({ v: { pop: 4e7 } }), false);
-  assert.equal(ok('人口低于1亿').test({ v: { pop: 6e7 } }), true);
-  assert.equal(ok('寿命高于75岁').test({ v: { life: 74.9 } }), false);
-  assert.equal(ok('首都在南半球吗').test({ lat: -10 }), true);
-  assert.equal(ok('属于欧洲吗').test({ region: 'Europe & Central Asia' }), true);
-  assert.equal(ok('中低收入国家吗').test({ income: 'Lower middle income' }), true);
-  assert.equal(ok('医疗支出占GDP超过10%').test({ v: { health: 11 } }), true);
-  ok('人均GDP高吗');
-  bad('你好');
-  bad('人口多少');
-  bad('人口超过5');
-  bad('非洲吗');
-  bad('人口和GDP');
-  bad('人均GDP高于1');
+  assert.equal(ok('population below 1 billion').test({ v: { pop: 6e7 } }), true);
+  assert.equal(ok('life expectancy above 75 years').test({ v: { life: 74.9 } }), false);
+  assert.equal(ok('Is the capital in the southern hemisphere?').test({ lat: -10 }), true);
+  assert.equal(ok('in Europe?').test({ region: 'Europe & Central Asia' }), true);
+  assert.equal(ok('lower middle income country?').test({ income: 'Lower middle income' }), true);
+  assert.equal(ok('Health spending over 10% of GDP').test({ v: { health: 11 } }), true);
+  assert.equal(ok('GDP per capita over $10,000').test({ v: { gdp: 12000 } }), true);
+  assert.equal(ok('GDP per capita not above 10k').test({ v: { gdp: 12000 } }), false);
+  assert.equal(ok('land area at least 1 million km2').test({ v: { area: 2e6 } }), true);
+  ok('Is GDP per capita high?');
+  bad('hello');
+  bad('what is the population');
+  bad('population over 5');
+  bad('Africa?');
+  bad('population and GDP');
+  bad('GDP per capita over 1');
 });
 
 test('pool validity over days 1–120', () => {
-  const zh = new Set();
+  const names = new Set();
   const ccs = new Set();
   for (const c of all) {
     assert.match(c.cc, /^[A-Z]{2}$/);
     assert.ok(!ccs.has(c.cc), 'dup ' + c.cc); ccs.add(c.cc);
-    const z = zhName(c.cc, c.name);
-    assert.ok(z && !/^[A-Za-z]/.test(z), `zh name ${c.cc} ${z}`);
-    assert.ok(!zh.has(z), 'dup zh label ' + z); zh.add(z);
-    assert.ok(enName(c.cc, c.name));
+    const n = enName(c.cc, c.name);
+    assert.match(n, /^[A-Za-z\u00c0-\u024f]/, `English name ${c.cc} ${n}`);
+    assert.ok(!names.has(n), 'dup label ' + n); names.add(n);
     assert.ok(c.capital && c.region && c.income);
     assert.ok(Number.isFinite(c.lat) && Math.abs(c.lat) <= 90 && Number.isFinite(c.lng) && Math.abs(c.lng) <= 180);
     for (const k of Object.keys(IND)) assert.ok(Number.isFinite(c.v[k]) && c.v[k] >= 0, `${c.cc}.${k}`);

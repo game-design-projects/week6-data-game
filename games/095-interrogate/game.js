@@ -1,46 +1,47 @@
 // #95 Interrogate — 20 Questions about a hidden country; every answer is computed from World Bank data.
-// Questions come from a menu OR free text: parseQuestion() routes Chinese text to a data query,
+// Questions come from a menu OR free text: parseQuestion() routes English text to a data query,
 // and asks the player to rephrase when it cannot tell which query was meant.
 export const MAX_Q = 20;
 
+const trim0 = (x) => x.toFixed(1).replace(/\.0$/, '');
 export const IND = {
-  gdp: { zh: '人均 GDP', words: ['人均gdp', '人均国内生产总值', '人均收入', 'gdp', '富裕', '贫穷'], fmt: (v) => `$${Math.round(v).toLocaleString('en-US')}` },
-  pop: { zh: '人口', words: ['人口', '人数'], fmt: (v) => (v >= 1e8 ? `${(v / 1e8).toFixed(1)} 亿` : `${Math.round(v / 1e4).toLocaleString('en-US')} 万`) },
-  life: { zh: '预期寿命', words: ['预期寿命', '寿命', '长寿'], fmt: (v) => `${v.toFixed(1)} 岁` },
-  urban: { zh: '城镇人口占比', words: ['城镇人口', '城镇化', '城市化', '城市人口', '城镇'], fmt: (v) => `${v.toFixed(0)}%` },
-  area: { zh: '国土面积', words: ['国土面积', '面积', '国土'], fmt: (v) => `${Math.round(v / 1e4).toLocaleString('en-US')} 万 km²` },
-  fert: { zh: '总和生育率', words: ['总和生育率', '生育率', '生育', '出生率'], fmt: (v) => v.toFixed(2) },
-  net: { zh: '网民占比', words: ['网民', '互联网', '上网'], fmt: (v) => `${v.toFixed(0)}%` },
-  forest: { zh: '森林覆盖率', words: ['森林覆盖', '森林', '绿化'], fmt: (v) => `${v.toFixed(0)}%` },
-  co2: { zh: '人均 CO₂ 排放', words: ['二氧化碳', 'co2', '碳排放', '排放'], fmt: (v) => `${v.toFixed(1)} 吨` },
-  health: { zh: '医疗支出占 GDP', words: ['医疗支出', '医疗', '卫生'], fmt: (v) => `${v.toFixed(1)}%` },
+  gdp: { name: 'GDP per capita', words: ['gdp per capita', 'income per capita', 'per capita income', 'income per person', 'gdp', 'rich', 'wealthy', 'wealth', 'poor'], fmt: (v) => `$${Math.round(v).toLocaleString('en-US')}` },
+  pop: { name: 'Population', words: ['population', 'inhabitants', 'populous', 'people'], fmt: (v) => (v >= 1e9 ? `${(v / 1e9).toFixed(2)} billion` : v >= 1e6 ? `${trim0(v / 1e6)} million` : `${Math.round(v / 1e3).toLocaleString('en-US')} thousand`) },
+  life: { name: 'Life expectancy', words: ['life expectancy', 'lifespan', 'life span', 'longevity', 'life'], fmt: (v) => `${v.toFixed(1)} yrs` },
+  urban: { name: 'Urban share', words: ['urban population', 'urbanization', 'urbanisation', 'urban', 'city dwellers', 'cities'], fmt: (v) => `${v.toFixed(0)}%` },
+  area: { name: 'Land area', words: ['land area', 'surface area', 'area', 'size'], fmt: (v) => (v >= 1e6 ? `${trim0(v / 1e6)} million km²` : `${Math.round(v / 1e3).toLocaleString('en-US')} thousand km²`) },
+  fert: { name: 'Fertility rate', words: ['fertility rate', 'fertility', 'birth rate', 'births'], fmt: (v) => v.toFixed(2) },
+  net: { name: 'Internet users', words: ['internet', 'online', 'web users'], fmt: (v) => `${v.toFixed(0)}%` },
+  forest: { name: 'Forest cover', words: ['forest', 'woodland'], fmt: (v) => `${v.toFixed(0)}%` },
+  co2: { name: 'CO₂ per person', words: ['carbon dioxide', 'co2', 'carbon', 'emissions', 'emit'], fmt: (v) => `${v.toFixed(1)} t` },
+  health: { name: 'Health spending', words: ['health spending', 'healthcare spending', 'health care spending', 'health expenditure', 'healthcare', 'health'], fmt: (v) => `${v.toFixed(1)}% of GDP` },
 };
 export const REGIONS = {
-  'East Asia & Pacific': { zh: '东亚与太平洋', words: ['东亚', '太平洋'] },
-  'Europe & Central Asia': { zh: '欧洲与中亚', words: ['欧洲', '中亚'] },
-  'Latin America & Caribbean': { zh: '拉美与加勒比', words: ['拉美', '拉丁美洲', '加勒比'] },
-  'Middle East, North Africa, Afghanistan & Pakistan': { zh: '中东北非及阿富汗巴基斯坦', words: ['中东', '北非', '阿富汗', '巴基斯坦'] },
-  'North America': { zh: '北美', words: ['北美'] },
-  'South Asia': { zh: '南亚', words: ['南亚'] },
-  'Sub-Saharan Africa': { zh: '撒哈拉以南非洲', words: ['撒哈拉', '南部非洲'] },
+  'East Asia & Pacific': { name: 'East Asia & Pacific', words: ['east asia', 'pacific'] },
+  'Europe & Central Asia': { name: 'Europe & Central Asia', words: ['europe', 'central asia'] },
+  'Latin America & Caribbean': { name: 'Latin America & Caribbean', words: ['latin america', 'south america', 'central america', 'caribbean'] },
+  'Middle East, North Africa, Afghanistan & Pakistan': { name: 'Middle East, N. Africa, Afghanistan & Pakistan', words: ['middle east', 'north africa', 'afghanistan', 'pakistan', 'mena'] },
+  'North America': { name: 'North America', words: ['north america'] },
+  'South Asia': { name: 'South Asia', words: ['south asia'] },
+  'Sub-Saharan Africa': { name: 'Sub-Saharan Africa', words: ['sub saharan', 'subsaharan', 'southern africa'] },
 };
 export const INCOMES = {
-  'Low income': { zh: '低收入', words: ['低收入'] },
-  'Lower middle income': { zh: '中低收入', words: ['中低收入'] },
-  'Upper middle income': { zh: '中高收入', words: ['中高收入'] },
-  'High income': { zh: '高收入', words: ['高收入'] },
+  'Low income': { name: 'Low income', words: ['low income'] },
+  'Lower middle income': { name: 'Lower middle income', words: ['lower middle income', 'lower middle'] },
+  'Upper middle income': { name: 'Upper middle income', words: ['upper middle income', 'upper middle'] },
+  'High income': { name: 'High income', words: ['high income'] },
 };
 const GEO = {
-  north: { text: '首都在北半球吗？', words: ['北半球'], test: (c) => c.lat > 0 },
-  south: { text: '首都在南半球吗？', words: ['南半球'], test: (c) => c.lat <= 0 },
-  east: { text: '首都在本初子午线以东吗？', words: ['东半球', '子午线以东'], test: (c) => c.lng > 0 },
-  west: { text: '首都在本初子午线以西吗？', words: ['西半球', '子午线以西'], test: (c) => c.lng <= 0 },
-  tropic: { text: '首都位于南北回归线之间吗？', words: ['热带', '回归线'], test: (c) => Math.abs(c.lat) < 23.44 },
+  north: { text: 'Is the capital in the Northern Hemisphere?', short: 'Northern Hemisphere', words: ['northern hemisphere', 'north of the equator', 'above the equator'], test: (c) => c.lat > 0 },
+  south: { text: 'Is the capital in the Southern Hemisphere?', short: 'Southern Hemisphere', words: ['southern hemisphere', 'south of the equator', 'below the equator'], test: (c) => c.lat <= 0 },
+  east: { text: 'Is the capital east of the Prime Meridian?', short: 'East of Prime Meridian', words: ['eastern hemisphere', 'east of the prime meridian', 'east of greenwich'], test: (c) => c.lng > 0 },
+  west: { text: 'Is the capital west of the Prime Meridian?', short: 'West of Prime Meridian', words: ['western hemisphere', 'west of the prime meridian', 'west of greenwich'], test: (c) => c.lng <= 0 },
+  tropic: { text: 'Is the capital between the Tropics of Cancer and Capricorn?', short: 'Within the tropics', words: ['tropics', 'tropical', 'tropic'], test: (c) => Math.abs(c.lat) < 23.44 },
 };
 const MENU_GEO = ['north', 'east', 'tropic'];
-const MENU_Q = [[0.1, '低端 10%'], [0.25, '低端 25%'], [0.5, '中位数'], [0.75, '高端 25%'], [0.9, '高端 10%']];
+const MENU_Q = [[0.1, '10th pct'], [0.25, '25th pct'], [0.5, 'median'], [0.75, '75th pct'], [0.9, '90th pct']];
+const GROUP_CAT = 'Region & income';
 
-export const zhName = (cc, fallback) => { try { return new Intl.DisplayNames(['zh-Hans'], { type: 'region' }).of(cc); } catch { return fallback; } };
 export const enName = (cc, fallback) => { try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(cc); } catch { return fallback; } };
 
 const quantile = (sorted, q) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
@@ -57,25 +58,29 @@ export function buildQuestions(countries) {
     const sorted = countries.map((c) => c.v[k]).sort((a, b) => a - b);
     for (const [p, label] of MENU_Q) {
       const t = nice(quantile(sorted, p));
-      push({ ...ge(k, t), group: meta.zh, text: `${meta.zh} 不低于 ${meta.fmt(t)}？`, short: `≥ ${meta.fmt(t)} · ${label}` });
+      push({ ...ge(k, t), group: meta.name, text: `${meta.name} at least ${meta.fmt(t)}?`, short: `≥ ${meta.fmt(t)} · ${label}` });
     }
   }
-  for (const [r, m] of Object.entries(REGIONS)) push({ id: `r:${r}`, group: '地区与收入', text: `属于世界银行分区「${m.zh}」吗？`, short: `地区：${m.zh}`, test: (c) => c.region === r });
-  for (const [i, m] of Object.entries(INCOMES)) push({ id: `i:${i}`, group: '地区与收入', text: `世界银行划为「${m.zh}」国家吗？`, short: `收入：${m.zh}`, test: (c) => c.income === i });
-  for (const g of MENU_GEO) push({ id: g, group: '地区与收入', text: GEO[g].text, short: GEO[g].text.replace('首都', '').replace('？', ''), test: GEO[g].test });
+  for (const [r, m] of Object.entries(REGIONS)) push({ id: `r:${r}`, group: GROUP_CAT, text: `Is it in the World Bank region \u201c${m.name}\u201d?`, short: `Region: ${m.name}`, test: (c) => c.region === r });
+  for (const [i, m] of Object.entries(INCOMES)) push({ id: `i:${i}`, group: GROUP_CAT, text: `Does the World Bank class it as \u201c${m.name}\u201d?`, short: `Income: ${m.name}`, test: (c) => c.income === i });
+  for (const g of MENU_GEO) push({ id: g, group: GROUP_CAT, text: GEO[g].text, short: GEO[g].short, test: GEO[g].test });
   return qs;
 }
 
-const half = (s) => s.replace(/[０-９．]/g, (ch) => (ch === '．' ? '.' : String.fromCharCode(ch.charCodeAt(0) - 0xfee0)));
-const UNIT = { 亿: 1e8, 百万: 1e6, 万: 1e4, 千: 1e3, k: 1e3, m: 1e6 };
+const UNIT = { billion: 1e9, bn: 1e9, b: 1e9, million: 1e6, mil: 1e6, m: 1e6, thousand: 1e3, k: 1e3 };
+const UNIT_WORDS = /square kilometers|square kilometres|square miles|sq km|sq\. km|km2|km²|kilometers|kilometres|years old|years|year|yrs|tonnes|tons|tonne|ton|dollars|usd|us\$|percent/g;
+const HIGH_NEG = /not (?:lower|below|under|less|smaller|fewer)|at least|no (?:less|fewer)|≥|>=/;
+const LOW_NEG = /not (?:above|over|higher|more|greater|larger|bigger)|at most|no more|≤|<=/;
+const HIGH = /above|over|higher|greater|more than|exceed|larger|bigger|>/;
+const LOW = /below|under|less than|lower|fewer|smaller|</;
 
 /**
- * Route a free-text Chinese question to a data query (pure).
+ * Route a free-text English question to a data query (pure).
  * → { ok: true, q } or { ok: false, msg, group? } (low confidence: ask the player to rephrase).
  */
 export function parseQuestion(text, countries) {
-  let s = half(String(text || '')).toLowerCase().replace(/co₂/g, 'co2').replace(/[\s,，。？?！!、]/g, '');
-  if (s.length < 2) return { ok: false, msg: '问题太短了。试试「人口超过 5000 万吗」「首都在北半球吗」。' };
+  const s = String(text || '').toLowerCase().replace(/co₂/g, 'co2').replace(/(\d),(?=\d{3}\b)/g, '$1').replace(/-/g, ' ').replace(/[^a-z0-9.%$<>=≤≥ ]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (s.length < 2) return { ok: false, msg: 'That is too short. Try \u201cIs the population over 50 million?\u201d or \u201cIs the capital in the Southern Hemisphere?\u201d.' };
   const hits = [];
   const scan = (topic, words) => { for (const w of words) if (s.includes(w)) hits.push({ topic, w }); };
   for (const [k, m] of Object.entries(IND)) scan(`ind:${k}`, m.words);
@@ -83,44 +88,44 @@ export function parseQuestion(text, countries) {
   for (const [k, m] of Object.entries(INCOMES)) scan(`i:${k}`, m.words);
   for (const [k, m] of Object.entries(GEO)) scan(`g:${k}`, m.words);
   if (!hits.length) {
-    if (/非洲/.test(s)) return { ok: false, msg: '世界银行把非洲拆成两块：「撒哈拉以南非洲」和「中东北非…」。请说清楚是哪一块。', group: '地区与收入' };
-    if (/亚洲/.test(s)) return { ok: false, msg: '「亚洲」跨了好几个世界银行分区（东亚与太平洋、南亚、中亚…）。请指明是东亚、南亚还是中亚。', group: '地区与收入' };
-    return { ok: false, msg: '我没看懂你想问哪项数据。可以问：人均 GDP、人口、寿命、城镇化、面积、生育率、网民、森林、CO₂、医疗支出，或地区、收入分组、半球。' };
+    if (/africa/.test(s)) return { ok: false, msg: 'The World Bank splits Africa in two: \u201cSub-Saharan Africa\u201d and \u201cMiddle East, North Africa\u2026\u201d. Say which one you mean.', group: GROUP_CAT };
+    if (/asia/.test(s)) return { ok: false, msg: '\u201cAsia\u201d spans several World Bank regions (East Asia & Pacific, South Asia, Central Asia\u2026). Say East, South or Central Asia.', group: GROUP_CAT };
+    return { ok: false, msg: 'I could not tell which statistic you mean. Ask about GDP per capita, population, life expectancy, urbanization, land area, fertility, internet users, forest, CO\u2082, health spending, or region, income group, hemisphere.' };
   }
   const maxLen = Math.max(...hits.map((h) => h.w.length));
   const best = hits.filter((h) => h.w.length === maxLen);
   const topics = [...new Set(best.map((h) => h.topic))];
-  if (topics.length > 1) return { ok: false, msg: '这句话同时像在问好几件事，请一次只问一个条件。' };
+  if (topics.length > 1) return { ok: false, msg: 'That sounds like several questions at once. Ask one condition at a time.' };
   const [kind, key] = [topics[0].slice(0, topics[0].indexOf(':')), topics[0].slice(topics[0].indexOf(':') + 1)];
   const finish = (q) => {
     const yes = countries.filter(q.test).length;
-    if (yes === 0 || yes === countries.length) return { ok: false, msg: `这条问题对所有国家的答案都一样（${yes ? '全是' : '全不是'}），问了没有信息。换个门槛吧。`, group: q.group };
+    if (yes === 0 || yes === countries.length) return { ok: false, msg: `The answer to this is the same for every country (${yes ? 'all yes' : 'all no'}), so it tells you nothing. Pick a different threshold.`, group: q.group };
     return { ok: true, q };
   };
-  if (kind === 'r') return finish({ id: `r:${key}`, group: '地区与收入', text: `属于世界银行分区「${REGIONS[key].zh}」吗？`, short: `地区：${REGIONS[key].zh}`, test: (c) => c.region === key });
-  if (kind === 'i') return finish({ id: `i:${key}`, group: '地区与收入', text: `世界银行划为「${INCOMES[key].zh}」国家吗？`, short: `收入：${INCOMES[key].zh}`, test: (c) => c.income === key });
-  if (kind === 'g') return finish({ id: key, group: '地区与收入', text: GEO[key].text, short: GEO[key].text.replace('首都', '').replace('？', ''), test: GEO[key].test });
+  if (kind === 'r') return finish({ id: `r:${key}`, group: GROUP_CAT, text: `Is it in the World Bank region \u201c${REGIONS[key].name}\u201d?`, short: `Region: ${REGIONS[key].name}`, test: (c) => c.region === key });
+  if (kind === 'i') return finish({ id: `i:${key}`, group: GROUP_CAT, text: `Does the World Bank class it as \u201c${INCOMES[key].name}\u201d?`, short: `Income: ${INCOMES[key].name}`, test: (c) => c.income === key });
+  if (kind === 'g') return finish({ id: key, group: GROUP_CAT, text: GEO[key].text, short: GEO[key].short, test: GEO[key].test });
   // numeric indicator
   const m = IND[key];
   let rest = s;
-  for (const h of hits.filter((x) => x.topic === `ind:${key}`)) rest = rest.split(h.w).join('');
-  rest = rest.replace(/多少|几个|是多少/g, "").replace(/平方公里|平方千米|km2|km|美元|岁|吨|\$|元/g, (x) => (x === '$' ? '$' : ''));
-  const high = /不低于|不少于|不小于|至少|以上|超过|高于|大于|多于|≥|>=|>/.test(rest) ? true
-    : /低于|少于|小于|不到|不足|以下|≤|<=|</.test(rest) ? false
-      : /高|大|多|长|富|快/.test(rest) ? true : /低|小|少|短|穷|慢/.test(rest) ? false : null;
-  const num = rest.match(/(\d+(?:\.\d+)?)(亿|百万|万|千|k|m|%)?/);
+  for (const h of hits.filter((x) => x.topic === `ind:${key}`)) rest = rest.split(h.w).join(' ');
+  rest = rest.replace(UNIT_WORDS, ' ').replace(/\$/g, ' ').replace(/\bhow (?:much|many)\b/g, ' ');
+  let high = HIGH_NEG.test(rest) ? true : LOW_NEG.test(rest) ? false : HIGH.test(rest) ? true : LOW.test(rest) ? false : null;
+  if (high === null) high = /\b(?:high|large|big|many|long|fast)\b/.test(rest) ? true : /\b(?:low|small|few|short|slow)\b/.test(rest) ? false : null;
+  if (high === null && key === 'gdp') high = /rich|wealth/.test(s) ? true : /poor/.test(s) ? false : null;
+  const num = rest.match(/(\d+(?:\.\d+)?)\s*(billion|bn|million|mil|thousand|k|m|b)?\b/);
   const vals = countries.map((c) => c.v[key]).sort((a, b) => a - b);
-  if (high === null && !num) return { ok: false, msg: `你想问「${m.zh}」的哪一边？请说「高于/低于」，最好带一个数字，例如「${m.zh}高于 ${m.fmt(nice(quantile(vals, 0.5)))}」。`, group: m.zh };
+  if (high === null && !num) return { ok: false, msg: `Which side of \u201c${m.name}\u201d do you mean? Say \u201chigher than\u201d or \u201clower than\u201d, ideally with a number, e.g. \u201c${m.name} higher than ${m.fmt(nice(quantile(vals, 0.5)))}\u201d.`, group: m.name };
   let t;
   if (num) {
     t = +num[1] * (UNIT[num[2]] || 1);
-    if (key === 'pop' && !num[2] && t < 1000) return { ok: false, msg: '人口请带上单位，例如「5000 万」或「1 亿」。', group: m.zh };
-    if (key === 'area' && !num[2] && t < 1000) return { ok: false, msg: '面积请带上单位，例如「100 万平方公里」。', group: m.zh };
+    if (key === 'pop' && !num[2] && t < 1000) return { ok: false, msg: 'Add a unit to the population, e.g. \u201c50 million\u201d or \u201c1 billion\u201d.', group: m.name };
+    if (key === 'area' && !num[2] && t < 1000) return { ok: false, msg: 'Add a unit to the area, e.g. \u201c1 million km2\u201d.', group: m.name };
   } else t = nice(quantile(vals, 0.5));
   const dir = high === null ? true : high;
   const base = dir ? ge(key, t) : lt(key, t);
-  const qtext = `${m.zh} ${dir ? "不低于" : "低于"} ${m.fmt(t)}？`;
-  return finish({ ...base, group: m.zh, text: qtext, short: `${dir ? '≥' : '<'} ${m.fmt(t)}`, free: true });
+  const qtext = `${m.name} ${dir ? 'at least' : 'below'} ${m.fmt(t)}?`;
+  return finish({ ...base, group: m.name, text: qtext, short: `${dir ? '≥' : '<'} ${m.fmt(t)}`, free: true });
 }
 
 /** Greedy best path with menu questions (for the "how to solve it" explanation). */
@@ -153,21 +158,21 @@ export default {
     num: 95,
     slug: 'interrogate',
     title: 'Interrogate',
-    tagline: '二十个问题审问一个隐藏的国家：用自己的话提问，答案由世界银行数据算出。',
+    tagline: 'Twenty questions about a hidden country. Ask in your own words; answers are computed from World Bank data.',
     category: 'model',
     data: 'snapshot',
     howTo: [
-      '今天有一个隐藏的国家。在输入框里用中文提是非题（如「人口超过 5000 万吗」「首都在南半球吗」），或从题库里点选，最多 20 问。',
-      '系统把你的问题对应到一条数据查询，答案由世界银行数据当场算出；没看懂时会请你换个问法（不扣提问次数）。',
-      '每问一题，面板会显示还剩多少个候选国家。好问题能把候选对半切开。',
-      '觉得有把握了就点「我要猜了」，从列表里选国家，最多 3 次机会。',
-      '计分：猜中得 100 − 3×提问数 − 12×之前猜错次数（最低 10 分）；没猜中 0 分。结算时会给出这个国家的最短问法。',
+      'A country is hidden today. Type yes/no questions in the box (\u201cIs the population over 50 million?\u201d, \u201cIs the capital in the Southern Hemisphere?\u201d) or tap them from the menu. 20 questions max.',
+      'Your question is matched to one data query and answered on the spot from World Bank data. If it cannot be understood you are asked to rephrase, and that does not cost a question.',
+      'After each question the panel shows how many candidate countries remain. A good question splits the field in half.',
+      'When you feel ready, hit \u201cI\u2019m ready to guess\u201d and pick a country. You get 3 guesses.',
+      'Scoring: a correct guess earns 100 - 3 x questions - 12 x earlier wrong guesses (minimum 10). No hit, 0. The result shows the shortest line of questioning for this country.',
     ],
-    scoring: '100 − 3×已问题数 − 12×猜错次数，下限 10；没猜中 0 分。',
+    scoring: '100 - 3 x questions asked - 12 x wrong guesses, floor 10; 0 if you miss.',
     sources: [
-      { name: 'World Bank Open Data API', url: 'https://api.worldbank.org/v2/', note: '人均 GDP、人口、预期寿命、城镇化、面积、生育率、网民、森林、CO₂、医疗支出；国家分区与收入分组；首都坐标' },
+      { name: 'World Bank Open Data API', url: 'https://api.worldbank.org/v2/', note: 'GDP per capita, population, life expectancy, urbanization, land area, fertility, internet users, forest, CO2, health spending; regions and income groups; capital coordinates' },
     ],
-    dataNote: '没有运行时 LLM：自由输入由关键词规则解析（指标词 + 高低方向 + 可选数字与单位），能确定时对应到一条固定的数据查询，不确定时请你换个问法，因此答案永远客观。题库的门槛取候选池的 10/25/50/75/90 分位数。仅含人口 ≥ 150 万且指标齐全的国家（144 个），取各指标最近一年数据（2024–2025）。世界银行数据按年发布，不随日更新，所以保持快照。',
+    dataNote: 'No LLM at runtime: free text is parsed by keyword rules (statistic word + direction + optional number and unit). When it is sure, it maps to one fixed data query; otherwise it asks you to rephrase, so answers are always objective. Menu thresholds are the 10th/25th/50th/75th/90th percentiles of the candidate pool. Only countries with at least 1.5 million people and every indicator present are included (144), using the latest year (2024-2025). The World Bank publishes yearly, not daily, so this stays a snapshot.',
   },
 
   puzzle({ data, pick }) {
@@ -191,7 +196,7 @@ export default {
 
     let done;
     const finished = new Promise((r) => { done = r; });
-    const names = (list) => list.map((c) => zhName(c.cc, c.name)).join('、');
+    const names = (list) => list.map((c) => enName(c.cc, c.name)).join(', ');
     let note = null;
     let menuHost; let noteHost; let input;
 
@@ -200,13 +205,13 @@ export default {
       return asked.map((a, i) => {
         const before = pool.length;
         pool = pool.filter((c) => a.q.test(c) === a.yes);
-        return { n: i + 1, q: a.q.text, a: a.yes ? '是' : '否', c: pool.length, cut: before - pool.length };
+        return { n: i + 1, q: a.q.text, a: a.yes ? 'Yes' : 'No', c: pool.length, cut: before - pool.length };
       });
     };
-    const logTable = () => ui.table({ columns: [{ key: 'n', label: '#', num: true }, { key: 'q', label: '问题' }, { key: 'a', label: '答' }, { key: 'c', label: '剩余', num: true }], rows: logRows() });
+    const logTable = () => ui.table({ columns: [{ key: 'n', label: '#', num: true }, { key: 'q', label: 'Question' }, { key: 'a', label: 'Answer' }, { key: 'c', label: 'Left', num: true }], rows: logRows() });
 
     const ask = (q) => {
-      if (asked.some((a) => a.q.id === q.id)) { setNote('这个问题已经问过了。', 'warn'); return; }
+      if (asked.some((a) => a.q.id === q.id)) { setNote('You already asked that one.', 'warn'); return; }
       const yes = q.test(ans);
       asked.push({ q, yes });
       cand = cand.filter((c) => q.test(c) === yes);
@@ -223,7 +228,7 @@ export default {
       if (!text) return;
       const r = parseQuestion(text, all);
       ctx.log('parse', { text, ok: r.ok, q: r.q?.id });
-      if (!r.ok) { if (r.group) group = r.group; setNote(`${r.msg}（这次不扣提问次数）`, 'warn'); renderMenu(); return; }
+      if (!r.ok) { if (r.group) group = r.group; setNote(`${r.msg} (This did not use up a question.)`, 'warn'); renderMenu(); return; }
       input.value = '';
       ask(r.q);
     };
@@ -238,67 +243,67 @@ export default {
 
     const render = () => {
       const left = MAX_Q - asked.length;
-      logHost.replaceChildren(ui.panel({ kicker: `剩余提问 ${left} / ${MAX_Q}`, title: `还有 ${cand.length} 个候选国家` },
+      logHost.replaceChildren(ui.panel({ kicker: `${left} of ${MAX_Q} questions left`, title: `${cand.length} ${cand.length === 1 ? 'country' : 'countries'} still possible` },
         ui.h('div', { class: 'ds-stack' },
-          asked.length ? logTable() : ui.h('div', { class: 'muted' }, '还没有提问。先从大范围的问题开始切：好问题会把候选对半分。'),
-          cand.length <= 12 ? ui.h('div', { class: 'small ink2' }, '候选：' + names(cand)) : null)));
+          asked.length ? logTable() : ui.h('div', { class: 'muted' }, 'No questions yet. Start with broad ones: a good question splits the field in half.'),
+          cand.length <= 12 ? ui.h('div', { class: 'small ink2' }, 'Candidates: ' + names(cand)) : null)));
       if (!menuHost) {
-        input = ui.h('input', { class: 'ds-input', type: 'text', maxlength: 60, placeholder: '如：人口超过5000万吗？', 'aria-label': '输入你的问题', onKeydown: (e) => { if (e.key === 'Enter') submit(); } });
+        input = ui.h('input', { class: 'ds-input', type: 'text', maxlength: 60, placeholder: 'Try: population over 50M', 'aria-label': 'Type your question', onKeydown: (e) => { if (e.key === 'Enter') submit(); } });
         noteHost = ui.h('div');
         menuHost = ui.h('div', { class: 'ds-stack' });
-        askHost.append(ui.panel({ kicker: '提问', title: '问一个是非题' },
+        askHost.append(ui.panel({ kicker: 'Ask', title: 'Ask a yes/no question' },
           ui.h('div', { class: 'ds-stack' },
-            ui.h('div', { class: 'ds-row' }, ui.h('div', { style: { flex: '1 1 220px' } }, input), ui.button('提问', { variant: 'accent', onClick: submit })),
+            ui.h('div', { class: 'ds-row' }, ui.h('div', { style: { flex: '1 1 220px' } }, input), ui.button('Ask', { variant: 'accent', onClick: submit })),
             noteHost,
-            ui.h('div', { class: 'small muted' }, '或者从题库点选（门槛取全部国家的分位数）：'),
+            ui.h('div', { class: 'small muted' }, 'Or tap one from the menu (thresholds are percentiles of all countries):'),
             menuHost,
-            ui.button(asked.length ? '我要猜了 →' : '直接猜（不提问）', { onClick: () => done() }))));
+            ui.button(asked.length ? 'I\u2019m ready to guess \u2192' : 'Guess now (no questions)', { onClick: () => done() }))));
       }
       renderNote();
       renderMenu();
     };
 
     if (ctx.autoplay) {
-      for (const q of qs.filter((x) => x.group !== '地区与收入').slice(0, 6)) ask(q);
+      for (const q of qs.filter((x) => x.group !== GROUP_CAT).slice(0, 6)) ask(q);
       done();
     } else render();
     await finished;
 
     const q = asked.length;
-    const clue = !q ? '你没有提问，只能凭运气。' : cand.length <= 12 ? `${q} 问之后只剩：${names(cand)}。` : `${q} 问之后仍有 ${cand.length} 个候选，凭常识挑最像的。`;
-    box.replaceChildren(ui.panel({ kicker: '审问结束', title: `用了 ${q} 问，剩 ${cand.length} 个候选` },
+    const clue = !q ? 'You asked nothing, so it is down to luck.' : cand.length <= 12 ? `After ${q} ${q === 1 ? 'question' : 'questions'}, only these remain: ${names(cand)}.` : `After ${q} ${q === 1 ? 'question' : 'questions'}, ${cand.length} candidates remain. Go with the likeliest.`;
+    box.replaceChildren(ui.panel({ kicker: 'Interrogation over', title: `${q} ${q === 1 ? 'question' : 'questions'} used, ${cand.length} ${cand.length === 1 ? 'candidate' : 'candidates'} left` },
       ui.h('div', { class: 'ds-stack' },
         q ? logTable() : null,
-        ui.h('div', { class: 'small ink2' }, cand.length <= 12 ? `候选：${names(cand)}` : '候选还很多，靠运气和常识吧。'))));
+        ui.h('div', { class: 'small ink2' }, cand.length <= 12 ? `Candidates: ${names(cand)}` : 'Still plenty of candidates: luck and common sense now.'))));
 
     const res = await ctx.guess({
-      options: all.map((c) => ({ id: c.cc, label: zhName(c.cc, c.name), hint: enName(c.cc, c.name), aliases: [enName(c.cc, c.name), c.name, c.cc] })),
+      options: all.map((c) => ({ id: c.cc, label: enName(c.cc, c.name), aliases: [c.name, c.cc] })),
       answer: ans.cc,
       maxGuesses: 3,
-      title: '这是哪个国家？',
-      placeholder: '输入国家名（中文或英文）…',
+      title: 'Which country is it?',
+      placeholder: 'Type a country name\u2026',
       clues: [clue],
-      cluesTitle: '现状',
+      cluesTitle: 'Status',
       scoring: (n, won) => scoreFor(q, n, won),
     });
 
     const rank = (k) => [...all].sort((a, b) => b.v[k] - a.v[k]).findIndex((c) => c.cc === ans.cc) + 1;
-    const rows = Object.entries(IND).map(([k, m]) => ({ k: m.zh, v: m.fmt(ans.v[k]), r: `第 ${rank(k)} / ${all.length}` }));
+    const rows = Object.entries(IND).map(([k, m]) => ({ k: m.name, v: m.fmt(ans.v[k]), r: `${rank(k)}/${all.length}` }));
     const ext = Object.entries(IND).map(([k, m]) => ({ m, r: rank(k) })).filter((x) => x.r <= 15 || x.r > all.length - 15)
       .sort((a, b) => Math.min(a.r, all.length + 1 - a.r) - Math.min(b.r, all.length + 1 - b.r)).slice(0, 3);
     const best = bestPath(all, ans, qs);
-    const path = best.steps.map((s, i) => ({ n: i + 1, q: s.q.text, a: s.yes ? '是' : '否', c: s.left }));
-    res.summary = `${zhName(ans.cc, ans.name)} · ${q} 问`;
+    const path = best.steps.map((s, i) => ({ n: i + 1, q: s.q.text, a: s.yes ? 'Yes' : 'No', c: s.left }));
+    res.summary = `${enName(ans.cc, ans.name)} · ${q} ${q === 1 ? 'question' : 'questions'}`;
     res.emoji = `${res.emoji || ''}\n❓×${q}`.trim();
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.h('div', { class: 'ink2' }, `答案：${zhName(ans.cc, ans.name)}（${enName(ans.cc, ans.name)}），首都 ${ans.capital}，${REGIONS[ans.region]?.zh || ans.region}，${INCOMES[ans.income]?.zh || ans.income}。`),
+      ui.h('div', { class: 'ink2' }, `Answer: ${enName(ans.cc, ans.name)}, capital ${ans.capital}, ${REGIONS[ans.region]?.name || ans.region}, ${(INCOMES[ans.income]?.name || ans.income).toLowerCase()}.`),
       ui.h('div', { class: 'ink2' }, ext.length
-        ? `最容易暴露它的特征：${ext.map((x) => `${x.m.zh}${x.r <= 15 ? '排名靠前' : '排名靠后'}（第 ${x.r}/${all.length}）`).join('、')}。对这类极端值问「高于/低于」会一下子砍掉大半候选。`
-        : '它在各项指标上都不极端，只能靠地区、收入分组和半球这类类别问题，加上几个中位数附近的门槛慢慢夹。'),
-      ui.h('div', { class: 'small muted' }, `题库的最短问法：${best.left === 1 ? `${path.length} 问就能锁定` : `${path.length} 问后还剩 ${best.left} 个无法区分的国家`}（你用了 ${q} 问，剩 ${cand.length} 个）`),
-      ui.table({ columns: [{ key: 'n', label: '#', num: true }, { key: 'q', label: '最短路径上的问题' }, { key: 'a', label: '答' }, { key: 'c', label: '剩余', num: true }], rows: path }),
-      ui.table({ columns: [{ key: 'k', label: '指标' }, { key: 'v', label: '数值', num: true }, { key: 'r', label: '全池排名', num: true }], rows }),
-      ui.h('div', { class: 'small muted' }, `${all.length} 个国家约等于 2^7.2：每题都对半切，8 问就够；一路问「前 25%」这种偏门槛，信息量会差很多。`));
+        ? `What gives it away: ${ext.map((x) => `${x.m.name.toLowerCase()} ranks ${x.r <= 15 ? 'near the top' : 'near the bottom'} (${x.r} of ${all.length})`).join('; ')}. Asking \u201chigher/lower than\u201d on an extreme like that cuts most candidates at once.`
+        : 'It is not extreme on any indicator, so you have to squeeze it with category questions (region, income group, hemisphere) plus a few thresholds near the median.'),
+      ui.h('div', { class: 'small muted' }, `Shortest line from the menu: ${best.left === 1 ? `${path.length} questions pin it down` : `after ${path.length} questions, ${best.left} indistinguishable countries remain`} (you used ${q} and had ${cand.length} left).`),
+      ui.table({ columns: [{ key: 'n', label: '#', num: true }, { key: 'q', label: 'Question on the shortest path' }, { key: 'a', label: 'Answer' }, { key: 'c', label: 'Left', num: true }], rows: path }),
+      ui.table({ columns: [{ key: 'k', label: 'Indicator' }, { key: 'v', label: 'Value', num: true }, { key: 'r', label: 'Rank', num: true }], rows }),
+      ui.h('div', { class: 'small muted' }, `${all.length} countries is about 2^7.2: if every question halves the field, 8 are enough. Lopsided thresholds like \u201ctop 25%\u201d carry far less information.`));
     return res;
   },
 };
