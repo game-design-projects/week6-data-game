@@ -1,4 +1,4 @@
-// #31 Rent Index — guess a county's HUD Fair Market Rent for a 2-bedroom, then three higher/lower duels.
+// #31 Rent Index — guess a county's HUD Fair Market Rent for a 2-bedroom, then four higher/lower duels.
 
 export const N_DUELS = 4;
 export const EST_MAX = 80;
@@ -26,18 +26,18 @@ export default {
     num: 31,
     slug: 'rent-index',
     title: 'Rent Index',
-    tagline: '猜一个美国县的两居室公平市场租金（HUD FMR），再比四组高低。',
+    tagline: 'Guess a US county\u2019s 2-bedroom Fair Market Rent (HUD FMR), then settle four higher-or-lower duels.',
     category: 'money',
     data: 'snapshot',
     howTo: [
-      '给你一个美国县（或新英格兰的镇）的名称、州、人口和所属租金区。猜它两居室的月租金（HUD 公平市场租金，FY2026）。',
-      '最多 3 次机会，每次猜完会告诉你该调高还是调低；多用一次扣 10% 的分。',
-      '接着是四道比大小：这个县和另一个县，谁的两居室租金更高。',
-      '计分满分 100：估值 80 分（约偏 20% 得 30 分）+ 比大小每题 5 分。',
+      'You get the name, state, population and rent area of a US county (or a New England town). Guess its monthly rent for a 2-bedroom apartment (HUD Fair Market Rent, FY2026).',
+      'Up to 3 tries; after each you are told to go higher or lower, and every extra try costs 10% of the points.',
+      'Then four duels: this county against another, which has the higher 2-bedroom rent?',
+      'Scoring is out of 100: the estimate is worth 80 (about 30 points at 20% off) and each duel is worth 5.',
     ],
-    scoring: '估值 80 分（按百分比误差衰减，多猜一次扣 10%）+ 比大小每题答对 5 分，共 100 分。',
-    sources: [{ name: 'HUD Fair Market Rents FY2026（县级）', url: 'https://www.huduser.gov/portal/datasets/fmr.html', note: 'FY26_FMRs_revised.xlsx，含 2023 年人口' }],
-    dataNote: 'FMR 是 HUD 为住房补贴设定的约第 40 百分位的市场租金，不等于平均租金。数据只含人口 ≥ 4 万的县（新英格兰为镇；不含关岛等海外领地）。同一个租金区内的县共用同一个 FMR。HUD 官方 API 需要令牌且无 CORS，所以使用官网发布的 xlsx 快照。',
+    scoring: 'Estimate 80 points (decays with percentage error, 10% off per extra try) + 5 per correct duel, 100 in total.',
+    sources: [{ name: 'HUD Fair Market Rents FY2026 (county level)', url: 'https://www.huduser.gov/portal/datasets/fmr.html', note: 'FY26_FMRs_revised.xlsx, with 2023 population' }],
+    dataNote: 'FMR is the roughly 40th-percentile market rent HUD sets for housing assistance, not an average rent. The data covers only counties with at least 40,000 people (towns in New England; no overseas territories such as Guam). Counties in the same rent area share one FMR. HUD\u2019s official API needs a token and has no CORS, so we use a snapshot of the xlsx published on its site.',
   },
 
   puzzle({ data, pick, rng }) {
@@ -53,28 +53,28 @@ export default {
     const $ = (v) => core.fmtMoney(v);
     ctx.log('county', c.name, c.st, c.fmr[2]);
 
-    ctx.stage.append(ui.panel({ kicker: 'HUD FY2026 · 两居室月租', title: `${c.name}，${c.st}` },
+    ctx.stage.append(ui.panel({ kicker: 'HUD FY2026 · 2-bedroom monthly rent', title: `${c.name}, ${c.st}` },
       ui.h('div', { class: 'ds-grid', style: { '--min': '140px' } },
-        ui.stat({ label: '人口', value: core.fmtCompact(c.pop), sub: '2023' }),
-        ui.stat({ label: `${c.st} 州中位县`, value: $(D.stateMed[c.st]), sub: '两居室' }),
-        ui.stat({ label: '全美中位县', value: $(D.nat), sub: '两居室' })),
-      ui.h('p', { class: 'small ink2', style: { marginTop: '10px' } }, `所属租金区：${c.area}`)));
+        ui.stat({ label: 'Population', value: core.fmtCompact(c.pop), sub: '2023' }),
+        ui.stat({ label: `${c.st} median county`, value: $(D.stateMed[c.st]), sub: '2-bedroom' }),
+        ui.stat({ label: 'US median county', value: $(D.nat), sub: '2-bedroom' })),
+      ui.h('p', { class: 'small ink2', style: { marginTop: '10px' } }, `Rent area: ${c.area}`)));
 
     const r1 = await ctx.estimate({
-      title: '这个地区两居室的月租是多少？',
+      title: 'What is the monthly rent for a 2-bedroom here?',
       answer: c.fmr[2], min: 300, max: 5000, log: true, step: 5, initial: D.nat,
       format: $, attempts: 3, scoring: 'pct', scale: 0.2, tolerance: 0.03,
     });
 
     const rivals = p.rivals.map((i) => D.counties[i]);
     const r2 = await ctx.rounds({
-      title: '比大小',
+      title: 'Higher or lower',
       rounds: rivals.map((o, k) => {
         const flip = (p.i + k) % 2;
         const opts = flip ? [o, c] : [c, o];
         return {
-          prompt: '谁的两居室租金更高？',
-          options: opts.map((x) => ({ label: `${x.name}, ${x.st}`, sub: `人口 ${core.fmtCompact(x.pop)}` })),
+          prompt: 'Which has the higher 2-bedroom rent?',
+          options: opts.map((x) => ({ label: `${x.name}, ${x.st}`, sub: `Pop. ${core.fmtCompact(x.pop)}` })),
           correct: opts[0].fmr[2] > opts[1].fmr[2] ? 0 : 1,
           explain: `${c.name} ${$(c.fmr[2])} vs ${o.name} ${$(o.fmr[2])}`,
         };
@@ -87,20 +87,20 @@ export default {
     const sm = D.stateMed[c.st];
     const sameArea = D.counties.filter((x) => x !== c && x.area === c.area).length;
     const why = [
-      `${c.name}两居室 ${$(ans)}，${pct(ans, sm) >= 0 ? '高于' : '低于'}${c.st} 州中位县（${$(sm)}）${Math.abs(pct(ans, sm))}%，${pct(ans, D.nat) >= 0 ? '高于' : '低于'}全美中位县（${$(D.nat)}）${Math.abs(pct(ans, D.nat))}%。`,
-      ans > sm * 1.2 ? '明显高于本州中位县：多半是大都会核心或旅游/高收入地区，人口大、靠近就业中心的县通常更贵。'
-        : ans < sm * 0.85 ? '低于本州中位县：偏农村或经济较弱的地区，租金随离大城市的距离衰减。'
-        : '接近本州中位水平：线索里的州中位县就是很好的锚点。',
-      c.metro ? '属于都会区：同一都会区内的县共用一个 FMR，邻县的价格是很好的参照。' : '不在大都会区内：租金主要由本地收入与住房存量决定。',
-      `每多一间卧室，租金约涨 ${pct(c.fmr[3], c.fmr[2])}%（两居 → 三居）。`,
+      `${c.name} has a 2-bedroom FMR of ${$(ans)}, ${Math.abs(pct(ans, sm))}% ${pct(ans, sm) >= 0 ? 'above' : 'below'} the ${c.st} median county (${$(sm)}) and ${Math.abs(pct(ans, D.nat))}% ${pct(ans, D.nat) >= 0 ? 'above' : 'below'} the US median county (${$(D.nat)}).`,
+      ans > sm * 1.2 ? 'Well above the state median: most likely a metro core or a tourist or high-income area. Big counties near job centers are usually pricier.'
+        : ans < sm * 0.85 ? 'Below the state median: a more rural or economically weaker area, with rents falling off with distance from big cities.'
+        : 'Close to the state median: the state median in the clues was a good anchor.',
+      c.metro ? 'Part of a metro area: counties in the same metro share one FMR, so a neighbor\u2019s price is a good reference.' : 'Not in a big metro area: rent is driven mainly by local income and housing stock.',
+      `Each extra bedroom adds about ${pct(c.fmr[3], c.fmr[2])}% to the rent (2BR to 3BR).`,
     ].join(' ');
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.kv([
-        ['答案', `${$(ans)} / 月`],
-        ['你的估值', r1.guess != null ? $(r1.guess) : (r1.summary || '')],
-        ['全部户型', `开间 ${$(c.fmr[0])} · 一居 ${$(c.fmr[1])} · 两居 ${$(c.fmr[2])} · 三居 ${$(c.fmr[3])} · 四居 ${$(c.fmr[4])}`],
-        ['租金区', `${c.area}${sameArea ? `（池中另有 ${sameArea} 个县/镇同价）` : ''}`],
-        ['规律', why]]));
+        ['Answer', `${$(ans)} / month`],
+        ['Your estimate', r1.guess != null ? $(r1.guess) : (r1.summary || '')],
+        ['All sizes', `Studio ${$(c.fmr[0])} · 1BR ${$(c.fmr[1])} · 2BR ${$(c.fmr[2])} · 3BR ${$(c.fmr[3])} · 4BR ${$(c.fmr[4])}`],
+        ['Rent area', `${c.area}${sameArea ? ` (${sameArea} other ${sameArea === 1 ? 'county or town' : 'counties or towns'} in the pool share this price)` : ''}`],
+        ['Pattern', why]]));
     return res;
   },
 };
