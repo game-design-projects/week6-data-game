@@ -29,10 +29,9 @@ test('pool: puzzles for days 1-120 valid', () => {
   }
   assert.ok(ccs.size >= 60);
 });
-test('every label (zh) is unique and does not equal a code', () => {
-  const dn = new Intl.DisplayNames(['zh-Hans'], { type: 'region' });
+test('every label is unique and is not a bare code', () => {
   const seen = new Set();
-  for (const c of data.countries) { const z = dn.of(c.cc); assert.ok(z && z !== c.cc && !seen.has(z), c.cc); seen.add(z); }
+  for (const c of data.countries) { assert.ok(c.name && c.name !== c.cc && !seen.has(c.name), c.cc); seen.add(c.name); }
 });
 test('why/pattern', () => {
   const p = pattern([[1800, 500, 30], [1850, 1100, 35], [1900, 1200, 20], [2015, 5000, 70]]);

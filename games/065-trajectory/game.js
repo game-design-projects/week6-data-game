@@ -1,6 +1,5 @@
 // #65 Trajectory — a country's 200-year path on the income x life-expectancy chart; name it.
-const zh = (cc, fb) => { try { return new Intl.DisplayNames(['zh-Hans'], { type: 'region' }).of(cc) || fb; } catch { return fb; } };
-const REGION = { africa: '非洲', americas: '美洲', asia: '亚洲', europe: '欧洲' };
+const REGION = { africa: 'Africa', americas: 'the Americas', asia: 'Asia', europe: 'Europe' };
 
 /** Largest single-step drop in life expectancy (pts are [year, income, lex]). */
 export function worstDip(pts) {
@@ -25,11 +24,11 @@ export function pattern(pts) {
 /** Puzzle-specific explanation of what made this trajectory recognisable. */
 export function why(name, p) {
   const x = p.incomeX >= 10 ? Math.round(p.incomeX) : p.incomeX.toFixed(1);
-  const parts = [`${name} 的 1800 年起点是 $${Math.round(p.start[1])}、${p.start[2]} 岁；到 2015 年收入涨到约 ${x} 倍，寿命增加 ${p.lexGain} 岁。`];
-  parts.push(p.takeoff && p.takeoff > 1800 ? `收入在 ${p.takeoff} 年前后翻了一倍。` : '收入没有翻倍的明确起飞点。');
-  if (p.dip.drop >= 3) parts.push(`${p.dip.year} 年前后一次骤降（−${p.dip.drop} 岁）是最醒目的特征，通常对应战争、饥荒或疫病。`);
-  else if (p.dip.drop >= 1) parts.push(`${p.dip.year} 年有一次小幅倒退（−${p.dip.drop} 岁）。`);
-  else parts.push('轨迹基本平滑，没有明显倒退。');
+  const parts = [`${name} started 1800 at $${Math.round(p.start[1]).toLocaleString('en-US')} a year with a life expectancy of ${p.start[2]}; by 2015 income had grown about ${x}\u00d7 and life expectancy had risen ${p.lexGain} years. `];
+  parts.push(p.takeoff && p.takeoff > 1800 ? `Income doubled around ${p.takeoff}. ` : 'There is no clear takeoff point where income doubled. ');
+  if (p.dip.drop >= 3) parts.push(`The sharp drop around ${p.dip.year} (\u2212${p.dip.drop} years) is the most striking feature, usually a war, famine or epidemic.`);
+  else if (p.dip.drop >= 1) parts.push(`There is a small setback around ${p.dip.year} (\u2212${p.dip.drop} years).`);
+  else parts.push('The path is mostly smooth, with no clear setback.');
   return parts.join('');
 }
 
@@ -38,21 +37,21 @@ export default {
     num: 65,
     slug: 'trajectory',
     title: 'Trajectory',
-    tagline: '某国 200 年来在“收入 × 预期寿命”图上走过的轨迹。看路线，说出是哪个国家。',
+    tagline: 'A country\'s 200-year path across the income \u00d7 life expectancy chart. Read the route and name the country.',
     category: 'society',
     data: 'snapshot',
     howTo: [
-      '图上横轴是人均收入（对数，按购买力和通胀调整），纵轴是出生时预期寿命，线是某国 1800–2015 年的轨迹。',
-      '从列表里选一个国家来猜，最多 6 次。每猜错一次解锁一条新线索。',
-      '每次猜测会显示它所在的大洲、2015 年收入是答案的几倍、预期寿命差几岁。',
-      '提示：战争、饥荒、内战会让轨迹向下“砸”出缺口；早早起飞的是工业化先行者。',
+      'The horizontal axis is income per person (log scale, adjusted for purchasing power and inflation), the vertical axis is life expectancy at birth, and the line is one country\'s path from 1800 to 2015.',
+      'Pick a country from the list, up to 6 guesses. Every miss unlocks a new clue.',
+      'Each guess shows its continent, how many times its 2015 income differs from the answer\'s, and the gap in life expectancy.',
+      'Hint: wars, famines and civil wars knock gaps downward in the path; early takeoffs belong to the first industrializers.',
     ],
-    scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分，6 次都没猜中 0 分。',
+    scoring: '100 points for a first-try hit, about 17 fewer for each extra guess, 0 if you miss all six.',
     sources: [
-      { name: 'Gapminder World（GDP/人均 PPP，通胀调整）', url: 'https://github.com/open-numbers/ddf--gapminder--gapminder_world' },
-      { name: 'Gapminder 预期寿命（life_expectancy_years）', url: 'https://www.gapminder.org/data/documentation/gd004/' },
+      { name: 'Gapminder World (GDP per capita, PPP, inflation-adjusted)', url: 'https://github.com/open-numbers/ddf--gapminder--gapminder_world' },
+      { name: 'Gapminder life expectancy (life_expectancy_years)', url: 'https://www.gapminder.org/data/documentation/gd004/' },
     ],
-    dataNote: '数据为 Gapminder 的历史估算，1800 年前后的数值多为推算；每 2 年取一个点（另加 2015 年），仅保留 1800–2015 年数据完整的 184 个国家；Gapminder 的这两个序列只到 2015 年。Gapminder 较新的收入序列口径不同（2021 年美元），且没有对应的预期寿命，所以未混用。',
+    dataNote: 'The data are Gapminder\'s historical estimates; values around 1800 are mostly extrapolated. One point is taken every 2 years (plus 2015), and only the 184 countries with complete data for 1800\u20132015 are kept; Gapminder\'s two series end in 2015. Gapminder\'s newer income series uses a different basis (2021 dollars) and has no matching life expectancy, so it is not mixed in.',
   },
 
   puzzle({ data, pick }) {
@@ -76,8 +75,8 @@ export default {
     const chart = await ui.plot((Plot, c) => ({
       height: 320,
       marginLeft: 40,
-      x: { type: 'log', label: '人均收入 $（对数）→', domain: [100, 200000], ticks: [100, 300, 1000, 3000, 10000, 30000, 100000], tickFormat: (v) => (v >= 1000 ? `${v / 1000}k` : v) },
-      y: { label: '↑ 预期寿命（岁）', domain: [0, 90], grid: true },
+      x: { type: 'log', label: 'Income per person, $ (log) \u2192', domain: [100, 200000], ticks: [100, 300, 1000, 3000, 10000, 30000, 100000], tickFormat: (v) => (v >= 1000 ? `${v / 1000}k` : v) },
+      y: { label: '\u2191 Life expectancy (years)', domain: [0, 90], grid: true },
       marks: [
         Plot.line(pts, { x: (q) => q[1], y: (q) => q[2], stroke: c.accent, strokeWidth: 2 }),
         Plot.dot(marks, { x: 'i', y: 'l', fill: c.ink, r: 3 }),
@@ -87,27 +86,27 @@ export default {
 
     const keyYears = [1800, 1850, 1900, 1950, 2000, 2015];
     const table = ui.table({
-      columns: [{ key: 'y', label: '年份' }, { key: 'i', label: '人均收入 $', num: true }, { key: 'l', label: '预期寿命', num: true }],
+      columns: [{ key: 'y', label: 'Year' }, { key: 'i', label: 'Income $', num: true }, { key: 'l', label: 'Life expectancy', num: true }],
       rows: keyYears.map((y) => { const q = at(pts, y); return { y, i: ctx.core.fmtNum(q[1]), l: q[2] }; }),
     });
     const clues = [
       chart,
-      `它位于${REGION[ans.region] || '世界某处'}。`,
-      ui.h('div', '关键年份的数字：', table),
-      dip.drop >= 1 ? `预期寿命最大的一次单步下跌发生在 ${dip.year} 年，一下掉了 ${dip.drop} 岁。` : '它的预期寿命几乎从未明显倒退。',
-      `英文国名以 “${ans.name[0]}” 开头。`,
+      `It is in ${REGION[ans.region] || 'somewhere in the world'}.`,
+      ui.h('div', 'Numbers for key years:', table),
+      dip.drop >= 1 ? `Its biggest one-step fall in life expectancy came around ${dip.year}: down ${dip.drop} years at once.` : 'Its life expectancy hardly ever fell noticeably.',
+      `The country name starts with \u201c${ans.name[0]}\u201d.`,
     ];
 
-    const options = ctx.data.countries.map((c) => ({ id: c.cc, label: zh(c.cc, c.name), hint: c.name, aliases: [c.name, c.cc] }));
+    const options = ctx.data.countries.map((c) => ({ id: c.cc, label: c.name, aliases: [c.cc, ...(c.alt ? [c.alt] : [])] }));
     const res = await ctx.guess({
       options,
       answer: ans.cc,
       maxGuesses: 6,
-      title: '这条轨迹属于哪个国家？',
-      placeholder: '输入国家名（中文或英文）…',
+      title: 'Which country does this path belong to?',
+      placeholder: 'Type a country, e.g. Peru\u2026',
       clues,
-      cluesTitle: '轨迹与线索',
-      columns: ['大洲', '收入比', '寿命差'],
+      cluesTitle: 'Path and clues',
+      columns: ['Region', 'Income', 'Life exp.'],
       near: (g, a) => by.get(g.id).region === by.get(a.id).region,
       feedback: (g) => {
         const gc = by.get(g.id), gl = gc.pts[gc.pts.length - 1];
@@ -124,14 +123,14 @@ export default {
     const t70 = firstAbove(pts, 70);
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.kv([
-        ['答案', `${zh(ans.cc, ans.name)}（${ans.name}）`],
-        ['1800 年', `$${ctx.core.fmtNum(pts[0][1])}，预期寿命 ${pts[0][2]} 岁`],
-        ['2015 年', `$${ctx.core.fmtNum(last[1])}，预期寿命 ${last[2]} 岁`],
-        ['预期寿命首次达到 70 岁', t70 ? `${t70} 年` : '至今未达到'],
-        ['最大倒退', dip.drop >= 1 ? `${dip.year} 年 −${dip.drop} 岁` : '无明显倒退'],
+        ['Answer', ans.name],
+        ['1800', `$${ctx.core.fmtNum(pts[0][1])}, life expectancy ${pts[0][2]}`],
+        ['2015', `$${ctx.core.fmtNum(last[1])}, life expectancy ${last[2]}`],
+        ['First reached 70', t70 ? `${t70}` : 'not yet'],
+        ['Biggest setback', dip.drop >= 1 ? `${dip.year}: \u2212${dip.drop} years` : 'none to speak of'],
       ]),
-      ui.callout(why(zh(ans.cc, ans.name), pattern(pts)), 'good'),
-      ui.h('div', { class: 'small muted' }, '读图技巧：起点越靠右上，工业化越早；轨迹突然下坠通常对应战争、饥荒或疫病。'));
+      ui.callout(why(ans.name, pattern(pts)), 'good'),
+      ui.h('div', { class: 'small muted' }, 'Reading tip: the further up and right the start, the earlier the industrialization; a sudden plunge usually means a war, famine or epidemic.'));
     return res;
   },
 };
