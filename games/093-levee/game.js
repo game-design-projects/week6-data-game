@@ -2,9 +2,9 @@
 import { N, LEN, WET, leveeCells, simulate, dryCount, cellCounts, scoreOf, marginals } from './sim.js';
 
 const COMPASS = (r, c) => {
-  const v = r < 5.33 ? '北' : r < 10.67 ? '中' : '南';
-  const h = c < 5.33 ? '西' : c < 10.67 ? '中' : '东';
-  return v === '中' && h === '中' ? '中心' : v === '中' ? `${h}侧` : h === '中' ? `${v}侧` : `${v}${h}角`;
+  const v = r < 5.33 ? 'north' : r < 10.67 ? 'middle' : 'south';
+  const h = c < 5.33 ? 'west' : c < 10.67 ? 'middle' : 'east';
+  return v === 'middle' && h === 'middle' ? 'center' : v === 'middle' ? `${h} side` : h === 'middle' ? `${v} side` : `${v}${h} corner`;
 };
 const leveeMid = (lv) => { const cs = leveeCells(lv); const a = cs[0], z = cs[cs.length - 1]; return [((Math.floor(a / N) + Math.floor(z / N)) / 2) + 0.5, (((a % N) + (z % N)) / 2) + 0.5]; };
 const leveeEnds = (lv) => { const cs = leveeCells(lv); const a = cs[0], z = cs[cs.length - 1]; return [[(a % N) + 0.5, Math.floor(a / N) + 0.5], [(z % N) + 0.5, Math.floor(z / N) + 0.5]]; };
@@ -18,21 +18,21 @@ export default {
     num: 93,
     slug: 'levee',
     title: 'Levee',
-    tagline: '暴雨落在一块真实的地形上。放三道堤坝，让尽可能多的真实建筑保持干燥。',
+    tagline: 'Storm rain falls on real terrain. Place three levees to keep as many real buildings dry as you can.',
     category: 'levels',
     data: 'snapshot',
     howTo: [
-      '地图是美国某个易涝城镇 1.6 km × 1.6 km 的真实地形（底色越亮地势越高，暗处是低洼）；每个小方块是 OpenStreetMap 里的一栋真实建筑，位置就是它的真实位置。',
-      '雨水落在每一格上，沿着低处流动、汇集。蓝色是当前方案下的积水，红色方块是被淹的建筑，米白色是干燥的。',
-      '点一格放一道 500 m 长的堤坝（先用按钮选横向或纵向），最多三道；点已有的堤坝可以移除，画面会实时重新模拟。',
-      '确认后与算法参考解比较：你比"什么都不放"多保住的建筑，占参考解多保住数量的百分比就是得分（可超过参考解，满分 100）。',
+      'The map is real terrain for a 1.6 km × 1.6 km patch of a flood-prone US town (lighter ground is higher, dark spots are low). Each small square is a real OpenStreetMap building at its true location.',
+      'Rain falls on every cell and flows downhill, pooling in low spots. Blue is standing water under your current plan, red squares are flooded buildings, cream ones are dry.',
+      'Tap a cell to drop a 500 m levee (pick horizontal or vertical with the buttons first), up to three. Tap an existing levee to remove it; the map re-simulates instantly.',
+      'When you confirm, you are compared with an algorithmic reference solution: the share of the reference\u2019s extra saved buildings (over doing nothing) that you saved is your score. You can beat the reference. Max 100.',
     ],
-    scoring: '100 × (你保住 − 不设堤坝) ÷ (参考解保住 − 不设堤坝)，限制在 0–100；随手乱放通常只有 10 分上下。',
+    scoring: '100 × (buildings you save − no levees) ÷ (reference saves − no levees), clamped to 0–100; random placement usually scores around 10.',
     sources: [
-      { name: 'AWS Terrain Tiles (Terrarium)', url: 'https://registry.opendata.aws/terrain-tiles/', note: '美国境内高程来自 USGS 3DEP 10 m 数据，夏威夷等地区来自其他 DEM' },
+      { name: 'AWS Terrain Tiles (Terrarium)', url: 'https://registry.opendata.aws/terrain-tiles/', note: 'Elevation inside the US comes from USGS 3DEP 10 m data; Hawaii and similar areas from other DEMs' },
       { name: 'OpenStreetMap buildings via Overpass API', url: 'https://overpass-api.de/' },
     ],
-    dataNote: '高程与建筑位置都是真实数据（建筑取 OSM 轮廓的中心点，一点一栋）。水流是自己写的简化浅水模型（每格 100 m，雨水均匀落下后按水位差向低处流动，边界外泄，堤坝视为不可越过的墙），不是 USGS 水文工程模拟；"暴雨量"是为每块地形选定的相对雨量，使不设堤坝时约一半建筑被淹，并不对应真实降雨毫米数。参考解由贪心搜索加局部调整离线算出，不一定是全局最优，玩家完全可能超过它。',
+    dataNote: 'Elevation and building locations are real (each building is the center point of its OSM outline, one dot per building). The water flow is our own simplified shallow-water model (100 m cells; rain falls evenly and flows toward lower water levels, drains off the edges, and levees act as walls that cannot be crossed), not a USGS hydrology simulation. The \u201cstorm size\u201d is a relative amount chosen per terrain so that about half the buildings flood with no levees; it does not correspond to real millimeters of rain. The reference solution is computed offline by greedy search plus local tweaks and is not necessarily the global optimum, so players can beat it.',
   },
 
   puzzle({ data, pick }) {
@@ -120,9 +120,9 @@ export default {
     const updateStatus = () => {
       const dry = dryCount(p.b, depth);
       status.replaceChildren(
-        ui.h('span', `保住 ${dry}/${nb}`),
-        ui.h('span', { class: 'muted' }, `不设堤坝 ${base}`),
-        ui.h('span', `堤坝 ${levees.length}/3`));
+        ui.h('span', `Saved ${dry}/${nb}`),
+        ui.h('span', { class: 'muted' }, `No levees: ${base}`),
+        ui.h('span', `Levees ${levees.length}/3`));
     };
 
     const stage = ctx.canvas({
@@ -135,23 +135,23 @@ export default {
         if (type !== 'down' || revealed) return;
         const hit = levees.findIndex((lv) => leveeCells(lv).includes(r * N + c));
         if (hit >= 0) { levees.splice(hit, 1); log('remove', r, c); }
-        else if (levees.length >= 3) { ui.toast('最多三道堤坝，点已有的堤坝可移除'); return; }
+        else if (levees.length >= 3) { ui.toast('Three levees max. Tap an existing one to remove it.'); return; }
         else { levees.push({ r, c, o: orient }); log('place', { r, c, o: orient }); }
         refresh(); updateStatus();
       },
     });
     stage.el.setAttribute('role', 'img');
-    stage.el.setAttribute('aria-label', '地形与建筑平面图，点击放置堤坝');
+    stage.el.setAttribute('aria-label', 'Plan view of terrain and buildings; tap to place levees');
 
-    const bh = ui.button('横向 ━', { variant: 'accent', small: true, onClick: () => setO('h') });
-    const bv = ui.button('纵向 ┃', { variant: 'ghost', small: true, onClick: () => setO('v') });
+    const bh = ui.button('Horizontal ━', { variant: 'accent', small: true, onClick: () => setO('h') });
+    const bv = ui.button('Vertical ┃', { variant: 'ghost', small: true, onClick: () => setO('v') });
     function setO(o) {
       orient = o;
       bh.className = bh.className.replace(/\b(accent|ghost)\b/g, '') + (o === 'h' ? ' accent' : ' ghost');
       bv.className = bv.className.replace(/\b(accent|ghost)\b/g, '') + (o === 'v' ? ' accent' : ' ghost');
     }
 
-    const describe = (lv) => { const [r, c] = leveeMid(lv); return `${COMPASS(r, c)}${lv.o === 'h' ? '东西向' : '南北向'}`; };
+    const describe = (lv) => { const [r, c] = leveeMid(lv); return `${COMPASS(r, c)} (${lv.o === 'h' ? 'east-west' : 'north-south'})`; };
 
     return new Promise((resolve) => {
       const finish = () => {
@@ -163,31 +163,31 @@ export default {
         log('submit', { got, base, refDry, score, mine, refM });
         // Second board: the reference solution's flood.
         const refStage = ctx.canvas({ aspect: 1, onFrame(dt, g, st) { drawBoard(g, st, refDepth, p.ref, { color: st.colors.hit }); } });
-        ctx.stage.append(ui.panel({ kicker: '参考解', title: `算法的三道堤坝：保住 ${refDry}/${nb} 栋` }, refStage.el,
-          ui.h('div', { class: 'small muted', style: { marginTop: '6px' } }, '绿色 = 参考解的堤坝；同样的雨，同样的地形。')));
+        ctx.stage.append(ui.panel({ kicker: 'Reference solution', title: `The algorithm\u2019s three levees: ${refDry}/${nb} buildings saved` }, refStage.el,
+          ui.h('div', { class: 'small muted', style: { marginTop: '6px' } }, 'Green = the reference levees; same rain, same terrain.')));
         refStage.start();
         const share = refDry > base ? Math.round((100 * refM.reduce((a, x) => a + Math.max(0, x), 0)) / (refDry - base)) : 0;
         resolve({
           score, max: 100, win: score >= 60,
-          emoji: `🌧️ ${'🛡️'.repeat(levees.length)}\n保住 ${got}/${nb}`,
-          summary: `保住 ${got}/${nb} 栋 · 参考 ${refDry}`,
+          emoji: `🌧️ ${'🛡️'.repeat(levees.length)}\nSaved ${got}/${nb}`,
+          summary: `Saved ${got}/${nb} · reference ${refDry}`,
           detail: ui.kv([
-            ['地点', `${p.name}（${p.lat.toFixed(3)}°, ${p.lng.toFixed(3)}°），窗口内最大高差 ${relief.toFixed(0)} m，共 ${nb} 栋建筑`],
-            ['不设堤坝', `保住 ${base}/${nb} 栋`],
-            ['你的方案', levees.length
-              ? `保住 ${got} 栋（${got - base >= 0 ? '+' : ''}${got - base}）；各堤坝单独贡献：${levees.map((lv, i) => `${describe(lv)} ${mine[i] >= 0 ? '+' : ''}${mine[i]}`).join('、')}`
-              : `没放堤坝，保住 ${got} 栋`],
-            ['参考解', `保住 ${refDry} 栋（${refDry - base >= 0 ? '+' : ''}${refDry - base}）：${p.ref.map((lv, i) => `${describe(lv)} ${refM[i] >= 0 ? '+' : ''}${refM[i]}`).join('、')}`],
-            ['规律', `水从高处流向低处，在洼地聚集；堤坝的价值取决于它切断了多大的汇水面积和流向建筑的路径。本题最好的一道堤坝挡在${describe(p.ref[refM.indexOf(Math.max(...refM))])}，单独保住 ${Math.max(...refM)} 栋${share > 105 ? '（三道之间有叠加效果）' : ''}；堵低洼出口比围住建筑本身更有效。`],
+            ['Place', `${p.name} (${p.lat.toFixed(3)}°, ${p.lng.toFixed(3)}°), ${relief.toFixed(0)} m maximum relief in the window, ${nb} buildings`],
+            ['No levees', `${base}/${nb} buildings saved`],
+            ['Your plan', levees.length
+              ? `${got} saved (${got - base >= 0 ? '+' : ''}${got - base}); each levee on its own: ${levees.map((lv, i) => `${describe(lv)} ${mine[i] >= 0 ? '+' : ''}${mine[i]}`).join(', ')}`
+              : `No levees placed, ${got} saved`],
+            ['Reference', `${refDry} saved (${refDry - base >= 0 ? '+' : ''}${refDry - base}): ${p.ref.map((lv, i) => `${describe(lv)} ${refM[i] >= 0 ? '+' : ''}${refM[i]}`).join(', ')}`],
+            ['Pattern', `Water runs downhill and pools in basins; a levee is worth what catchment area and flow paths toward buildings it cuts off. The best single levee here is at the ${describe(p.ref[refM.indexOf(Math.max(...refM))])}, saving ${Math.max(...refM)} on its own${share > 105 ? ' (the three levees reinforce each other)' : ''}. Blocking a low outlet beats ringing the buildings themselves.`],
           ]),
         });
       };
-      const done = ui.button('确认方案', { variant: 'accent', onClick: finish });
-      const clear = ui.button('清空', { variant: 'ghost', small: true, onClick: () => { levees = []; refresh(); updateStatus(); } });
+      const done = ui.button('Confirm plan', { variant: 'accent', onClick: finish });
+      const clear = ui.button('Clear', { variant: 'ghost', small: true, onClick: () => { levees = []; refresh(); updateStatus(); } });
       ctx.stage.append(ui.panel(
-        { kicker: `${p.name} · 1.6 × 1.6 km · 高差 ${relief.toFixed(0)} m`, title: '放三道堤坝' },
+        { kicker: `${p.name} · 1.6 × 1.6 km · relief ${relief.toFixed(0)} m`, title: 'Place three levees' },
         stage.el, status,
-        ui.h('div', { class: 'small muted', style: { marginTop: '4px' } }, `底色越亮地势越高 · 蓝 = 积水 · 红点 = 被淹建筑 · 黄条 = 你的堤坝（每道 ${LEN * 100} m）`),
+        ui.h('div', { class: 'small muted', style: { marginTop: '4px' } }, `Lighter = higher ground · blue = standing water · red = flooded building · yellow bar = your levee (${LEN * 100} m each)`),
         ui.h('div', { class: 'ds-row', style: { marginTop: '12px', gap: '10px', flexWrap: 'wrap' } }, bh, bv, clear, done)));
       updateStatus();
       stage.start();
