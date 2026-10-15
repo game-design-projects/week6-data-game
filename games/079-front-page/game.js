@@ -39,19 +39,19 @@ export function apiUrl(date) {
 export default {
   meta: {
     num: 79, slug: 'front-page', title: 'Front Page',
-    tagline: '一天里四条 Hacker News 帖子，只看标题、域名和评论数，猜它们各拿了多少分。',
+    tagline: 'Four Hacker News stories from one day. From the title, domain and comment count alone, guess how many points each earned.',
     category: 'tech', data: 'live',
     howTo: [
-      '每天取 HN 两个 UTC 日之前的那一天（此时分数已基本定型），在 ≥15 分的帖子里按排名挑 4 条：当日榜首、热门、中等、普通，顺序随机。',
-      '对每条帖子拖动对数刻度滑块（或直接输入），猜它最终的点赞分数。',
-      '线索：评论数大约是分数的 0.3~0.8 倍（中位数 0.5）；评论远多于此是争议帖，远少于此多半是小众链接或 Show HN。顶部会告诉你当天有多少条帖子过了 15 分、中位数是多少。',
+      'Each day takes the HN day two UTC days back (when scores have mostly settled) and picks 4 stories with 15+ points by rank: the day\'s top story, a hot one, a middling one and an ordinary one, in random order.',
+      'For each story, drag the log-scale slider (or type a number) to guess its final score.',
+      'Clue: comments are roughly 0.3 to 0.8 times the points (median 0.5). Far more comments than that means a controversial post, and far fewer is usually a niche link or a Show HN. The top tells you how many stories passed 15 points that day and the median score.',
     ],
-    scoring: '每条按对数误差计分：差 2 倍约 37 分，猜对 100 分；四条相加，满分 400。',
+    scoring: 'Each story is scored by log error: off by 2x is about 37 points, spot on is 100. The four add up to 400 at most.',
     sources: [
-      { name: 'Hacker News Search API (Algolia)', url: 'https://hn.algolia.com/api', note: '实时请求，带 CORS，无需密钥' },
+      { name: 'Hacker News Search API (Algolia)', url: 'https://hn.algolia.com/api', note: 'Live request, CORS-enabled, no key needed' },
       { name: 'Hacker News', url: 'https://news.ycombinator.com/' },
     ],
-    dataNote: '实时：打开页面时向 Algolia HN 搜索 API 请求两个 UTC 日之前（即 24 小时以上、分数已基本不再变化）的全部 ≥15 分帖子，再按排名挑 4 条，所以所有玩家看到同一道题。请求失败时回退到构建时抓取的 120 天快照（build/fetch.mjs）。',
+    dataNote: 'Live: when the page opens, it asks the Algolia HN search API for all 15+ point stories from two UTC days back (more than 24 hours old, so scores have mostly stopped moving), then picks 4 by rank, so every player sees the same puzzle. If the request fails it falls back to a 120-day snapshot taken at build time (build/fetch.mjs).',
   },
 
   async load(ctx) {
@@ -71,17 +71,17 @@ export default {
     const { ui, core } = ctx;
     ctx.log('day', p.date, 'n', p.n);
     const max = Math.max(3000, Math.ceil((Math.max(...p.stories.map((s) => s.points)) * 1.5) / 500) * 500);
-    ctx.stage.append(ui.callout(`HN ${p.date}（UTC）· 当天共 ${p.n} 条帖子拿到 ≥15 分，中位数 ${p.median} 分。下面 4 条来自这一天，顺序已打乱。`));
+    ctx.stage.append(ui.callout(`HN ${p.date} (UTC) · ${p.n} stories got 15+ points that day, with a median of ${p.median}. The 4 below are from that day, shuffled.`));
     const rs = [];
     for (const [i, s] of p.stories.entries()) {
       const box = ui.h('div');
       ctx.stage.append(box);
-      box.append(ui.panel({ kicker: `第 ${i + 1} / ${p.stories.length} 条`, title: s.title },
-        ui.row(ui.badge(s.domain || '文字帖（无外链）'), ui.badge(`${core.fmtNum(s.comments)} 条评论`, 'accent'), ui.badge(`UTC ${s.hour}:00 发布`))));
+      box.append(ui.panel({ kicker: `Story ${i + 1} of ${p.stories.length}`, title: s.title },
+        ui.row(ui.badge(s.domain || 'Text post (no link)'), ui.badge(`${core.fmtNum(s.comments)} ${s.comments === 1 ? 'comment' : 'comments'}`, 'accent'), ui.badge(`Posted at ${s.hour}:00 UTC`))));
       const r = await ctx.estimate({
         container: box, answer: s.points, min: 10, max, log: true, initial: Math.min(p.median * 2, max), step: 1,
-        unit: '分', format: (v) => core.fmtNum(Math.round(v)), scoring: 'log', scale: 0.3,
-        title: '它拿了多少分？',
+        unit: 'points', format: (v) => core.fmtNum(Math.round(v)), scoring: 'log', scale: 0.3,
+        title: 'How many points did it get?',
       });
       ctx.log('story', s.id, s.points, r.guess);
       rs.push(r);
@@ -92,20 +92,20 @@ export default {
       const off = Math.max(byComments, s.points) / Math.max(1, Math.min(byComments, s.points));
       return {
         title: s.title, rank: `${s.rank}/${p.n}`, points: s.points, comments: s.comments,
-        ratio: (s.comments / s.points).toFixed(2), byComments: `${core.fmtNum(byComments)}（×${off.toFixed(1)}）`,
+        ratio: (s.comments / s.points).toFixed(2), byComments: `${core.fmtNum(byComments)} (×${off.toFixed(1)})`,
         guess: core.fmtNum(Math.round(rs[i].guess)),
       };
     });
     res.detail = ui.stack(
       ui.table({
         columns: [
-          { key: 'title', label: '帖子' }, { key: 'rank', label: '名次', num: true }, { key: 'points', label: '分数', num: true },
-          { key: 'comments', label: '评论', num: true },
-          { key: 'byComments', label: '评论反推', num: true }, { key: 'guess', label: '你猜', num: true },
+          { key: 'title', label: 'Story' }, { key: 'rank', label: 'Rank', num: true }, { key: 'points', label: 'Points', num: true },
+          { key: 'comments', label: 'Comments', num: true },
+          { key: 'byComments', label: 'From comments', num: true }, { key: 'guess', label: 'Your guess', num: true },
         ],
         rows,
       }),
-      ui.h('p', { class: 'ds-muted' }, `提示：评论数 ÷ ${MEDIAN_RATIO}（样本中位比值）是个不错的起点，括号里是它与真实分数的倍数差。评论/分明显高于 0.8 的是争议帖，低于 0.3 的往往是安静的外链或 Show HN。`),
+      ui.h('p', { class: 'ds-muted' }, `Tip: comments ÷ ${MEDIAN_RATIO} (the sample's median ratio) is a good starting point, and the figure in parentheses is how many times it is off the real score. A comments-to-points ratio well above 0.8 marks a controversial post, and below 0.3 is often a quiet link or a Show HN.`),
     );
     return res;
   },
