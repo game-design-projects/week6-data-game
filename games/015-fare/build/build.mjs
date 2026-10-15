@@ -16,7 +16,7 @@ for (const f of zonesGeo.features) {
 }
 const trips = [];
 const seen = new Set();
-for (const file of fs.readdirSync('raw').filter((f) => f.startsWith('trips-')).sort()) {
+for (const file of fs.readdirSync('raw').filter((f) => f.startsWith('s2-')).sort()) {
   const rows = JSON.parse(fs.readFileSync('raw/' + file, 'utf8'));
   let kept = 0;
   for (const r of rows) {
@@ -27,6 +27,8 @@ for (const file of fs.readdirSync('raw').filter((f) => f.startsWith('trips-')).s
     if (!pu || !dofl || min < 3 || min > 90 || dist > 40 || !(fare > 0)) continue;
     if (dist / (min / 60) > 60 || dist / (min / 60) < 2) continue;
     if (+r.tolls_amount > 0) continue; // keep fare ~ time+distance only
+    if (/^(NV|NA|Unknown)$/i.test(pu.boro) || /^(NV|NA|Unknown)$/i.test(dofl.boro)) continue;
+    if (fare / (3 + 3.5 * dist) < 0.5 || fare / (3 + 3.5 * dist) > 3) continue; // meter anomalies
     const key = r.pulocationid + '>' + r.dolocationid;
     if (seen.has(key)) continue;
     seen.add(key);
