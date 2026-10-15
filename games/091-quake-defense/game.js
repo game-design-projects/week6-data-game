@@ -5,9 +5,9 @@ export const MAX_QUAKES = 32; // a day's first 32 quakes (median day has ~20)
 export const MIN_QUAKES = 10;
 export const TOWERS = [
   null,
-  { id: 'gun', name: '机枪', short: '枪', cost: 1, dmg: 3, range: 1 },
-  { id: 'cannon', name: '加农炮', short: '炮', cost: 2, dmg: 10, range: 1 },
-  { id: 'laser', name: '激光', short: '光', cost: 3, dmg: 6, range: 3 },
+  { id: 'gun', name: 'Gun', short: 'G', cost: 1, dmg: 3, range: 1 },
+  { id: 'cannon', name: 'Cannon', short: 'C', cost: 2, dmg: 10, range: 1 },
+  { id: 'laser', name: 'Laser', short: 'L', cost: 3, dmg: 6, range: 3 },
 ];
 export const hpOf = (m) => Math.round(Math.pow(2, (m - 4.5) * 2) * 24);
 export const costOf = (layout) => layout.reduce((s, t) => s + (TOWERS[t]?.cost ?? 0), 0);
@@ -22,7 +22,7 @@ export function toPuzzle(geo, date) {
     .map((q) => ({
       m: Math.round(q.m * 10) / 10,
       t: new Date(q.ms).toISOString().slice(11, 16),
-      place: q.place.replace(/^\d+(\.\d+)? km [NSEW]+ of /, '').trim() || '未命名区域',
+      place: q.place.replace(/^\d+(\.\d+)? km [NSEW]+ of /, '').trim() || 'Unnamed region',
     }));
   return quakes.length >= MIN_QUAKES ? { date, quakes } : null;
 }
@@ -101,11 +101,12 @@ export function explain(quakes, leakedIdx, optLayout) {
   const byPlace = {};
   quakes.forEach((q) => { byPlace[q.place] = (byPlace[q.place] ?? 0) + 1; });
   const [cp, cn] = Object.entries(byPlace).sort((a, b) => b[1] - a[1])[0];
-  const parts = [`这一天最大的 M${quakes[top].m.toFixed(1)}（${quakes[top].place}，UTC ${quakes[top].t}）一个就占了总血量的 ${share}%，其余 ${small} 个 M<5 的小震合计只有 ${Math.round((100 * hps.reduce((s, h, i) => s + (quakes[i].m < 5 ? h : 0), 0)) / tot)}%——古登堡-里克特定律：震级每低 1 级，次数约多 10 倍，血量却只有 1/4，所以“量多血薄”和“量少血厚”并存。`];
-  if (cn >= 3) parts.push(`${cp} 一带连续出现 ${cn} 次，是余震群：它们挤在队伍里，炮塔的射程内同时有好几个靶子。`);
+  const parts = [`The day\u2019s biggest, M${quakes[top].m.toFixed(1)} (${quakes[top].place}, ${quakes[top].t} UTC), alone is ${share}% of total HP, while the ${small} quakes under M5 add up to only ${Math.round((100 * hps.reduce((s, h, i) => s + (quakes[i].m < 5 ? h : 0), 0)) / tot)}%. That is the Gutenberg-Richter law: each magnitude step down brings about 10 times as many quakes but only 1/4 the HP, so \u201cmany but thin\u201d and \u201cfew but thick\u201d coexist.`];
+  if (cn >= 3) parts.push(`${cp} shows up ${cn} times in a row: an aftershock cluster. They bunch up in the queue, so several targets sit inside a tower\u2019s range at once.`);
   const cannons = optLayout.filter((t) => t === 2).length, lasers = optLayout.filter((t) => t === 3).length, guns = optLayout.filter((t) => t === 1).length;
-  parts.push(`最优布阵用了 ${[cannons && `${cannons} 门加农炮`, lasers && `${lasers} 台激光`, guns && `${guns} 挺机枪`].filter(Boolean).join('、')}：${top > 0 ? `头目排在第 ${top + 1} 位出场，炮塔要在它经过时凑够火力，` : '头目排在最前面出场，'}同时别把 10 点伤害浪费在小怪身上（溢出的伤害不会传给下一个）。`);
-  if (leakedIdx.length) parts.push(`你的布阵漏过了 ${leakedIdx.length} 个敌人（最大 M${Math.max(...leakedIdx.map((i) => quakes[i].m)).toFixed(1)}）。`);
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  parts.push(`The optimal layout uses ${[cannons && plural(cannons, 'cannon'), lasers && plural(lasers, 'laser'), guns && plural(guns, 'gun')].filter(Boolean).join(', ')}. ${top > 0 ? `The boss enters at position ${top + 1}, so the towers must add up enough firepower as it passes,` : 'The boss enters first,'} and you should not waste 10-damage shots on small fry (overkill does not carry over to the next enemy).`);
+  if (leakedIdx.length) parts.push(`Your layout let ${leakedIdx.length} ${leakedIdx.length === 1 ? 'enemy' : 'enemies'} through (largest M${Math.max(...leakedIdx.map((i) => quakes[i].m)).toFixed(1)}).`);
   return parts;
 }
 
@@ -114,17 +115,17 @@ export default {
     num: 91,
     slug: 'quake-defense',
     title: 'Quake Defense',
-    tagline: '塔防：敌人就是昨天全球的真实地震，震级决定血量。在 10 格通道上布防，挡住地动山摇。',
+    tagline: 'Tower defense where the enemies are yesterday\u2019s real earthquakes and magnitude sets HP. Build a 10-cell lane and hold the line.',
     category: 'levels',
     data: 'live',
     howTo: [
-      `昨天（UTC）全球所有 M4.5 以上的地震（最多取前 ${MAX_QUAKES} 次）按发生时间排成一队，每个滴答前进一格；震级每高 1 级，血量 ×4。`,
-      `点格子循环放置 机枪(1 点，伤害 3)、加农炮(2 点，伤害 10)、激光(3 点，伤害 6、射程 3 格)，总预算 ${BUDGET} 点。炮塔每个滴答只开一枪，打射程内最靠近出口的敌人。`,
-      '点“开战”观看回放。分数 = 100 ×（你造成的伤害 ÷ 最高可能伤害）²。最高伤害由穷举全部 7,348 种合法布阵得出，不是近似。',
+      `Yesterday\u2019s (UTC) M4.5+ earthquakes worldwide (the first ${MAX_QUAKES} at most) line up in the order they happened and advance one cell per tick. Each magnitude step up multiplies HP by 4.`,
+      `Tap a cell to cycle through Gun (1 point, damage 3), Cannon (2 points, damage 10) and Laser (3 points, damage 6, range 3 cells). Total budget ${BUDGET} points. Each tower fires once per tick at the enemy nearest the exit within range.`,
+      'Hit \u201cFight\u201d to watch the replay. Score = 100 × (your damage ÷ best possible damage)². The best possible is found by brute-forcing all 7,348 legal layouts, not approximated.',
     ],
-    scoring: '100 × (你的总伤害 ÷ 穷举得到的最优总伤害)²。0 分 = 没造成伤害，100 分 = 达到最优；随手摆一套大约 50 分。',
-    sources: [{ name: 'USGS Earthquake Catalog (FDSN event API)', url: 'https://earthquake.usgs.gov/fdsnws/event/1/', note: '实时读取昨天 (UTC) 的 M4.5+ 地震；失败时用 2026-06-01 至 2026-10-14 的快照' }],
-    dataNote: '关卡 = 昨天（UTC 日）的真实地震，每位玩家拿到同一份名单；读取失败或当天不足 10 次时改用快照中的真实历史日。USGS 偶尔会修订震级，快照与实时可能相差 0.1 级。血量公式 HP = 8·4^(M−4.5) 和炮塔数值是游戏设定。',
+    scoring: '100 × (your total damage ÷ the brute-force optimal damage)². 0 = no damage, 100 = optimal; a casual layout scores around 50.',
+    sources: [{ name: 'USGS Earthquake Catalog (FDSN event API)', url: 'https://earthquake.usgs.gov/fdsnws/event/1/', note: 'Reads yesterday\u2019s (UTC) M4.5+ quakes live; falls back to a snapshot of 2026-06-01 to 2026-10-14' }],
+    dataNote: 'The level is yesterday\u2019s (UTC day) real earthquakes, the same list for every player. If the fetch fails or the day has fewer than 10 quakes, a real historical day from the snapshot is used. USGS sometimes revises magnitudes, so snapshot and live values can differ by 0.1. The HP formula HP = 8·4^(M−4.5) and the tower stats are game design.',
   },
 
   async load(ctx) {
@@ -159,10 +160,10 @@ export default {
       x: { label: null, tickFormat: (d) => d },
       y: { label: 'HP', grid: true },
     }), { height: 190 });
-    ctx.stage.append(ui.panel({ kicker: `${p.date}（UTC）· ${p.quakes.length} 次地震 · 总血量 ${tot}`, title: '来袭的敌人（横轴 = 出场顺序）' },
+    ctx.stage.append(ui.panel({ kicker: `${p.date} (UTC) · ${p.quakes.length} quakes · total HP ${tot}`, title: 'Incoming enemies (x axis = order of arrival)' },
       chart,
-      ui.table({ columns: [{ key: 'n', label: '#', num: true }, { key: 't', label: 'UTC' }, { key: 'm', label: '震级', num: true, fmt: (v) => v.toFixed(1) }, { key: 'hp', label: 'HP', num: true }, { key: 'place', label: '地点' }], rows: top.map((i) => ({ n: i + 1, ...p.quakes[i], hp: hps[i] })) }),
-      ui.h('div', { class: 'small muted', style: { marginTop: '8px' } }, '上表是血量最厚的 4 个“头目”。敌人从左进、右出，没被打死的按已造成的伤害计分。')));
+      ui.table({ columns: [{ key: 'n', label: '#', num: true }, { key: 't', label: 'UTC' }, { key: 'm', label: 'Mag.', num: true, fmt: (v) => v.toFixed(1) }, { key: 'hp', label: 'HP', num: true }, { key: 'place', label: 'Place' }], rows: top.map((i) => ({ n: i + 1, ...p.quakes[i], hp: hps[i] })) }),
+      ui.h('div', { class: 'small muted', style: { marginTop: '8px' } }, 'The table lists the 4 thickest-HP \u201cbosses\u201d. Enemies enter on the left and exit on the right; any that survive still score for the damage already dealt.')));
 
     const budgetEl = ui.h('div', { class: 'mono' });
     const cells = ui.h('div', { class: 'ds-row', style: { gap: '4px', flexWrap: 'nowrap' } });
@@ -180,15 +181,15 @@ export default {
     btns.forEach((b) => { b.style.flex = '1 1 0'; b.style.minWidth = '0'; b.style.padding = '12px 0'; b.style.minHeight = '44px'; cells.append(b); });
     const slotEls = layout.map(() => { const s = ui.h('div', { style: { flex: '1 1 0', minWidth: '0', textAlign: 'center', minHeight: '1.4em' } }); slots.append(s); return s; });
     const refresh = () => {
-      btns.forEach((b, c) => { b.textContent = TOWERS[layout[c]]?.short ?? '＋'; b.setAttribute('aria-label', `第 ${c + 1} 格：${TOWERS[layout[c]]?.name ?? '空'}`); });
-      budgetEl.textContent = `已用 ${costOf(layout)} / ${BUDGET} 点`;
+      btns.forEach((b, c) => { b.textContent = TOWERS[layout[c]]?.short ?? '+'; b.setAttribute('aria-label', `Cell ${c + 1}: ${TOWERS[layout[c]]?.name ?? 'empty'}`); });
+      budgetEl.textContent = `${costOf(layout)} / ${BUDGET} points used`;
     };
     refresh();
-    const go = ui.button('开战', { variant: 'accent' });
-    const clear = ui.button('清空', { variant: 'ghost', onClick: () => { if (locked) return; layout.fill(0); refresh(); } });
-    ctx.stage.append(ui.panel({ kicker: '布防', title: '布置炮塔' },
-      ui.kv(TOWERS.slice(1).map((t) => [`${t.short} ${t.name}`, `${t.cost} 点 · 伤害 ${t.dmg} · 射程 ${t.range} 格`])),
-      ui.h('div', { class: 'small muted', style: { marginTop: '6px' } }, '点格子依次切换 空 → 枪 → 炮 → 光。炮塔每个滴答开一枪，只打自己所在格前后射程内的敌人。'),
+    const go = ui.button('Fight', { variant: 'accent' });
+    const clear = ui.button('Clear', { variant: 'ghost', onClick: () => { if (locked) return; layout.fill(0); refresh(); } });
+    ctx.stage.append(ui.panel({ kicker: 'Defense', title: 'Place your towers' },
+      ui.kv(TOWERS.slice(1).map((t) => [`${t.short} ${t.name}`, `${t.cost} ${t.cost === 1 ? 'point' : 'points'} · damage ${t.dmg} · range ${t.range} ${t.range === 1 ? 'cell' : 'cells'}`])),
+      ui.h('div', { class: 'small muted', style: { marginTop: '6px' } }, 'Tap a cell to cycle empty → G → C → L. Each tower fires once per tick, only at enemies within range of its own cell.'),
       ui.h('div', { style: { height: '10px' } }), cells, slots, ui.h('div', { style: { height: '8px' } }), budgetEl,
       ui.h('div', { style: { height: '8px' } }), ui.row(go, clear)));
 
@@ -207,15 +208,15 @@ export default {
     const blocks = Math.round(sc / 10);
     const res = {
       score: sc, max: 100, win: sim.leaked.length === 0,
-      summary: `击杀 ${sim.kills}/${p.quakes.length} · 伤害 ${sim.killedHP}/${tot}`,
+      summary: `Kills ${sim.kills}/${p.quakes.length} · damage ${sim.killedHP}/${tot}`,
       emoji: `🌋 ${p.date}\n${'█'.repeat(blocks)}${'░'.repeat(10 - blocks)} ${sc}`,
     };
-    const leakTxt = sim.leaked.length ? sim.leaked.slice(0, 8).map((i) => `M${p.quakes[i].m.toFixed(1)}`).join('、') + (sim.leaked.length > 8 ? ` 等 ${sim.leaked.length} 个` : '') : '无';
+    const leakTxt = sim.leaked.length ? sim.leaked.slice(0, 8).map((i) => `M${p.quakes[i].m.toFixed(1)}`).join(', ') + (sim.leaked.length > 8 ? ` and ${sim.leaked.length - 8} more` : '') : 'none';
     res.detail = ui.kv([
-      ['你的布阵', `${show(layout)}（伤害 ${sim.killedHP}）`],
-      ['最优布阵', `${show(p.opt.layout)}（伤害 ${p.opt.killedHP}，穷举所有布阵）`],
-      ['漏过的敌人', leakTxt],
-      ...explain(p.quakes, sim.leaked, p.opt.layout).map((t, i) => [i === 0 ? '规律' : '', t]),
+      ['Your layout', `${show(layout)} (damage ${sim.killedHP})`],
+      ['Best layout', `${show(p.opt.layout)} (damage ${p.opt.killedHP}, brute-forced over all layouts)`],
+      ['Leaked enemies', leakTxt],
+      ...explain(p.quakes, sim.leaked, p.opt.layout).map((t, i) => [i === 0 ? 'Pattern' : '', t]),
     ]);
     return res;
   },
