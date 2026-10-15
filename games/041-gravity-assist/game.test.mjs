@@ -108,8 +108,8 @@ test('scoring extremes: perfect, typical, worst', () => {
 
 test('culprit names the dominant extra cost', () => {
   const b = { vinf: 3, flyby: [0], arr: 2 };
-  assert.match(culprit({ vinf: 3, flyby: [0], arr: 6 }, b), /到达/);
-  assert.match(culprit({ vinf: 3, flyby: [2.5], arr: 2 }, b), /借力/);
-  assert.match(culprit({ vinf: 6, flyby: [0], arr: 2 }, b), /离地/);
-  assert.equal(label({ venus: '金星' }, 'venus'), '经金星借力');
+  assert.match(culprit({ vinf: 3, flyby: [0], arr: 6 }, b), /arrives too fast/);
+  assert.match(culprit({ vinf: 3, flyby: [2.5], arr: 2 }, b), /flyby/);
+  assert.match(culprit({ vinf: 6, flyby: [0], arr: 2 }, b), /departure/);
+  assert.equal(label({ venus: 'Venus' }, 'venus'), 'Venus flyby');
 });

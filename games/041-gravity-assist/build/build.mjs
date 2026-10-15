@@ -35,5 +35,5 @@ let worst = 0;
 for (const c of check) worst = Math.max(worst, Math.hypot(...position(elements, c.body, c.jd).map((x, i) => x / AU - c.r[i])));
 console.log('check points', check.length, 'worst error AU', worst.toFixed(4));
 
-const zh = { mercury: '水星', venus: '金星', earth: '地球', mars: '火星', jupiter: '木星', saturn: '土星' };
-fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ zh, elements, check }));
+const names = { mercury: 'Mercury', venus: 'Venus', earth: 'Earth', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn' };
+fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ names, elements, check }));

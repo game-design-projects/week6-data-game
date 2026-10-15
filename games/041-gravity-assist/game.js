@@ -1,7 +1,7 @@
 // #41 Gravity Assist — today's real planet positions (JPL Keplerian ephemeris) → rank flyby routes by total delta-v.
 import { buildPuzzle, TARGETS, jdOf, position, phaseDeg, AU, STEP, NDEP, DEP_STRIDE } from './astro.js';
 
-export const label = (zh, via) => (via ? `经${zh[via]}借力` : '直飞');
+export const label = (names, via) => (via ? `${names[via]} flyby` : 'Direct');
 /** route ids sorted from cheapest to most expensive */
 export const rankRoutes = (routes) => routes.slice().sort((a, b) => a.dv - b.dv).map((r) => r.via ?? 'direct');
 /** final score: 70 % ranking, 30 % the Δv estimate */
@@ -9,12 +9,12 @@ export const blend = (order, est) => Math.round(0.7 * order + 0.3 * est);
 /** which term makes `r` cost more than the best route `b`: [text, extra km/s] */
 export function culprit(r, b) {
   const parts = [
-    ['离地速度要得更高', r.vinf - b.vinf], // positive = worse (vinf proxies the departure burn)
-    ['借力处还要额外点火修正', r.flyby.reduce((s, x) => s + x, 0) - b.flyby.reduce((s, x) => s + x, 0)],
-    ['到达时相对目标太快、刹车代价大', r.arr - b.arr],
+    ['a higher departure speed is needed', r.vinf - b.vinf], // positive = worse (vinf proxies the departure burn)
+    ['extra correction burns are needed at the flyby', r.flyby.reduce((s, x) => s + x, 0) - b.flyby.reduce((s, x) => s + x, 0)],
+    ['it arrives too fast relative to the target, so braking is costly', r.arr - b.arr],
   ];
   parts.sort((x, y) => y[1] - x[1]);
-  return parts[0][1] > 0.15 ? parts[0][0] : '三项都略高';
+  return parts[0][1] > 0.15 ? parts[0][0] : 'all three terms run a bit higher';
 }
 
 export default {
@@ -22,22 +22,22 @@ export default {
     num: 41,
     slug: 'gravity-assist',
     title: 'Gravity Assist',
-    tagline: '今天各大行星的真实位置摆在眼前：从地球出发，直飞还是借某颗行星的引力“弹”一下，哪条路线最省燃料？',
+    tagline: 'Today\'s real planet positions are laid out in front of you. Leaving Earth, is it cheaper to fly direct or to slingshot off another planet? Rank the routes by fuel.',
     category: 'science',
     data: 'computed',
     howTo: [
-      '图里是今天（用 JPL 轨道根数算出的）各行星真实位置：彩色大点是今天的位置，细线是之后约 14 个月慢行星走过的轨迹。发射窗口从今天起开放 400 天。',
-      '先估算：最省燃料那条路线的总 Δv 大概是多少 km/s？',
-      '再排序：把 4 条路线（1 条直飞 + 3 条各借一颗行星的引力）按总 Δv 从小到大排好，一共 3 次提交机会，每次告诉你对了几个位置。',
-      '看相位：借力行星是不是正好在去目标的路上？飞掠木星这类大质量行星能大幅加速，但行星不在位置上，绕路只会多花燃料。',
+      'The chart shows where the planets really are today (computed from JPL orbital elements): the big colored dots are today\'s positions, the thin lines trace where the slower planets travel over the next 14 months. The launch window stays open for 400 days from today.',
+      'First estimate: roughly how many km/s of total Δv does the cheapest route need?',
+      'Then rank: put the 4 routes (1 direct + 3 that each use one planet\'s gravity) in order of total Δv, lowest first. You get 3 submissions, and each tells you how many positions are right.',
+      'Check the phasing: is the flyby planet actually on the way to the target? A massive planet like Jupiter can give a big boost, but if it is out of position the detour only costs more fuel.',
     ],
-    scoring: '总分 100：排序占 70（第 1 次排对 70，第 2 次约 47，第 3 次约 23，没排对按位置给少量分），Δv 估算占 30（倍数误差越小越高）。',
+    scoring: '100 points total: ranking is worth 70 (a perfect 1st submission scores 70, the 2nd about 47, the 3rd about 23, with small partial credit for correct positions), and the Δv estimate is worth 30 (the smaller the multiplicative error, the higher).',
     sources: [
-      { name: 'NASA JPL「Approximate Positions of the Planets」（开普勒轨道根数，1800–2050 年）', url: 'https://ssd.jpl.nasa.gov/planets/approx_pos.html', note: '本游戏用它在浏览器里算出每天的行星位置与速度' },
-      { name: 'NASA JPL Horizons System', url: 'https://ssd.jpl.nasa.gov/api/horizons.api', note: '仅用于离线校验：90 个检查点上轨道根数与 DE441 星历的位置偏差都在 0.05 AU 内' },
-      { name: 'Lambert 问题 + 圆锥曲线拼接', url: 'https://en.wikipedia.org/wiki/Lambert%27s_problem', note: '求每条路线的最小 Δv' },
+      { name: 'NASA JPL \u201cApproximate Positions of the Planets\u201d (Keplerian elements, 1800-2050)', url: 'https://ssd.jpl.nasa.gov/planets/approx_pos.html', note: 'Used to compute each day\'s planet positions and velocities in the browser' },
+      { name: 'NASA JPL Horizons System', url: 'https://ssd.jpl.nasa.gov/api/horizons.api', note: 'Offline check only: at 90 checkpoints the orbital elements agree with the DE441 ephemeris to within 0.05 AU' },
+      { name: 'Lambert problem + patched conics', url: 'https://en.wikipedia.org/wiki/Lambert%27s_problem', note: 'Finds the minimum Δv of each route' },
     ],
-    dataNote: 'Horizons 接口没有 CORS（浏览器无法直接调用），所以游戏用 JPL 公布的开普勒轨道根数在本地计算当天行星位置，meta.data 为“计算”而非“实时”。Δv 为简化的拼接圆锥模型：从 300 km 低轨出发的点火 + 借力行星处的修正点火（若轨道转角够用则为 0）+ 到达目标时的相对速度（相当于刹停，不含入轨）。每条路线在 400 天发射窗口（每 40 天一个出发点）、约 10 种飞行时间的网格里搜索最小值，总飞行时间不超过 14 年，只考虑零圈兰伯特弧和单次借力，不含深空机动。目标行星每天轮换；若某个目标的四条路线 Δv 太接近（相差不足 4%），当天会换下一个目标。',
+    dataNote: 'The Horizons API has no CORS (browsers cannot call it directly), so the game computes the day\'s planet positions locally from JPL\'s published Keplerian elements, and the data badge says \u201ccomputed\u201d rather than \u201clive\u201d. Δv comes from a simplified patched-conic model: the burn from a 300 km low orbit + the correction burn at the flyby planet (0 if the turn angle suffices) + the relative speed on arrival at the target (equivalent to stopping, without orbit insertion). Each route is minimized over a 400-day launch window (one departure every 40 days) and a grid of about 10 flight times, total flight time up to 14 years, zero-revolution Lambert arcs and a single flyby only, no deep-space maneuvers. The target planet rotates daily; if a target\'s four routes are too close in Δv (under 4% apart), the next target is used that day.',
   },
 
   puzzle({ data, date, pick }) {
@@ -47,7 +47,7 @@ export default {
 
   async play(ctx, p) {
     const { ui } = ctx;
-    const d = ctx.data, el = d.elements, ZH = d.zh;
+    const d = ctx.data, el = d.elements, ZH = d.names;
     ctx.log('puzzle', p.date, p.target, p.routes.map((r) => `${r.via ?? 'direct'}:${r.dv}`).join(' '));
     const jd0 = jdOf(p.date);
     const vias = [...new Set(p.routes.map((r) => r.via).filter(Boolean))];
@@ -74,56 +74,56 @@ export default {
         Plot.text(first.filter((t) => t.b === ZH.earth), { x: 'x', y: 'y', text: 'b', fill: c.ink, dy: 17, fontWeight: 600, fontSize: 13 }), // earth label below so it never covers Venus/Mars
       ],
     }));
-    const legend = ui.h('div', { class: 'small mono ink2', style: { marginTop: '6px' } }, '● 今天的位置　━ 之后约 14 个月慢行星的轨迹　┄ 轨道（半径按平方根压缩）');
+    const legend = ui.h('div', { class: 'small mono ink2', style: { marginTop: '6px' } }, '\u25cf today\u2019s position   \u2501 path of the slower planets over the next ~14 months   \u2504 orbit (radius compressed by square root)');
     ctx.stage.append(ui.panel(
-      { kicker: `发射窗口 ${p.date} 起 400 天`, title: `从地球出发，去${ZH[p.target]}` },
+      { kicker: `Launch window: 400 days from ${p.date}`, title: `From Earth to ${ZH[p.target]}` },
       chart, legend,
       ui.h('div', { class: 'ds-grid', style: { '--min': '140px', marginTop: '12px' } },
-        ui.stat({ label: '目标', value: ZH[p.target], sub: `轨道半径 ${sma(p.target).toFixed(2)} AU` }),
-        ui.stat({ label: '候选路线', value: `${p.routes.length} 条`, sub: p.routes.map((r) => label(ZH, r.via)).join(' · ') }))));
+        ui.stat({ label: 'Target', value: ZH[p.target], sub: `orbit radius ${sma(p.target).toFixed(2)} AU` }),
+        ui.stat({ label: 'Routes', value: `${p.routes.length}`, sub: p.routes.map((r) => label(ZH, r.via)).join(' · ') }))));
 
     // stage 1: estimate the best total delta-v
     const best = p.routes.reduce((a, b) => (b.dv < a.dv ? b : a));
     const est = await ctx.estimate({
       answer: best.dv, min: 3, max: 40, log: true, step: 0.1, initial: 12, unit: ' km/s', format: (v) => `${v.toFixed(1)} km/s`,
       scoring: 'log', scale: 0.35, attempts: 1,
-      title: '先估一估：最省的路线要多少 Δv？',
-      prompt: '参考：从 300 km 低轨冲出地球引力就要约 3–4 km/s；到达时还得把相对目标的速度刹掉。',
+      title: 'First, estimate: how much Δv does the cheapest route need?',
+      prompt: 'For scale: escaping Earth from a 300 km low orbit takes about 3-4 km/s, and on arrival you still have to kill the speed relative to the target.',
     });
     ctx.log('estimate', est.guess, best.dv, est.score);
 
     // stage 2: rank the routes
     const items = p.routes.map((r) => {
       const ph = r.via ? Math.round(phaseDeg(el, r.via, jd0)) : null;
-      return { id: r.via ?? 'direct', label: label(ZH, r.via), sub: r.via ? `飞掠${ZH[r.via]} · 今天在地球${ph >= 0 ? '前方' : '后方'} ${Math.abs(ph)}°` : '直接转移', value: r.dv };
+      return { id: r.via ?? 'direct', label: label(ZH, r.via), sub: r.via ? `Flyby of ${ZH[r.via]} \u00b7 today ${Math.abs(ph)}\u00b0 ${ph >= 0 ? 'ahead of' : 'behind'} Earth` : 'Direct transfer', value: r.dv };
     });
     const res = await ctx.order({
       items, direction: 'asc', attempts: 3,
-      title: '按总 Δv 从省到费排序',
-      prompt: '最上面是最省燃料（Δv 最小）的路线。“前方/后方”指绕太阳的日心经度差。',
+      title: 'Rank by total Δv, cheapest first',
+      prompt: 'Put the most fuel-efficient route (lowest Δv) on top. \u201cAhead/behind\u201d is the heliocentric longitude difference around the Sun.',
       format: (v) => `${v.toFixed(1)} km/s`,
     });
 
     const sorted = p.routes.slice().sort((a, b) => a.dv - b.dv);
     const rows = sorted.map((r) => ({
       route: label(ZH, r.via), dv: r.dv.toFixed(2), dep: r.vinf.toFixed(2), fb: r.flyby.length ? r.flyby[0].toFixed(2) : '—', arr: r.arr.toFixed(2),
-      when: `${r.launch.slice(0, 7)} → ${r.arrive.slice(0, 7)}（${r.years} 年）`,
+      when: `${r.launch.slice(0, 7)} \u2192 ${r.arrive.slice(0, 7)} (${r.years} yr)`,
     }));
     const direct = p.routes.find((r) => !r.via);
-    const why = sorted.slice(1).map((r) => `${label(ZH, r.via)}（+${(r.dv - best.dv).toFixed(1)}）：${culprit(r, best)}`);
+    const why = sorted.slice(1).map((r) => `${label(ZH, r.via)} (+${(r.dv - best.dv).toFixed(1)}): ${culprit(r, best)}`);
     const score = blend(res.score, est.score);
     ctx.log('best', best.via ?? 'direct', best.dv, 'score', score);
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.callout(best.via
-        ? `最省的是${label(ZH, best.via)}：${best.dv.toFixed(1)} km/s，比直飞（${direct.dv.toFixed(1)}）省 ${(direct.dv - best.dv).toFixed(1)} km/s。去${ZH[p.target]}的路上，${ZH[best.via]}在窗口里恰好可借：${best.launch} 离地，${best.flybyDate} 飞掠，${best.arrive} 到达（${best.years} 年），借它的引力改变日心速度，省下的是自己点火的燃料。`
-        : `今天直飞最省：${best.dv.toFixed(1)} km/s（${best.launch} 离地，${best.arrive} 到达，${best.years} 年）。借力行星的位置对不上，或要求的转向超过它能提供的，绕路只会多花燃料。`, 'good'),
-      ui.h('div', { class: 'small' }, `你的估算 ${est.guess.toFixed(1)} km/s，实际 ${best.dv.toFixed(1)} km/s。`),
-      ui.h('div', { class: 'small ink2' }, `其他路线为什么更贵（相对最省路线）：${why.join('；')}。`),
+        ? `The cheapest is the ${label(ZH, best.via)}: ${best.dv.toFixed(1)} km/s, ${(direct.dv - best.dv).toFixed(1)} km/s less than flying direct (${direct.dv.toFixed(1)}). On the way to ${ZH[p.target]}, ${ZH[best.via]} is well placed in the window: leave Earth ${best.launch}, fly by ${best.flybyDate}, arrive ${best.arrive} (${best.years} yr). Its gravity changes your heliocentric velocity, and what you save is your own engine fuel.`
+        : `Flying direct is cheapest today: ${best.dv.toFixed(1)} km/s (leave ${best.launch}, arrive ${best.arrive}, ${best.years} yr). The flyby planets are out of position, or the turn they would have to provide is more than they can give, so a detour only costs more fuel.`, 'good'),
+      ui.h('div', { class: 'small' }, `Your estimate was ${est.guess.toFixed(1)} km/s; the actual value is ${best.dv.toFixed(1)} km/s.`),
+      ui.h('div', { class: 'small ink2' }, `Why the other routes cost more (versus the cheapest): ${why.join('; ')}.`),
       ui.table({
-        columns: [{ key: 'route', label: '路线' }, { key: 'dv', label: '总 Δv', num: true }, { key: 'dep', label: '离地 v∞', num: true }, { key: 'fb', label: '借力修正', num: true }, { key: 'arr', label: '到达 v∞', num: true }, { key: 'when', label: '最佳时间' }],
+        columns: [{ key: 'route', label: 'Route' }, { key: 'dv', label: 'Δv', num: true }, { key: 'dep', label: 'Depart', num: true }, { key: 'fb', label: 'Flyby', num: true }, { key: 'arr', label: 'Arrive', num: true }, { key: 'when', label: 'Dates' }],
         rows,
       }),
-      ui.h('div', { class: 'small muted' }, '单位 km/s。总 Δv = 低轨出发点火 + 借力处修正 + 到达时的相对速度。'));
-    return { ...res, score, max: 100, summary: `${res.summary} · 估算 ${est.guess.toFixed(1)} km/s`, emoji: `${res.emoji}\n估算 ${est.score >= 70 ? '🎯' : est.score >= 35 ? '👍' : '🙈'}` };
+      ui.h('div', { class: 'small muted' }, 'Units: km/s. Δv = total. Depart = low-orbit departure burn, Flyby = correction at the flyby, Arrive = relative speed on arrival.'));
+    return { ...res, score, max: 100, summary: `${res.summary} \u00b7 estimate ${est.guess.toFixed(1)} km/s`, emoji: `${res.emoji}\nEstimate ${est.score >= 70 ? '🎯' : est.score >= 35 ? '👍' : '🙈'}` };
   },
 };
