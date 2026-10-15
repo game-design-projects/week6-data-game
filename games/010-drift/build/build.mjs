@@ -23,6 +23,7 @@ for (const f of fs.readdirSync(RAW).filter((n) => n.startsWith('trk_'))) {
   if (disp < 150) continue;
   const lost = Date.parse(rows[0][4]);
   const [, id, start] = f.match(/trk_(\d+)_(\d{4}-\d\d-\d\d)/);
+  if (out.some((o) => o.id === id)) continue; // one window per drifter
   out.push({ id, start, drogued: Number.isFinite(lost) && lost > t0 + 60 * 86400000, track: days.map((p) => [+p[0].toFixed(2), +p[1].toFixed(2)]) });
 }
 fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ built: new Date().toISOString().slice(0, 10), drifters: out }));
