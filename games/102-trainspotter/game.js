@@ -22,10 +22,10 @@ export function totalScore(opOk, typeOk, pinScore) {
 
 /** Short verdict on the pin, specific to how far off the player was. */
 export function pinVerdict(km) {
-  if (km < 30) return '几乎就在同一个站台附近，太准了。';
-  if (km < 300) return '落在了同一个国家、同一片区域，方向对了。';
-  if (km < 1500) return '大致在对的地区，但差了一个国家左右；先用涂装和接触网判断国家，再沿铁路线找大站。';
-  return '落在了另一个大洲或另一端；先认出国家（涂装、文字、站台），再缩小到大城市。';
+  if (km < 30) return 'Practically on the same platform. Superb.';
+  if (km < 300) return 'Same country, same general area: right idea.';
+  if (km < 1500) return 'Roughly the right region, but about a country off. Use the livery and overhead wires to find the country first, then follow the railway to a big station.';
+  return 'On another continent or the far side of one. Identify the country first (livery, lettering, platforms), then narrow down to a big city.';
 }
 
 export default {
@@ -33,21 +33,21 @@ export default {
     num: 102,
     slug: 'trainspotter',
     title: 'Trainspotter',
-    tagline: '一张铁路照片：认出运营商和车型，再在地图上标出拍摄地。',
+    tagline: 'A railway photo: name the operator and the train type, then pin where it was taken.',
     category: 'transit',
     data: 'snapshot',
     howTo: [
-      '看照片：涂装、车头形状、受电弓、站台和信号灯都是线索。',
-      '先选运营商，再选车型（各 4 选 1，各占 100 分）。车型选项里会混入同国家的车型，别只看国家。',
-      '最后在地图上标出摄影师所站的位置（缩放到 6 级以上会显示 OpenRailwayMap 铁路线，方便沿线找站）。',
-      '定位 100 × e^(−距离/600 km)：0 km 得 100 分，差 600 km 约 37 分。满分 300。',
+      'Study the photo: livery, nose shape, pantograph, platforms and signals are all clues.',
+      'Pick the operator, then the train type (4 choices each, 100 points each). The type options include other models from the same country, so the country alone will not decide it.',
+      'Finally, pin where the photographer stood on the map (zoom to level 6 or more to see OpenRailwayMap lines and follow the track to a station).',
+      'The pin scores 100 × e^(−distance / 600 km): 100 points at 0 km, about 37 at 600 km off. 300 points max.',
     ],
-    scoring: '运营商 100 + 车型 100 + 定位 100 × e^(−距离/600 km)，满分 300。',
+    scoring: 'Operator 100 + type 100 + pin 100 × e^(−distance / 600 km), 300 max.',
     sources: [
-      { name: 'Wikimedia Commons 铁路车型分类（照片、拍摄坐标、作者、许可证）', url: 'https://commons.wikimedia.org/wiki/Category:Trains_by_type' },
-      { name: 'OpenRailwayMap / OpenStreetMap（地图铁路线叠加层）', url: 'https://www.openrailwaymap.org/' },
+      { name: 'Wikimedia Commons train-type categories (photos, coordinates, authors, licenses)', url: 'https://commons.wikimedia.org/wiki/Category:Trains_by_type' },
+      { name: 'OpenRailwayMap / OpenStreetMap (railway line map overlay)', url: 'https://www.openrailwaymap.org/' },
     ],
-    dataNote: '照片来自 Wikimedia Commons 17 个车型分类中带拍摄坐标的图片，每张都经人工逐张检查（排除了车内、特写、看得清运营商大标志或站名牌的照片）；车型与运营商对应关系为人工整理。坐标是摄影师的站位，不一定是车站。外挂 OpenRailwayMap 瓦片由第三方提供：没有 OSM 铁路线的离线处理版本——整个欧亚大陆的线路矢量无法放进浏览器端，所以直接叠加其栅格图层。Commons 现在只允许 960 px 缩略图。',
+    dataNote: 'Photos come from geotagged images in 17 Wikimedia Commons train-type categories, each checked by hand (interiors, close-ups and photos with a legible operator logo or station sign were excluded). The type-to-operator mapping is hand-curated. Coordinates are the photographer\'s position, not necessarily a station. The OpenRailwayMap tiles are served by a third party; there is no offline version of the OSM rail lines (the vector data for all of Eurasia will not fit in a browser), so its raster layer is overlaid directly. Commons now only serves 960 px thumbnails.',
   },
 
   puzzle({ data, pick, rng }) {
@@ -70,24 +70,24 @@ export default {
     ctx.log('photo', photo.id, model.name);
 
     // author and licence are shown after the answer (an author's home town can give the place away)
-    const credit = ui.h('div', { class: 'small muted', style: { marginTop: '8px' } }, 'Wikimedia Commons · 作者与许可证在结算后显示');
-    const img = ui.h('img', { src: photo.img, alt: '铁路照片', decoding: 'async', style: { width: '100%', borderRadius: 'var(--radius, 10px)', display: 'block' } });
-    img.addEventListener('error', () => { ctx.log.warn('photo failed to load', photo.id); credit.textContent = '照片加载失败，请刷新重试（Wikimedia Commons 暂时不可用）。'; });
-    ctx.stage.append(ui.panel({ kicker: '今日照片', title: '这是什么车？' }, img, credit));
+    const credit = ui.h('div', { class: 'small muted', style: { marginTop: '8px' } }, 'Wikimedia Commons · author and license shown after you answer');
+    const img = ui.h('img', { src: photo.img, alt: 'Railway photo', decoding: 'async', style: { width: '100%', borderRadius: 'var(--radius, 10px)', display: 'block' } });
+    img.addEventListener('error', () => { ctx.log.warn('photo failed to load', photo.id); credit.textContent = 'The photo failed to load. Refresh to retry (Wikimedia Commons may be temporarily unavailable).'; });
+    ctx.stage.append(ui.panel({ kicker: 'Today\'s photo', title: 'What train is this?' }, img, credit));
 
     const opRes = await ctx.rounds({
-      title: '运营商',
-      rounds: [{ prompt: '它属于哪家运营商？', options: p.ops.map((label) => ({ label })), correct: p.ops.indexOf(model.op), explain: `${model.op}（${model.country}）` }],
+      title: 'Operator',
+      rounds: [{ prompt: 'Which operator runs it?', options: p.ops.map((label) => ({ label })), correct: p.ops.indexOf(model.op), explain: `${model.op} (${model.country})` }],
     });
     const typeRes = await ctx.rounds({
-      title: '车型',
-      rounds: [{ prompt: '它是哪种车型？', options: p.names.map((label) => ({ label })), correct: p.names.indexOf(model.name), explain: model.name }],
+      title: 'Train type',
+      rounds: [{ prompt: 'Which type of train is it?', options: p.names.map((label) => ({ label })), correct: p.names.indexOf(model.name), explain: model.name }],
     });
 
     const pinRes = await ctx.pin({
-      title: '摄影师站在哪里？',
-      prompt: '在地图上标出拍摄位置（车站或沿线）。放大到 6 级以上会出现铁路线。',
-      answer: { lat: photo.lat, lng: photo.lng, label: '拍摄位置' },
+      title: 'Where did the photographer stand?',
+      prompt: 'Pin the shooting location on the map (a station or along the line). Zoom in to level 6 or more to see the railway lines.',
+      answer: { lat: photo.lat, lng: photo.lng, label: 'Shot location' },
       view: { bounds: [[18, -82], [62, 143]] },
       scale: 600,
       setup: async ({ map, L }) => {
@@ -108,14 +108,14 @@ export default {
     ]);
     res.score = totalScore(opOk, typeOk, pinRes.score);
     res.max = 300;
-    res.summary = `运营商${opOk ? '✓' : '✗'} · 车型${typeOk ? '✓' : '✗'} · 误差 ${ctx.core.fmtKm(pinRes.km)}`;
+    res.summary = `Operator ${opOk ? '✓' : '✗'} · Type ${typeOk ? '✓' : '✗'} · ${ctx.core.fmtKm(pinRes.km)} off`;
     res.detail = ui.kv([
-      ['车型', `${model.name}（${model.op}，${model.country}）`],
-      ['怎么认出来', model.tell],
-      ['这次的车型选项', p.names.join(' / ')],
-      ['拍摄地', ui.h('span', {}, ui.h('a', { href: photo.page, target: '_blank', rel: 'noopener' }, photo.title), ` · ${photo.lat.toFixed(3)}°, ${photo.lng.toFixed(3)}°`)],
-      ['你的定位', `${ctx.core.fmtKm(pinRes.km)}。${pinVerdict(pinRes.km)}`],
-      ['作者与许可证', `${photo.author} · ${photo.lic}`],
+      ['Train type', `${model.name} (${model.op}, ${model.country})`],
+      ['How to spot it', model.tell],
+      ['Type options this time', p.names.join(' / ')],
+      ['Location', ui.h('span', {}, ui.h('a', { href: photo.page, target: '_blank', rel: 'noopener' }, photo.title), ` · ${photo.lat.toFixed(3)}°, ${photo.lng.toFixed(3)}°`)],
+      ['Your pin', `${ctx.core.fmtKm(pinRes.km)} off. ${pinVerdict(pinRes.km)}`],
+      ['Author and license', `${photo.author} · ${photo.lic}`],
     ]);
     return res;
   },

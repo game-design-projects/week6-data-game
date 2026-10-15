@@ -71,8 +71,8 @@ test('puzzle() days 1–120: answer selectable, distractors distinct, nothing le
 test('no visible pre-guess text names the answer', () => {
   // the caption/alt shown before answering are constants in game.js, never model/author/title
   const src = fs.readFileSync(new URL('./game.js', import.meta.url), 'utf8');
-  assert.ok(/alt: '铁路照片'/.test(src));
-  assert.ok(/作者与许可证在结算后显示/.test(src));
+  assert.ok(/alt: 'Railway photo'/.test(src));
+  assert.ok(/author and license shown after you answer/.test(src));
   // the OpenRailwayMap overlay only appears from zoom 6 (low zoom is a density heat map)
   assert.ok(/minZoom: 6/.test(src));
 });
