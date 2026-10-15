@@ -26,9 +26,9 @@ test('shape and pattern', () => {
   const s = shape([1, 1, 1, 1, 100]);
   assert.equal(s.peakIdx, 4); assert.equal(s.median, 1); assert.equal(s.ratio, 100);
   assert.ok(s.top3Share > 0.9);
-  assert.ok(pattern(shape(Array(68).fill(100))).includes('平稳'));
-  assert.ok(pattern(shape([10, 10, 20, 40, 80, 160, 320, 640])).includes('升温'));
-  assert.ok(pattern(shape([640, 320, 160, 80, 40, 20, 10, 10])).includes('消退'));
+  assert.ok(pattern(shape(Array(68).fill(100))).includes('smooth'));
+  assert.ok(pattern(shape([10, 10, 20, 40, 80, 160, 320, 640])).includes('heating up'));
+  assert.ok(pattern(shape([640, 320, 160, 80, 40, 20, 10, 10])).includes('fading'));
 });
 test('logTicks', () => {
   assert.deepEqual(logTicks(300, 3000), [500, 1000, 2000]);

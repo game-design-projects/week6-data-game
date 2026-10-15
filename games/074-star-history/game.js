@@ -66,13 +66,13 @@ export function logTicks(lo, hi) {
 /** Explanation of which pattern in the series identifies the repo. */
 export function pattern(st) {
   const bits = [];
-  if (st.top3Share > 0.3) bits.push('少数几周贡献了大部分涨星——典型的 Hacker News / 社交媒体爆发');
-  else if (st.ratio < 2.5) bits.push('曲线非常平稳——老牌项目的长尾增长');
-  else bits.push('涨势起伏适中，有持续关注也有阶段性高峰');
-  if (st.trend > 1.5) bits.push(`后四分之一时段的周均涨星是前四分之一的 ${st.trend.toFixed(1)} 倍，仍在升温`);
-  else if (st.trend < 0.5) bits.push(`后四分之一时段的周均涨星只有前四分之一的 ${(st.trend * 100).toFixed(0)}%，热度在消退`);
-  else bits.push('前后热度大致持平');
-  return bits.join('；') + '。';
+  if (st.top3Share > 0.3) bits.push('a few weeks account for most of the stars, the classic Hacker News / social media burst');
+  else if (st.ratio < 2.5) bits.push('a very smooth curve, the long-tail growth of an established project');
+  else bits.push('moderate ups and downs, with steady interest and occasional peaks');
+  if (st.trend > 1.5) bits.push(`the last quarter averages ${st.trend.toFixed(1)}x the weekly stars of the first quarter, so it is still heating up`);
+  else if (st.trend < 0.5) bits.push(`the last quarter averages only ${(st.trend * 100).toFixed(0)}% of the first quarter's weekly stars, so interest is fading`);
+  else bits.push('interest is about the same early and late');
+  return bits.join('; ').replace(/^./, (c) => c.toUpperCase()) + '.';
 }
 
 const fmt = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n));
@@ -83,21 +83,21 @@ export default {
     num: 74,
     slug: 'star-history',
     title: 'Star History',
-    tagline: '一条 GitHub 仓库的每周新增 star 曲线，看形状猜仓库。',
+    tagline: 'The weekly new-star curve of a GitHub repo. Guess the repo from its shape.',
     category: 'tech',
     data: 'snapshot',
     howTo: [
-      '图里是某个热门仓库在 2023-02 至 2024-05 共 68 周里每周新增的 star 数（纵轴是对数刻度），解锁线索 2 后还能看到累计曲线。',
-      '从列表里选仓库来猜，最多 6 次；每猜错一次多解锁一条线索（累计曲线、语言与创建年份、话题、描述、总 star 数）。',
-      '猜错时会告诉你：语言是否相同、创建年份比答案早（↑）还是晚（↓），以及你猜的仓库在这 68 周的涨星量是答案的几倍。',
-      '提示：尖峰通常是登上 Hacker News 或发布大版本；一路上扬的多是 AI 新项目；平稳长尾是老牌经典项目。',
+      'The chart shows the new stars per week for a popular repo over 68 weeks, Feb 2023 to May 2024 (log scale on the y-axis). Clue 2 adds the cumulative curve.',
+      'Pick a repo from the list, up to 6 guesses. Each wrong guess unlocks another clue (cumulative curve, language and creation year, topics, description, total stars).',
+      'A wrong guess tells you whether the language matches, whether the creation year is earlier (↑) or later (↓) than the answer, and how many times the answer\'s star gain your guess gained in these 68 weeks.',
+      'Hint: sharp spikes usually mean a Hacker News front page or a big release, a steady climb is often a new AI project, and a smooth long tail is an old classic.',
     ],
-    scoring: '第 1 次猜中 100 分，之后每多用一次少约 17 分，6 次都没猜中 0 分。',
+    scoring: '100 points for a first-guess hit, about 17 fewer for each extra guess, and 0 if all 6 miss.',
     sources: [
-      { name: 'GH Archive（WatchEvent），经 ClickHouse 公开 playground 的 github_events 表', url: 'https://www.gharchive.org/' },
-      { name: 'GitHub REST API（仓库元数据：语言、创建时间、话题、总 star）', url: 'https://docs.github.com/rest/search/search#search-repositories' },
+      { name: 'GH Archive (WatchEvent), via the github_events table on the public ClickHouse playground', url: 'https://www.gharchive.org/' },
+      { name: 'GitHub REST API (repo metadata: language, creation date, topics, total stars)', url: 'https://docs.github.com/rest/search/search#search-repositories' },
     ],
-    dataNote: 'GitHub 的 stargazers 接口（REST 与 GraphQL）已对该账号返回 404 / totalCount 0，拿不到逐个 star 的时间戳，无法还原从创建起的完整增长曲线，因此改用 GH Archive 的 WatchEvent（即点 star 事件）按周汇总。该镜像表在 2024-06 至 2025-08 之间缺数据，故曲线取 2023-02-06 至 2024-05-26 共 68 周。该镜像 2025-09 之后虽有数据，但每周事件总量从 80 万逐步降到 10 万以下，疑似不完整，不予采用；创建时间早于窗口的仓库，累计曲线从窗口起点（0）算起。总 star 数、语言、话题为 2026-10 抓取的快照。未做实时加载：GitHub 无密钥接口限流 60 次/小时且无 stargazers 时间戳，ClickHouse 镜像滞后且不完整。',
+    dataNote: 'GitHub\'s stargazers endpoints (REST and GraphQL) return 404 / totalCount 0 for this account, so per-star timestamps are unavailable and the full growth curve since creation cannot be rebuilt. Instead, GH Archive WatchEvents (star clicks) are summed by week. The mirror table has no data between 2024-06 and 2025-08, so the curve covers 68 weeks, 2023-02-06 to 2024-05-26. The mirror has data after 2025-09, but weekly event totals drop from 800k to under 100k, which looks incomplete, so it is not used. For repos created before the window, the cumulative curve starts at 0 at the window start. Total stars, language and topics are a snapshot taken in Oct 2026. Nothing loads live: GitHub\'s keyless API is limited to 60 requests an hour and has no stargazer timestamps, and the ClickHouse mirror lags and is incomplete. Repo descriptions that were written in Chinese are shown in English translation.',
   },
 
   puzzle({ data, pick }) {
@@ -119,7 +119,7 @@ export default {
     const chart = await ui.plot((Plot, c) => ({
       height: 260,
       marginLeft: 48,
-      y: { type: 'log', label: '每周新增 star', grid: true, ticks: logTicks(lo, hi), tickFormat: '~s', domain: [lo, hi] },
+      y: { type: 'log', label: 'New stars per week', grid: true, ticks: logTicks(lo, hi), tickFormat: '~s', domain: [lo, hi] },
       x: { label: null },
       marks: [Plot.areaY(rows, { x: 'd', y: 'v', y1: lo, fill: c.accent, fillOpacity: 0.18 }), Plot.lineY(rows, { x: 'd', y: 'v', stroke: c.accent, strokeWidth: 2 }), Plot.tip(rows, Plot.pointerX({ x: 'd', y: 'v' }))],
     }));
@@ -128,7 +128,7 @@ export default {
     const cumChart = await ui.plot((Plot, c) => ({
       height: 170,
       marginLeft: 48,
-      y: { label: '窗口内累计新增 star', grid: true, tickFormat: '~s', domain: [0, ans.total] },
+      y: { label: 'Cumulative new stars in window', grid: true, tickFormat: '~s', domain: [0, ans.total] },
       x: { label: null },
       marks: [Plot.areaY(cum, { x: 'd', y: 'v', fill: c.accent, fillOpacity: 0.18 }), Plot.lineY(cum, { x: 'd', y: 'v', stroke: c.accent, strokeWidth: 2 }), Plot.tip(cum, Plot.pointerX({ x: 'd', y: 'v' }))],
     }));
@@ -136,22 +136,22 @@ export default {
     const topics = ans.topics.filter((t) => !topicLeaks(t, ans.id));
     const clues = [
       chart,
-      ui.stack(`这 ${ans.s.length} 周里共新增 ${core.fmtNum(ans.total)} 个 star；最高的一周 ${core.fmtNum(st.peak)} 个，是中位周的 ${st.ratio.toFixed(1)} 倍。下图是同一段时间的累计曲线：`, cumChart),
-      `主要语言：${ans.lang || '（无）'}；创建于 ${ans.created.slice(0, 4)} 年。`,
-      topics.length ? `GitHub 话题标签（与名字相同的已隐藏）：${topics.join('、')}` : '这个仓库没有可公开的话题标签。',
-      `项目描述（名字已涂掉）：${redact(ans.desc, ans.id) || '（无）'}`,
-      `如今累计 star 数在 ${bucket(ans.stars)} 之间。`,
+      ui.stack(`It gained ${core.fmtNum(ans.total)} stars over these ${ans.s.length} weeks. The best week had ${core.fmtNum(st.peak)}, ${st.ratio.toFixed(1)}x the median week. Below is the cumulative curve for the same period:`, cumChart),
+      `Main language: ${ans.lang || 'none'}. Created in ${ans.created.slice(0, 4)}.`,
+      topics.length ? `GitHub topics (any matching the name are hidden): ${topics.join(', ')}` : 'This repo has no public topic tags.',
+      `Description (name blacked out): ${redact(ans.desc, ans.id) || 'none'}`,
+      `Its total star count today is between ${bucket(ans.stars)}.`,
     ];
 
     const res = await ctx.guess({
       options: repos.map((r) => ({ id: r.id, label: r.id, hint: r.lang || '', aliases: [r.id.split('/')[1]] })),
       answer: ans.id,
       maxGuesses: 6,
-      title: '这是哪个仓库？',
-      placeholder: '输入仓库名或 owner/repo …',
+      title: 'Which repo is this?',
+      placeholder: 'Type a repo name or owner/repo…',
       clues,
-      cluesTitle: '曲线和线索',
-      columns: ['语言', '创建', '涨星倍数'],
+      cluesTitle: 'The curve and clues',
+      columns: ['Language', 'Created', 'Star gain'],
       near: (g, a) => Math.abs(byId.get(g.id).total / byId.get(a.id).total - 1) < 0.35,
       feedback: (g) => {
         const gr = byId.get(g.id);
@@ -167,11 +167,11 @@ export default {
     });
 
     res.detail = ui.kv([
-      ['答案', `${ans.id}（${ans.lang || '—'}，${ans.created.slice(0, 4)} 年创建）`],
-      ['简介', ans.desc || '—'],
-      ['最高的一周', `${ctx.data.weeks[st.peakIdx]} 起，+${core.fmtNum(st.peak)} star（中位周 ${core.fmtNum(st.median)}）`],
-      ['曲线形状', `最高周 / 中位周 = ${st.ratio.toFixed(1)}；前三周占 ${(st.top3Share * 100).toFixed(0)}%。${pattern(st)}`],
-      ['累计 star', `${core.fmtNum(ans.stars)}（其中这 ${ans.s.length} 周新增 ${core.fmtNum(ans.total)}）`],
+      ['Answer', `${ans.id} (${ans.lang || '—'}, created ${ans.created.slice(0, 4)})`],
+      ['About', ans.desc || '—'],
+      ['Best week', `Week of ${ctx.data.weeks[st.peakIdx]}: +${core.fmtNum(st.peak)} stars (median week ${core.fmtNum(st.median)})`],
+      ['Curve shape', `Best week / median week = ${st.ratio.toFixed(1)}; the top 3 weeks hold ${(st.top3Share * 100).toFixed(0)}% of stars. ${pattern(st)}`],
+      ['Total stars', `${core.fmtNum(ans.stars)} (${core.fmtNum(ans.total)} of them gained in these ${ans.s.length} weeks)`],
     ]);
     return res;
   },
