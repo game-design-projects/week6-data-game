@@ -6,7 +6,7 @@ import { estimateSize, median } from './build/estimate.mjs';
 import { dailyIndex } from '../../engine/core.js';
 
 const data = JSON.parse(readFileSync(new URL('./data.json', import.meta.url)));
-const byZh = Object.fromEntries(data.species.map((s) => [s.zh, s]));
+const byName = Object.fromEntries(data.species.map((s) => [s.name, s]));
 const pickFor = (day) => (arr) => arr[dailyIndex(game.meta.slug, day, arr.length)];
 
 test('fmtMb units', () => {
@@ -15,7 +15,7 @@ test('fmtMb units', () => {
   assert.equal(fmtMb(0.0299), '29.9 kb');
 });
 test('vsHuman', () => {
-  assert.match(vsHuman(15000, 3000), /5\.0 倍/);
+  assert.match(vsHuman(15000, 3000), /5\.0×/);
   assert.match(vsHuman(3, 3000), /1\/1,000/);
 });
 test('estimateSize drops fragments and doubled assemblies', () => {
@@ -24,9 +24,9 @@ test('estimateSize drops fragments and doubled assemblies', () => {
   assert.ok(e.mb > 2900 && e.mb < 3100, String(e.mb));
 });
 test('onion ~5x human; anchors present', () => {
-  assert.ok(byZh['洋葱'].mb / byZh['人类'].mb > 4 && byZh['洋葱'].mb / byZh['人类'].mb < 6);
-  for (const a of ANCHORS) assert.ok(byZh[a], a);
-  assert.ok(byZh['人类'].mb > 2900 && byZh['人类'].mb < 3200);
+  assert.ok(byName['Onion'].mb / byName['Human'].mb > 4 && byName['Onion'].mb / byName['Human'].mb < 6);
+  for (const a of ANCHORS) assert.ok(byName[a], a);
+  assert.ok(byName['Human'].mb > 2900 && byName['Human'].mb < 3200);
 });
 test('pool is large, sorted, well-formed', () => {
   const sp = data.species;
@@ -34,10 +34,10 @@ test('pool is large, sorted, well-formed', () => {
   const seen = new Set();
   for (let i = 0; i < sp.length; i++) {
     const s = sp[i];
-    assert.ok(s.sci && s.zh && s.group, `fields ${i}`);
-    assert.ok(Number.isFinite(s.mb) && s.mb >= 0.002 && s.mb <= 90000, `${s.zh} ${s.mb}`);
-    assert.ok(!seen.has(s.sci) && !seen.has(s.zh), `dup ${s.zh}`);
-    seen.add(s.sci); seen.add(s.zh);
+    assert.ok(s.sci && s.name && s.group, `fields ${i}`);
+    assert.ok(Number.isFinite(s.mb) && s.mb >= 0.002 && s.mb <= 90000, `${s.name} ${s.mb}`);
+    assert.ok(!seen.has(s.sci) && !seen.has(s.name), `dup ${s.name}`);
+    seen.add(s.sci); seen.add(s.name);
     if (i) assert.ok(s.mb >= sp[i - 1].mb);
   }
 });
@@ -56,11 +56,11 @@ test('puzzles days 1-120 valid, no leaks, no anchor items', () => {
     assert.equal(p.items.length, 3);
     assert.equal(new Set(p.items.map((x) => x.sci)).size, 3);
     p.items.forEach((it, i) => {
-      assert.ok(!ANCHORS.includes(it.zh), `anchor as item day ${day}`);
+      assert.ok(!ANCHORS.includes(it.name), `anchor as item day ${day}`);
       assert.ok(it.mb > 0 && Number.isFinite(it.mb));
       assert.ok(!/undefined|NaN/.test(JSON.stringify(it)));
       // shown before guessing: title, sci, group — the size must not appear in them
-      const shown = `${it.zh} ${it.sci} ${it.group}`;
+      const shown = `${it.name} ${it.sci} ${it.group}`;
       assert.ok(!/\d+(\.\d+)?\s?(Mb|Gb|kb)/i.test(shown), shown);
     });
     assert.ok(p.items[0].mb < p.items[2].mb);
@@ -69,8 +69,8 @@ test('puzzles days 1-120 valid, no leaks, no anchor items', () => {
   assert.ok(new Set(sizes).size >= 100, 'enough distinct days');
 });
 test('explain is species-specific', () => {
-  const anchors = ANCHORS.map((z) => byZh[z]);
-  const t = explain(byZh['洋葱'], data.species, anchors);
-  assert.match(t, /洋葱/); assert.match(t, /人类/); assert.match(t, /4\.9 倍/);
-  assert.notEqual(t, explain(byZh['玉米'], data.species, anchors));
+  const anchors = ANCHORS.map((z) => byName[z]);
+  const t = explain(byName['Onion'], data.species, anchors);
+  assert.match(t, /Onion/); assert.match(t, /Human/); assert.match(t, /4\.9×/);
+  assert.notEqual(t, explain(byName['Maize'], data.species, anchors));
 });

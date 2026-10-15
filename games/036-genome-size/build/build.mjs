@@ -1,6 +1,6 @@
 // Build data.json from NCBI GENOME_REPORTS. Run: node build/build.mjs  (downloads into build/raw/ once).
 import fs from 'node:fs';
-import { SPECIES, MICRO, NOTES, GROUP_ZH } from './species.mjs';
+import { SPECIES, MICRO, NOTES, GROUP_EN } from './species.mjs';
 import { estimateSize, median } from './estimate.mjs';
 
 const rawDir = new URL('./raw/', import.meta.url);
@@ -38,7 +38,7 @@ const matches = (name, sci) => {
 
 const out = [];
 const missing = [];
-const add = (sci, zh, tab) => {
+const add = (sci, name, tab) => {
   const all = tabs[tab].filter((r) => matches(r.name, sci));
   if (!all.length) { missing.push(sci); return; }
   // drop fragments (organelle / single-chromosome / macronuclear-minichromosome entries) before anything else
@@ -51,9 +51,9 @@ const add = (sci, zh, tab) => {
   const top = rows.filter((r) => (rank[r.status] ?? 0) === best);
   const est = estimateSize((top.length >= 3 || best === 3 ? top : rows).map((r) => r.mb));
   const ref = rows.find((r) => r.mb === est.mb) ?? rows[0];
-  const group = tab === 'vir' ? '病毒' : tab === 'prok' ? (ref.group === 'Archaea' ? '古菌' : '细菌') : (GROUP_ZH[ref.sub] ?? GROUP_ZH[ref.group] ?? ref.group);
+  const group = tab === 'vir' ? 'Viruses' : tab === 'prok' ? (ref.group === 'Archaea' ? 'Archaea' : 'Bacteria') : (GROUP_EN[ref.sub] ?? GROUP_EN[ref.group] ?? ref.group);
   out.push({
-    sci, zh, mb: +est.mb.toPrecision(4), group, n: est.used, taxid: ref.taxid, acc: ref.acc,
+    sci, name, mb: +est.mb.toPrecision(4), group, n: est.used, taxid: ref.taxid, acc: ref.acc,
     ...(NOTES[sci] ? { note: NOTES[sci] } : {}),
   });
 };
@@ -63,6 +63,6 @@ console.error('missing:', missing.join(' | '));
 // de-dupe by scientific name; sort by size
 const seen = new Set();
 const uniq = out.filter((o) => (seen.has(o.sci) ? false : (seen.add(o.sci), true))).sort((a, b) => a.mb - b.mb);
-console.error(uniq.map((o) => `${o.zh}\t${o.mb}\t${o.group}\tn=${o.n}`).join('\n'));
+console.error(uniq.map((o) => `${o.name}\t${o.mb}\t${o.group}\tn=${o.n}`).join('\n'));
 fs.writeFileSync(new URL('../data.json', import.meta.url), JSON.stringify({ built: '2026-10-15', species: uniq }));
 console.error('wrote', uniq.length);
