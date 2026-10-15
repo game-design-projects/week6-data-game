@@ -7,11 +7,11 @@ const data = JSON.parse(readFileSync(new URL('./data.json', import.meta.url)));
 const fx = JSON.parse(readFileSync(new URL('./build/fixture.json', import.meta.url)));
 
 test('weatherLabel', () => {
-  assert.equal(weatherLabel(0), '晴天');
-  assert.equal(weatherLabel(3), '阴天');
-  assert.equal(weatherLabel(63, 0, 0.8), '大雨');
-  assert.equal(weatherLabel(73, 1), '下雪');
-  assert.equal(weatherLabel(95), '雷暴');
+  assert.equal(weatherLabel(0), 'Sunny');
+  assert.equal(weatherLabel(3), 'Overcast');
+  assert.equal(weatherLabel(63, 0, 0.8), 'Heavy rain');
+  assert.equal(weatherLabel(73, 1), 'Snow');
+  assert.equal(weatherLabel(95), 'Thunderstorm');
 });
 test('total', () => assert.equal(total([1, 2, 3]), 6));
 

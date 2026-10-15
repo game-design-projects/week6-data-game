@@ -1,8 +1,9 @@
 // #18 Bridge Count — given a day's weather, rank the four East River bike bridges by cyclists and guess the total.
 // Live: the most recent day (at least 2 days old) on which all four DOT counters have a complete record.
 
-const WD = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-export const BRIDGES = ['布鲁克林桥', '曼哈顿桥', '威廉斯堡桥', '皇后区桥'];
+const WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const BRIDGES = ['Brooklyn Bridge', 'Manhattan Bridge', 'Williamsburg Bridge', 'Queensboro Bridge'];
 /** NYC DOT sensor ids, in BRIDGES order, and the number of 15-minute rows a complete day has for each. */
 export const SENSOR_IDS = ['300020904', '100062893', '100009427', '100009428'];
 export const FULL_ROWS = { 300020904: 192, 100062893: 384, 100009427: 384, 100009428: 384 };
@@ -18,16 +19,16 @@ export const total = (c) => c.reduce((a, b) => a + b, 0);
 export const dayType = (date) => { const w = new Date(`${date}T00:00:00Z`).getUTCDay(); return w === 0 || w === 6 ? 1 : 0; };
 export const fToC = (f) => Math.round(((f - 32) * 5) / 9);
 
-/** WMO weather code -> short Chinese label. */
+/** WMO weather code -> short English label. */
 export function weatherLabel(code, snow = 0, rain = 0) {
-  if (snow > 0.1 || (code >= 71 && code <= 77) || code === 85 || code === 86) return '下雪';
-  if (code >= 95) return '雷暴';
-  if (code >= 61 || (code >= 80 && code <= 82) || rain > 0.05) return rain > 0.5 ? '大雨' : '有雨';
-  if (code >= 51) return '毛毛雨';
-  if (code >= 45) return '有雾';
-  if (code === 3) return '阴天';
-  if (code >= 1) return '晴间多云';
-  return '晴天';
+  if (snow > 0.1 || (code >= 71 && code <= 77) || code === 85 || code === 86) return 'Snow';
+  if (code >= 95) return 'Thunderstorm';
+  if (code >= 61 || (code >= 80 && code <= 82) || rain > 0.05) return rain > 0.5 ? 'Heavy rain' : 'Rain';
+  if (code >= 51) return 'Drizzle';
+  if (code >= 45) return 'Fog';
+  if (code === 3) return 'Overcast';
+  if (code >= 1) return 'Partly cloudy';
+  return 'Sunny';
 }
 
 /**
@@ -90,20 +91,20 @@ export function explainDay(day, typical) {
   const lo = rs.indexOf(Math.min(...rs));
   const hi = rs.indexOf(Math.max(...rs));
   let why;
-  if (day.snow > 0.1) why = `下雪（${day.snow} 英寸）`;
-  else if (day.rain > 0.3) why = `降水 ${day.rain} 英寸`;
-  else if (day.rain > 0.05) why = `有小雨（${day.rain} 英寸）`;
-  else if (day.hi < 40) why = `最高气温只有 ${day.hi}°F（${fToC(day.hi)}°C）`;
-  else if (day.hi > 90) why = `酷热（最高 ${day.hi}°F）`;
-  else if (day.wind >= 20) why = `大风（最大 ${day.wind} mph）`;
-  else why = '天气没有明显的捣乱因素';
-  const verdict = ratio < 0.6 ? '人流大幅低于平常' : ratio < 0.85 ? '人流低于平常' : ratio <= 1.15 ? '人流接近平常' : '人流高于平常';
+  if (day.snow > 0.1) why = `snow (${day.snow} in)`;
+  else if (day.rain > 0.3) why = `${day.rain} in of precipitation`;
+  else if (day.rain > 0.05) why = `light rain (${day.rain} in)`;
+  else if (day.hi < 40) why = `a high of only ${day.hi}°F (${fToC(day.hi)}°C)`;
+  else if (day.hi > 90) why = `scorching heat (high of ${day.hi}°F)`;
+  else if (day.wind >= 20) why = `strong wind (up to ${day.wind} mph)`;
+  else why = 'no obvious weather spoiler';
+  const verdict = ratio < 0.6 ? 'traffic far below normal' : ratio < 0.85 ? 'traffic below normal' : ratio <= 1.15 ? 'traffic close to normal' : 'traffic above normal';
   const lines = [
-    `排名：${ord.map((i) => `${BRIDGES[i]} ${day.c[i].toLocaleString('en-US')}`).join(' > ')}。`,
-    `总计 ${sum.toLocaleString('en-US')} 人次，是同月同类日中位数（${tsum.toLocaleString('en-US')}）的 ${Math.round(ratio * 100)}%：${verdict}。关键线索：${why}。`,
+    `Ranking: ${ord.map((i) => `${BRIDGES[i]} ${day.c[i].toLocaleString('en-US')}`).join(' > ')}.`,
+    `Total ${sum.toLocaleString('en-US')} crossings, ${Math.round(ratio * 100)}% of the median for the same kind of day that month (${tsum.toLocaleString('en-US')}): ${verdict}. Key clue: ${why}.`,
   ];
-  if (lo !== hi) lines.push(`相对平常，${BRIDGES[hi]}最稳（${Math.round(rs[hi] * 100)}%），${BRIDGES[lo]}最敏感（${Math.round(rs[lo] * 100)}%）。` +
-    (dayType(day.date) ? ' 周末通勤骑行少，游客多的布鲁克林桥相对更占优。' : ' 工作日以通勤为主，威廉斯堡桥通常领先，天气一差通勤客也会少骑。'));
+  if (lo !== hi) lines.push(`Relative to normal, the ${BRIDGES[hi]} held up best (${Math.round(rs[hi] * 100)}%) and the ${BRIDGES[lo]} was the most sensitive (${Math.round(rs[lo] * 100)}%).` +
+    (dayType(day.date) ? ' Weekends have fewer commuters, so the tourist-heavy Brooklyn Bridge fares relatively better.' : ' Weekdays are mostly commuters, so the Williamsburg Bridge usually leads, and bad weather keeps commuters home too.'));
   return lines;
 }
 
@@ -112,23 +113,23 @@ export default {
     num: 18,
     slug: 'bridge-count',
     title: 'Bridge Count',
-    tagline: '看一天的天气，猜东河四座桥上过了多少骑车人：先给四座桥排名，再估总数。',
+    tagline: 'Given one day\'s weather, guess how many cyclists crossed the four East River bridges: rank the bridges, then estimate the total.',
     category: 'nyc',
     data: 'live',
     howTo: [
-      '给你一天（最近一个四座桥计数器都完整的日子，通常是前天）的日期、星期、气温、降水和风速，以及「同月同类日（工作日/周末）」的骑行人次中位数作参照。',
-      '第一步：把布鲁克林桥、曼哈顿桥、威廉斯堡桥、皇后区桥按这天的骑行人数从多到少排序（最多 3 次，每次告诉你几个位置对了）。',
-      '第二步：估这四座桥当天骑行人次的总和（对数滑块，偏差约 22% 得 37 分，差一倍几乎不得分）。',
-      '计分：排序最多 100 分（第 1 次排对满分，3 次内排对依次递减，排不对按对的位置给少量分），总数最多 100 分，两部分相加。',
-      '提示：下雨、下雪、低温会让人数骤降；周末布鲁克林桥（游客多）相对更强。',
+      'You get one day (the most recent day on which all four bridge counters have complete data, usually the day before yesterday): its date, weekday, temperature, precipitation and wind, plus the median crossings for the same kind of day that month (weekday or weekend) as a reference.',
+      'Step 1: rank the Brooklyn, Manhattan, Williamsburg and Queensboro bridges by cyclists that day, from most to fewest (up to 3 tries; each try tells you how many positions are right).',
+      'Step 2: estimate the combined number of crossings on the four bridges that day (log slider; about 22% off scores 37, twice off scores almost nothing).',
+      'Scoring: the ranking is worth up to 100 (full marks on the 1st try, less on the 2nd and 3rd, and a little partial credit for correct positions otherwise); the total is worth up to 100; the two add up.',
+      'Tip: rain, snow and cold make numbers plunge; on weekends the Brooklyn Bridge (tourists) holds up relatively better.',
     ],
-    scoring: '排序 100 分 + 总数 100 分：排序每多用一次机会少 1/3，总数按倍数误差计分（偏差约 22% 得 37 分）。',
+    scoring: 'Ranking 100 + total 100: each extra ranking try costs a third, and the total is scored by ratio error (about 22% off earns 37).',
     sources: [
-      { name: 'NYC DOT Bicycle and Pedestrian Counts (ct66-47at)', url: 'https://data.cityofnewyork.us/d/ct66-47at', note: '各桥自行车道的 15 分钟计数器，按日汇总；每天更新' },
-      { name: 'NYC DOT Bicycle and Pedestrian Count Sensors (6up2-gnw8)', url: 'https://data.cityofnewyork.us/d/6up2-gnw8', note: '计数器位置' },
-      { name: 'Open-Meteo Historical Weather API', url: 'https://open-meteo.com/en/docs/historical-weather-api', note: '曼哈顿下城每日天气（ERA5 再分析）' },
+      { name: 'NYC DOT Bicycle and Pedestrian Counts (ct66-47at)', url: 'https://data.cityofnewyork.us/d/ct66-47at', note: '15-minute counters on each bridge\'s bike lane, summed by day; updated daily' },
+      { name: 'NYC DOT Bicycle and Pedestrian Count Sensors (6up2-gnw8)', url: 'https://data.cityofnewyork.us/d/6up2-gnw8', note: 'Counter locations' },
+      { name: 'Open-Meteo Historical Weather API', url: 'https://open-meteo.com/en/docs/historical-weather-api', note: 'Daily weather for Lower Manhattan (ERA5 reanalysis)' },
     ],
-    dataNote: '实时：浏览器直接读取纽约市交通局的计数器数据（Socrata，ct66-47at）和 Open-Meteo 天气，取「前天及更早、四座桥计数器全天完整」的最近一天，保证所有人拿到同一天。有些计数器会停摆几天，所以有时会往前回溯，页面会写明日期。若联网失败则回退到内置的 2022 年至今的历史日。计数器只覆盖自行车道（不含行人），为双向合计；与最近一天差距不足 4% 的日子会被跳过，避免排名变成抛硬币。「同类日」指同一个月份内的工作日或周末。',
+    dataNote: 'Live: the browser reads NYC DOT counter data (Socrata, ct66-47at) and Open-Meteo weather directly, and uses the most recent day that is at least two days old and has a full day of data on all four bridge counters, so everyone gets the same day. Some counters go dark for days, so it sometimes looks further back; the page shows the date. If the network fails it falls back to built-in historical days from 2022 on. Counters cover bike lanes only (no pedestrians), both directions combined; days where adjacent bridges differ by less than 4% are skipped so the ranking is not a coin flip. A "same kind of day" means a weekday or a weekend within the same month.',
   },
 
   async load(ctx) {
@@ -161,24 +162,24 @@ export default {
     const wx = weatherLabel(day.wc, day.snow, day.rain);
     ctx.log('puzzle', day.date, wx, day.c);
 
-    ctx.stage.append(ui.panel({ kicker: '线索 · 最近一个数据完整的日子', title: `${dt.getUTCMonth() + 1} 月 ${dt.getUTCDate()} 日 ${wd}` },
+    ctx.stage.append(ui.panel({ kicker: 'Clues · latest day with complete data', title: `${wd}, ${MON[dt.getUTCMonth()]} ${dt.getUTCDate()}, ${dt.getUTCFullYear()}` },
       ui.grid(110,
-        ui.stat({ label: '天气', value: wx }),
-        ui.stat({ label: '气温 °F', value: `${day.lo}–${day.hi}`, sub: `${fToC(day.lo)}–${fToC(day.hi)}°C` }),
-        ui.stat({ label: '降水 英寸', value: String(day.rain) }),
-        ui.stat({ label: '最大风速 mph', value: String(day.wind) })),
-      ui.h('div', { class: 'small muted', style: { marginTop: '10px' } }, `参照：${dt.getUTCMonth() + 1} 月${dayType(day.date) ? '周末' : '工作日'}的骑行人次中位数（2022 年至今）`),
-      ui.table({ columns: [{ key: 'b', label: '桥' }, { key: 't', label: '平常一天', num: true }],
+        ui.stat({ label: 'Weather', value: wx }),
+        ui.stat({ label: 'Temp °F', value: `${day.lo}–${day.hi}`, sub: `${fToC(day.lo)}–${fToC(day.hi)}°C` }),
+        ui.stat({ label: 'Precip. (in)', value: String(day.rain) }),
+        ui.stat({ label: 'Max wind (mph)', value: String(day.wind) })),
+      ui.h('div', { class: 'small muted', style: { marginTop: '10px' } }, `Reference: median crossings on a ${MON[dt.getUTCMonth()]} ${dayType(day.date) ? 'weekend day' : 'weekday'} (2022 to date)`),
+      ui.table({ columns: [{ key: 'b', label: 'Bridge' }, { key: 't', label: 'Typical day', num: true }],
         rows: BRIDGES.map((b, i) => ({ b, t: core.fmtNum(typical[i]) })) })));
 
     const items = BRIDGES.map((b, i) => ({ id: String(i), label: b, value: day.c[i] }));
-    const r1 = await ctx.order({ title: '1 / 2 · 给四座桥排名', prompt: '这天骑行人数从多到少排列', items: ctx.rng.shuffle(items), direction: 'desc', attempts: 3, format: (v) => core.fmtNum(v) });
+    const r1 = await ctx.order({ title: '1 / 2 · Rank the four bridges', prompt: 'Order them by cyclists that day, most to fewest', items: ctx.rng.shuffle(items), direction: 'desc', attempts: 3, format: (v) => core.fmtNum(v) });
     const sum = total(day.c);
-    const r2 = await ctx.estimate({ title: '2 / 2 · 四座桥当天骑行总人次', answer: sum, min: EST_MIN, max: EST_MAX, log: true, step: 100, unit: '人次', format: (v) => core.fmtNum(Math.round(v)), scoring: 'log', scale: 0.2 });
+    const r2 = await ctx.estimate({ title: '2 / 2 · Total crossings on the four bridges that day', answer: sum, min: EST_MIN, max: EST_MAX, log: true, step: 100, unit: 'crossings', format: (v) => core.fmtNum(Math.round(v)), scoring: 'log', scale: 0.2 });
 
     const res = ctx.combine([r1, r2]);
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.table({ columns: [{ key: 'b', label: '桥' }, { key: 'n', label: `${day.date} 人次`, num: true }, { key: 'r', label: '相对平常', num: true }],
+      ui.table({ columns: [{ key: 'b', label: 'Bridge' }, { key: 'n', label: `${day.date} crossings`, num: true }, { key: 'r', label: 'vs. typical', num: true }],
         rows: BRIDGES.map((b, i) => ({ b, n: core.fmtNum(day.c[i]), r: `${Math.round((day.c[i] / typical[i]) * 100)}%` })) }),
       ...explainDay(day, typical).map((t) => ui.h('div', { class: 'ink2' }, t)));
     return res;
