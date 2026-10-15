@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 const UA = { 'User-Agent': 'daily-data-games/1.0 (class project)' };
 const IND = ['NY.GDP.PCAP.CD','SP.POP.TOTL','SP.DYN.LE00.IN','SP.URB.TOTL.IN.ZS','AG.LND.TOTL.K2','SP.DYN.TFRT.IN','IT.NET.USER.ZS','AG.LND.FRST.ZS','EN.GHG.CO2.PC.CE.AR5','SH.XPD.CHEX.GD.ZS'];
+fs.mkdirSync('raw', { recursive: true });
 const get = async (name, url) => {
   const f = `raw/${name}.json`;
   if (fs.existsSync(f)) return;
