@@ -1,8 +1,4 @@
 // #69 Life Table — a 40-year-old in country X, year Y: what's the chance of reaching 80?
-const zhName = (iso2, fallback) => {
-  try { return new Intl.DisplayNames(['zh-Hans'], { type: 'region' }).of(iso2) || fallback; } catch { return fallback; }
-};
-
 /** Survival 40→80 as a percentage from lx values (pure; tested). */
 export const survival = (l40, l80) => +((l80 / l40) * 100).toFixed(1);
 
@@ -20,12 +16,12 @@ export const findRow = (data, cc, s, y) => data.rows.find((r) => r.cc === cc && 
 export function explain(r) {
   const lifeAfter40 = r.e40 + 40;
   const parts = [];
-  if (r.u5 >= 40) parts.push(`每千名新生儿有 ${r.u5} 人活不到 5 岁，把出生预期寿命（${r.e0} 岁）拉低了一截；但活到 40 岁的人平均还能活到约 ${lifeAfter40.toFixed(0)} 岁，比出生预期寿命高 ${(lifeAfter40 - r.e0).toFixed(0)} 岁。`);
-  else if (r.u5 >= 12) parts.push(`5 岁前死亡率为 ${r.u5}‰，还会拉低一点出生预期寿命（${r.e0} 岁）；活到 40 岁的人平均能活到约 ${lifeAfter40.toFixed(0)} 岁，比它高 ${(lifeAfter40 - r.e0).toFixed(0)} 岁。`);
-  else parts.push(`婴幼儿死亡已很少（5 岁前仅 ${r.u5}‰），出生预期寿命（${r.e0} 岁）和 40 岁时的平均寿命（约 ${lifeAfter40.toFixed(0)} 岁）只差 ${(lifeAfter40 - r.e0).toFixed(0)} 岁，关键看中老年死亡率。`);
+  if (r.u5 >= 40) parts.push(`${r.u5} of every 1,000 newborns do not reach age 5, which drags life expectancy at birth (${r.e0} years) down a lot; but people who reach 40 live to about ${lifeAfter40.toFixed(0)} on average, ${(lifeAfter40 - r.e0).toFixed(0)} years more than life expectancy at birth. `);
+  else if (r.u5 >= 12) parts.push(`Under-5 mortality of ${r.u5} per 1,000 also pulls life expectancy at birth (${r.e0} years) down a bit; people who reach 40 live to about ${lifeAfter40.toFixed(0)} on average, ${(lifeAfter40 - r.e0).toFixed(0)} years higher. `);
+  else parts.push(`Child deaths are already rare (only ${r.u5} per 1,000 before age 5), so life expectancy at birth (${r.e0} years) and the average age at death for 40-year-olds (about ${lifeAfter40.toFixed(0)}) differ by only ${(lifeAfter40 - r.e0).toFixed(0)} years. What matters is middle-age and old-age mortality. `);
   parts.push(lifeAfter40 >= 80
-    ? `40 岁的人平均能活过 80 岁，所以多数人（${r.p}%）能跨过 80 岁这道线。`
-    : `40 岁的人平均只能活到 ${lifeAfter40.toFixed(0)} 岁左右，比 80 岁少 ${(80 - lifeAfter40).toFixed(0)} 岁，所以只有 ${r.p}% 的人能活到 80。`);
+    ? `A 40-year-old lives past 80 on average, so most people (${r.p}%) clear the age-80 line.`
+    : `A 40-year-old lives to only about ${lifeAfter40.toFixed(0)} on average, ${(80 - lifeAfter40).toFixed(0)} years short of 80, so only ${r.p}% reach 80.`);
   return parts.join('');
 }
 
@@ -34,19 +30,19 @@ export default {
     num: 69,
     slug: 'life-table',
     title: 'Life Table',
-    tagline: '某国某年的 40 岁男性或女性，有多大概率活到 80 岁？看预期寿命等线索估这个百分比。',
+    tagline: 'What are the odds that a 40-year-old man or woman in a given country and year reaches 80? Use life expectancy and other clues to estimate the percentage.',
     category: 'society',
     data: 'snapshot',
     howTo: [
-      '今天给你一个国家、一个年份（1970、1990、2010 或 2023）和性别，估计该年 40 岁的人能活到 80 岁的概率（0–100%）。',
-      '线索：出生预期寿命、5 岁前死亡率，以及日本、美国、印度、尼日利亚同年同性别的参照值。出生预期寿命低往往是婴幼儿死亡多拉低的，不代表中年人同样短命。',
-      '有两次机会，第一次提交后会告诉你偏高还是偏低。',
+      'Today you get a country, a year (1970, 1990, 2010 or 2023) and a sex. Estimate the chance (0-100%) that a 40-year-old that year lives to 80.',
+      'Clues: life expectancy at birth, under-5 mortality, and reference values for Japan, the US, India and Nigeria for the same year and sex. Low life expectancy at birth is often dragged down by child deaths and does not mean middle-aged people die just as young.',
+      'You get two tries, and after the first one you are told whether you were too high or too low.',
     ],
-    scoring: '以最后一次的误差计分：差 0 个百分点满分，每差 12 个百分点分数降到约三分之一；第二次提交的得分打九折。',
+    scoring: 'Scored on the error of your last try: 0 points off is full marks, and every 12 percentage points off cuts the score to about a third. A second try scores 90% of that.',
     sources: [
       { name: 'UN World Population Prospects 2024 — Abridged Life Table (Medium variant)', url: 'https://population.un.org/wpp/downloads?folder=Standard%20Projections&group=Mortality' },
     ],
-    dataNote: '联合国人口司对各国各年的估计（1970、1990、2010、2023 年），不是实测的追踪队列。概率 = 生命表中活到恰好 80 岁的人数 l80 ÷ 活到恰好 40 岁的人数 l40（生命表的 lx 即恰好该岁数时的存活人数，不是近似）。已去掉非主权的小型属地。',
+    dataNote: 'These are UN Population Division estimates for each country and year (1970, 1990, 2010, 2023), not an observed cohort follow-up. The probability is l80 ÷ l40 from the life table, the number alive at exactly age 80 divided by the number alive at exactly 40 (lx is the survivors at exactly that age, not an approximation). Small non-sovereign territories are removed.',
   },
 
   puzzle({ data, pick, rng }) {
@@ -58,19 +54,19 @@ export default {
     const { ui, core } = ctx;
     const { rows, countries } = ctx.data;
     const r = findRow(ctx.data, p.cc, p.s, p.y);
-    const nm = (cc) => zhName(countries[cc].iso2, countries[cc].name);
+    const nm = (cc) => countries[cc].name;
     const name = nm(p.cc);
-    const sexZh = p.s === 'F' ? '女性' : '男性';
+    const sexTxt = p.s === 'F' ? 'women' : 'men';
     ctx.log('puzzle', p.cc, p.s, p.y, r.p);
 
     const anchors = anchorsFor(p.cc).map((k) => findRow(ctx.data, k, p.s, p.y)).filter(Boolean);
-    ctx.stage.append(ui.panel({ kicker: '今天的题目', title: `${p.y} 年 · ${name} · ${sexZh}` },
+    ctx.stage.append(ui.panel({ kicker: 'Today\'s puzzle', title: `${p.y} · ${name} · ${sexTxt}` },
       ui.grid(130,
-        ui.stat({ label: '出生预期寿命（岁）', value: r.e0.toFixed(1), big: true }),
-        ui.stat({ label: '5 岁前死亡率（‰）', value: r.u5.toFixed(1), big: true })),
-      ui.h('div', { class: 'small muted', style: { margin: '10px 0 4px' } }, `参照（${p.y} 年同性别）：`),
+        ui.stat({ label: 'Life expectancy at birth (years)', value: r.e0.toFixed(1), big: true }),
+        ui.stat({ label: 'Under-5 mortality (per 1,000)', value: r.u5.toFixed(1), big: true })),
+      ui.h('div', { class: 'small muted', style: { margin: '10px 0 4px' } }, `Reference (${p.y}, same sex):`),
       ui.table({
-        columns: [{ key: 'n', label: '国家' }, { key: 'e', label: '预期寿命', num: true }, { key: 'u', label: '5 岁前‰', num: true }, { key: 'p', label: '40→80', num: true }],
+        columns: [{ key: 'n', label: 'Country' }, { key: 'e', label: 'Life exp.', num: true }, { key: 'u', label: 'U5 per 1,000', num: true }, { key: 'p', label: '40→80', num: true }],
         rows: anchors.map((a) => ({ n: nm(a.cc), e: `${a.e0.toFixed(1)}`, u: `${a.u5.toFixed(0)}`, p: `${a.p}%` })),
       })));
 
@@ -78,7 +74,7 @@ export default {
       answer: r.p, min: 0, max: 100, step: 0.5, initial: 50,
       format: (v) => `${core.fmtNum(v, 1)}%`,
       attempts: 2, scoring: 'abs', scale: 12, tolerance: 1.5,
-      title: `${p.y} 年${name}${sexZh}：40 岁活到 80 岁的概率`,
+      title: `${name}, ${p.y}, ${sexTxt}: chance a 40-year-old reaches 80`,
     });
 
     // reveal chart: every country, same year and sex — life expectancy vs. 40→80 survival
@@ -89,20 +85,20 @@ export default {
         Plot.dot([r], { x: 'e0', y: 'p', r: 6, fill: c.accent, stroke: c.ink }),
         Plot.text([r], { x: 'e0', y: 'p', text: () => name, dy: -12, fill: c.ink }),
       ],
-      x: { label: '出生预期寿命（岁）', domain: [30, 90] },
-      y: { label: '40→80 存活率（%）', domain: [0, 90] },
+      x: { label: 'Life expectancy at birth (years)', domain: [30, 90] },
+      y: { label: '40→80 survival (%)', domain: [0, 90] },
     }), { height: 240 });
 
     res.detail = ui.stack(
       ui.kv([
-        ['答案', `${r.p}%`],
-        ['出生预期寿命', `${r.e0.toFixed(1)} 岁`],
-        ['40 岁时的剩余预期寿命', `${r.e40.toFixed(1)} 岁（平均活到约 ${(r.e40 + 40).toFixed(0)} 岁）`],
-        ['新生儿活到 40 岁', `${r.s40}%`],
-        ['规律', explain(r)],
-        ['性别差', `同国同年${p.s === 'F' ? '男性' : '女性'}为 ${findRow(ctx.data, p.cc, p.s === 'F' ? 'M' : 'F', p.y).p}%`],
+        ['Answer', `${r.p}%`],
+        ['Life exp. at birth', `${r.e0.toFixed(1)} years`],
+        ['Years left at 40', `${r.e40.toFixed(1)} years (living to about ${(r.e40 + 40).toFixed(0)} on average)`],
+        ['Newborns reaching 40', `${r.s40}%`],
+        ['The pattern', explain(r)],
+        ['Sex gap', `${p.s === 'F' ? 'Men' : 'Women'} in the same country and year: ${findRow(ctx.data, p.cc, p.s === 'F' ? 'M' : 'F', p.y).p}%`],
       ]),
-      ui.h('div', { class: 'small muted' }, `${p.y} 年同性别的所有国家：预期寿命越高，40→80 存活率越高，但并非等比例。`),
+      ui.h('div', { class: 'small muted' }, `All countries in ${p.y}, same sex: the higher the life expectancy, the higher the 40→80 survival, but not proportionally.`),
       chart);
     return res;
   },
