@@ -17,7 +17,7 @@ for (const f of fs.readdirSync('raw')) {
       drive: pct('B08301_003E'), carpool: pct('B08301_004E'), walk: pct('B08301_019E'), other: pct('B08301_020E') });
   }
 }
-// playable: big enough for stable estimates, and bike share measurable
-const pool = rows.filter((r) => r.workers >= 40000 && r.bike >= 0.2).sort((a, b) => b.workers - a.workers).slice(0, 320);
+// playable: big enough for stable estimates; all three guessed shares >= 0.2% (the slider floor is 0.1%, so no answer is clamped)
+const pool = rows.filter((r) => r.workers >= 25000 && r.pop && r.bike >= 0.2 && r.transit >= 0.2 && r.wfh >= 0.2).sort((a, b) => b.workers - a.workers);
 fs.writeFileSync('../data.json', JSON.stringify({ vintage: 'ACS 2019-2023 5-year', counties: pool }));
 console.log(rows.length, 'counties;', pool.length, 'in pool');
