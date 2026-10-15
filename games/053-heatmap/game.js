@@ -45,20 +45,20 @@ export default {
     num: 53,
     slug: 'heatmap',
     title: 'Heatmap',
-    tagline: '一部剧每一集的 IMDb 评分，排成「季 × 集」热力图。看高低起伏，猜剧名。',
+    tagline: 'Every episode\'s IMDb rating of a TV show, laid out as a season \u00d7 episode heatmap. Read the ups and downs and name the show.',
     category: 'culture',
     data: 'snapshot',
     howTo: [
-      '热力图每一行是一季，每一格是一集，颜色越深评分越高；淡灰的空格是评分人数太少、没有收录的集。',
-      '从列表里选剧名来猜，最多 6 次。每猜错一次解锁一条新线索：季数与集数、类型和年代、最高分与最低分的集名（剧名已遮住）、剧名首字……',
-      '看形状：一路变淡说明口碑下滑，末季突然变深多半是大结局，每季最后一格都很深说明爱在季终集放大招。',
-      '第 1 次猜中 100 分，之后每多猜一次少约 17 分，6 次都没猜中 0 分。',
+      'Each row of the heatmap is a season and each cell an episode; the darker the cell, the higher the rating. Pale gray blanks are episodes with too few ratings to be included.',
+      'Pick a show from the list, up to 6 guesses. Every miss unlocks a new clue: seasons and episode counts, genre and era, the names of the best and worst episodes (with the show\'s title masked), the first letter\u2026',
+      'Read the shape: fading all the way down means a slide in reputation; a suddenly dark last season is probably a big finale; a dark last cell in every season means the show loves a season-ending bang.',
+      'Scoring: 100 points for a first-try hit, about 17 fewer for each extra guess, 0 if you miss all six.',
     ],
-    scoring: '第 n 次猜中得 100·(7−n)/6 分，6 次都没猜中 0 分。',
+    scoring: 'A hit on guess n scores 100 \u00b7 (7 \u2212 n) / 6; 0 if you miss all six.',
     sources: [
       { name: 'IMDb Non-Commercial Datasets', url: 'https://developer.imdb.com/non-commercial-datasets/', note: 'title.basics / title.episode / title.ratings' },
     ],
-    dataNote: '数据来自 IMDb 公开数据集的快照（该数据集是几百 MB 的整库文件，且没有 CORS，浏览器无法实时读取，其余可用的 IMDb 接口如 OMDb 需要密钥），收录评分人数超过 10 万、至少 2 季、至少 20 集有评分的 200 部热门剧，每部剧就是一道题。评分会随时间微调；每集评分不足 50 人的集不收录。',
+    dataNote: 'A snapshot of the public IMDb datasets (a database of several hundred MB with no CORS, so browsers cannot read it live; other IMDb-like APIs such as OMDb need a key). It covers 200 popular shows with over 100,000 ratings, at least 2 seasons and at least 20 rated episodes; each show is one puzzle. Ratings drift over time, and episodes with fewer than 50 ratings are left out.',
   },
 
   puzzle({ data, pick }) {
@@ -109,11 +109,11 @@ export default {
     const perSeason = Math.round(cells.length / seasonList.length);
     const clues = [
       ui.h('div', heat, legend),
-      `${seasonList.length} 季，共 ${cells.length} 集有评分（平均每季约 ${perSeason} 集）。第一季均分 ${avg(first).toFixed(1)}，最后一季均分 ${avg(last).toFixed(1)}。`,
-      `类型：${ans.genres.join(' / ')}。首播于 ${decade} 年代。${ans.end ? '已完结。' : '数据里没有标记完结。'}`,
-      `评分最高的一集 ${best.r}（S${best.s}E${best.e}）：“${redactTitle(best.t, ans)}”`,
-      `评分最低的一集 ${worst.r}（S${worst.s}E${worst.e}）：“${redactTitle(worst.t, ans)}”`,
-      `剧名以 “${ans.title[0]}” 开头，共 ${ans.title.length} 个字符。`,
+      `${seasonList.length} season${seasonList.length === 1 ? '' : 's'}, ${cells.length} rated episodes (about ${perSeason} per season). Season 1 averages ${avg(first).toFixed(1)}, the last season ${avg(last).toFixed(1)}.`,
+      `Genre: ${ans.genres.join(' / ')}. It premiered in the ${decade}s. ${ans.end ? 'It has ended.' : 'The data does not mark it as ended.'}`,
+      `Best-rated episode, ${best.r} (S${best.s}E${best.e}): \u201c${redactTitle(best.t, ans)}\u201d`,
+      `Worst-rated episode, ${worst.r} (S${worst.s}E${worst.e}): \u201c${redactTitle(worst.t, ans)}\u201d`,
+      `The title starts with \u201c${ans.title[0]}\u201d and has ${ans.title.length} characters.`,
     ];
 
     const byId = new Map(shows.map((s, i) => [s.id, s]));
@@ -121,11 +121,11 @@ export default {
       options: shows.map((s, i) => ({ id: s.id, label: labels[i], hint: String(s.start), aliases: /^the /i.test(s.title) ? [s.title.slice(4)] : [] })),
       answer: ans.id,
       maxGuesses: MAX_GUESSES,
-      title: '这是哪部剧？',
-      placeholder: '输入剧名…',
+      title: 'Which show is this?',
+      placeholder: 'Type a show\u2026',
       clues,
-      cluesTitle: '热力图和线索',
-      columns: ['首播', '总分'],
+      cluesTitle: 'Heatmap and clues',
+      columns: ['Debut', 'Rating'],
       near: (g, a) => Math.abs(byId.get(g.id).start - byId.get(a.id).start) <= 2,
       scoring: scoreFor,
       feedback: (g, a) => {
@@ -147,20 +147,20 @@ export default {
     const trend = avg(last) - avg(first);
     const lastEp = last.reduce((a, b) => (b.e > a.e ? b : a));
     const finale = lastEp.r - avg(last);
-    const shape = trend < -0.3 ? `口碑下滑：首季 ${avg(first).toFixed(1)} → 末季 ${avg(last).toFixed(1)}，热力图越往下越淡`
-      : trend > 0.3 ? `越拍越好：首季 ${avg(first).toFixed(1)} → 末季 ${avg(last).toFixed(1)}，热力图越往下越深`
-        : `全程稳定：首季 ${avg(first).toFixed(1)} → 末季 ${avg(last).toFixed(1)}，颜色深浅几乎不变`;
-    const finaleTxt = finale >= 0.4 ? `大结局 S${lastEp.s}E${lastEp.e} 评分 ${lastEp.r}，比末季均分高 ${finale.toFixed(1)}，热力图右下角那格特别深`
-      : `大结局 S${lastEp.s}E${lastEp.e} 评分 ${lastEp.r}，和末季均分差不多`;
+    const shape = trend < -0.3 ? `Slipping: season 1 ${avg(first).toFixed(1)} \u2192 last season ${avg(last).toFixed(1)}, the heatmap fades toward the bottom`
+      : trend > 0.3 ? `Getting better: season 1 ${avg(first).toFixed(1)} \u2192 last season ${avg(last).toFixed(1)}, the heatmap darkens toward the bottom`
+        : `Steady: season 1 ${avg(first).toFixed(1)} \u2192 last season ${avg(last).toFixed(1)}, the shading barely changes`;
+    const finaleTxt = finale >= 0.4 ? `The finale, S${lastEp.s}E${lastEp.e}, is rated ${lastEp.r}, ${finale.toFixed(1)} above the last season\'s average: the bottom-right cell is especially dark`
+      : `The finale, S${lastEp.s}E${lastEp.e}, is rated ${lastEp.r}, about the same as the last season\'s average`;
     res.detail = ui.h('div', { class: 'ds-stack' },
       ui.kv([
-        ['答案', `${ans.title}（${ans.start}${ans.end ? '–' + ans.end : '–'}）· ${ans.genres.join(' / ')}`],
-        ['IMDb 总评分', `${ans.rating} · ${core.fmtCompact(ans.votes)} 人评分`],
-        ['最高一集', `S${best.s}E${best.e} “${best.t}” ${best.r}`],
-        ['最低一集', `S${worst.s}E${worst.e} “${worst.t}” ${worst.r}`],
-        ['走势', shape],
-        ['最强 / 最弱季', `S${peak[0]} 均分 ${peak[1].toFixed(1)} / S${dip[0]} 均分 ${dip[1].toFixed(1)}`],
-        ['结局', finaleTxt],
+        ['Answer', `${ans.title} (${ans.start}${ans.end ? '\u2013' + ans.end : '\u2013'}) \u00b7 ${ans.genres.join(' / ')}`],
+        ['IMDb rating', `${ans.rating} \u00b7 ${core.fmtCompact(ans.votes)} votes`],
+        ['Best episode', `S${best.s}E${best.e} “${best.t}” ${best.r}`],
+        ['Worst episode', `S${worst.s}E${worst.e} “${worst.t}” ${worst.r}`],
+        ['Trend', shape],
+        ['Best / worst season', `S${peak[0]} avg ${peak[1].toFixed(1)} / S${dip[0]} avg ${dip[1].toFixed(1)}`],
+        ['Finale', finaleTxt],
       ]));
     return res;
   },
