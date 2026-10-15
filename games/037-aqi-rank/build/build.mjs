@@ -14,7 +14,7 @@ for (let i = 0; i < CITIES.length; i += BATCH) {
   const part = CITIES.slice(i, i + BATCH);
   const f = `${raw}/batch${i / BATCH}_${START}_${END}.json`;
   if (!fs.existsSync(f)) {
-    const u = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${part.map((c) => c[2]).join(',')}&longitude=${part.map((c) => c[3]).join(',')}&hourly=pm2_5&start_date=${START}&end_date=${END}&timezone=UTC`;
+    const u = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${part.map((c) => c[1]).join(',')}&longitude=${part.map((c) => c[2]).join(',')}&hourly=pm2_5&start_date=${START}&end_date=${END}&timezone=UTC`;
     const r = await fetch(u, { headers: { 'User-Agent': 'daily-data-games/1.0 (class project)' } });
     const txt = await r.text();
     if (!r.ok) throw new Error(`batch ${i} ${r.status} ${txt.slice(0, 100)}`);
@@ -41,7 +41,7 @@ while (puzzles.length < 90 && tries++ < 50000) {
 }
 fs.writeFileSync('data.json', JSON.stringify({
   source: 'Open-Meteo Air Quality API (Copernicus CAMS global reanalysis/forecast)', dates,
-  cities: CITIES.map(([en, zh, lat, lng]) => ({ en, zh, lat, lng })), pm, puzzles }));
+  cities: CITIES.map(([en, lat, lng]) => ({ en, lat, lng })), pm, puzzles }));
 console.log(dates.length, puzzles.length, fs.statSync('data.json').size);
 
 // live fixture: Beijing, Delhi, Chicago, 15 days up to 2026-10-14 (hourly, as the API returns it)

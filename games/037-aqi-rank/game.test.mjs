@@ -5,7 +5,7 @@ const rd = (f) => JSON.parse(fs.readFileSync(new URL(f, import.meta.url)));
 const data = rd('./data.json'); const fx = rd('./build/fixture.json');
 
 test('mean skips nulls', () => assert.equal(mean([1, null, 3]), 2));
-test('band edges (EPA 2024)', () => { assert.equal(band(5), '优'); assert.equal(band(9.1), '中等'); assert.equal(band(40), '对敏感人群不健康'); assert.equal(band(200), '非常不健康'); assert.equal(band(300), '危险'); });
+test('band edges (EPA 2024)', () => { assert.equal(band(5), 'Good'); assert.equal(band(9.1), 'Moderate'); assert.equal(band(40), 'Unhealthy for sensitive groups'); assert.equal(band(200), 'Very unhealthy'); assert.equal(band(300), 'Hazardous'); });
 test('addDays', () => { assert.equal(addDays('2026-10-01', -1), '2026-09-30'); assert.equal(addDays('2026-02-28', 1), '2026-03-01'); });
 
 const checkPuzzle = (p, label) => {
@@ -13,7 +13,7 @@ const checkPuzzle = (p, label) => {
   assert.equal(new Set(p.cities.map((c) => c.en)).size, 5, label + ' distinct');
   assert.match(p.date, /^\d{4}-\d\d-\d\d$/);
   for (const c of p.cities) {
-    assert.ok(c.zh && c.en, label); assert.equal(c.prev.length, 14);
+    assert.ok(c.en && !c.zh, label); assert.equal(c.prev.length, 14);
     assert.ok(Number.isFinite(c.val) && c.val >= 2 && c.val < 1500, `${label} val ${c.val}`);
     for (const v of c.prev) assert.ok(v == null || (Number.isFinite(v) && v >= 0 && v < 1500), label + ' prev');
     assert.ok(c.prev[13] != null);
@@ -52,7 +52,7 @@ test('toLive shapes the committed fixture', () => {
 
 test('live puzzle from synthetic 40-city live data validates', () => {
   const cities = data.cities.slice(0, 40);
-  const live = { date: '2026-10-14', cities: cities.map((c, i) => ({ en: c.en, zh: c.zh, prev: Array(14).fill(10 + i * 3), val: 8 + i * 4 })) };
+  const live = { date: '2026-10-14', cities: cities.map((c, i) => ({ en: c.en, prev: Array(14).fill(10 + i * 3), val: 8 + i * 4 })) };
   const rng = makeRng('x');
   const p = g.puzzle({ data: { ...data, live }, rng, pick: (a) => a[0] });
   assert.equal(p.live, true); checkPuzzle(p, 'live');

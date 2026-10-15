@@ -13,16 +13,16 @@ export const heuristicHits = (rows, key) => {
 export default {
   meta: {
     num: 37, slug: 'aqi-rank', title: 'AQI Rank',
-    tagline: '5 座城市，按昨天的 PM2.5 从高到低排序。线索只有此前两周的走势。',
+    tagline: 'Rank five cities by yesterday\u2019s PM2.5, from dirtiest to cleanest. Your only clue is the two weeks before.',
     category: 'science', data: 'live',
     howTo: [
-      '每座城市给出此前 14 天的 PM2.5 走势（统一纵轴，可直接比较高低）、两周均值和「前一天」的值，单位 µg/m³，越高越脏。',
-      '拖动或用 ↑↓ 把 5 座城市按「目标日」（昨天，UTC）的日均 PM2.5 从高到低排好，最多提交 3 次，每次会告诉你几个位置对了。',
-      '空气污染有惯性，但风、雨、沙尘会让单日大幅偏离均值：注意走势末端的突变。',
+      'Each city shows its PM2.5 for the 14 days before the target day (one shared vertical axis, so heights compare directly), the two-week average and the value for the day before, in \u00b5g/m\u00b3. Higher is dirtier.',
+      'Drag or use \u2191\u2193 to rank the five cities by their daily mean PM2.5 on the target day (yesterday, UTC), highest first. You get up to 3 submissions, and each tells you how many positions are right.',
+      'Air pollution has inertia, but wind, rain and dust storms can swing a single day far from the average. Watch for a sudden move at the end of each curve.',
     ],
-    scoring: '排对：100 / 67 / 33 分（第 1 / 2 / 3 次提交排对）；3 次都没排对，按最后一次的正确位置数得 0–30 分。',
-    sources: [{ name: 'Open-Meteo Air Quality API（Copernicus CAMS）', url: 'https://open-meteo.com/en/docs/air-quality-api', note: '免 Key、支持 CORS；OpenAQ v3 需要 API Key 且无 CORS，故改用' }],
-    dataNote: '每天打开页面时，浏览器直接向 Open-Meteo 请求 50 座城市最近 15 天的逐小时 PM2.5（CAMS 大气成分模型的分析/预报值，不是地面监测站读数），取 UTC 日均；目标日 = 谜题日期的前一天，所有玩家拿到同一组数据。5 座城市由日期确定性抽取，并要求相邻城市相差 ≥ 20%。网络失败时回退到 data.json 里 2026-07 至 2026-10 的快照谜题（此时目标日为快照中的某一天）。',
+    scoring: 'Correct order: 100 / 67 / 33 points (1st / 2nd / 3rd submission). If none of the 3 is right, 0\u201330 points by the number of correct positions in your last try.',
+    sources: [{ name: 'Open-Meteo Air Quality API (Copernicus CAMS)', url: 'https://open-meteo.com/en/docs/air-quality-api', note: 'no key, CORS enabled; OpenAQ v3 needs an API key and has no CORS, so it is not used' }],
+    dataNote: 'Each day, your browser asks Open-Meteo for the last 15 days of hourly PM2.5 for 50 cities (CAMS atmospheric-composition model analysis/forecast values, not ground-station readings) and takes UTC daily means. The target day is the day before the puzzle date, so every player gets the same data. The five cities are drawn deterministically from the date, and neighbors in the ranking must differ by at least 20%. If the request fails, the game falls back to a snapshot puzzle in data.json from July to October 2026 (the target day is then a day inside the snapshot).',
   },
 
   puzzle({ data, pick, rng }) {
@@ -30,11 +30,11 @@ export default {
     if (L) {
       for (let k = 0; k < 400; k++) {
         const set = rng.sample(L.cities, 5);
-        if (validSet(set)) return { live: true, date: L.date, cities: set.map(({ en, zh, prev, val }) => ({ en, zh, prev, val })) };
+        if (validSet(set)) return { live: true, date: L.date, cities: set.map(({ en, prev, val }) => ({ en, prev, val })) };
       }
     }
     const p = pick(data.puzzles);
-    return { live: false, date: data.dates[p.t], cities: p.c.map((ci) => ({ en: data.cities[ci].en, zh: data.cities[ci].zh, prev: data.pm[ci].slice(p.t - 14, p.t), val: data.pm[ci][p.t] })) };
+    return { live: false, date: data.dates[p.t], cities: p.c.map((ci) => ({ en: data.cities[ci].en, prev: data.pm[ci].slice(p.t - 14, p.t), val: data.pm[ci][p.t] })) };
   },
 
   async load(ctx) {
@@ -63,13 +63,13 @@ export default {
       ],
       x: { domain: [0, 13] }, y: { domain: [0, ymax] },
     }), { height: 64, width: 130, axis: false })));
-    ctx.stage.append(ui.panel({ kicker: p.live ? '线索 · 实时数据' : '线索 · 快照数据', title: `目标日：${p.date}` },
-      ui.h('p', { class: 'ink2' }, `下面是各城市目标日之前 14 天的日均 PM2.5（µg/m³，所有走势共用 0–${Math.round(ymax)} 的纵轴，圆点是前一天）。目标日的值是隐藏的。`),
-      ui.grid(130, ...rows.map((r, i) => ui.h('div', { class: 'ds-stack' }, ui.h('b', r.zh), sparks[i],
-        ui.h('div', { class: 'small mono muted' }, ui.h('div', `均值 ${r.avg.toFixed(0)}`), ui.h('div', `前一天 ${r.last.toFixed(0)}`)))))));
+    ctx.stage.append(ui.panel({ kicker: p.live ? 'Clues \u00b7 live data' : 'Clues \u00b7 snapshot data', title: `Target day: ${p.date}` },
+      ui.h('p', { class: 'ink2' }, `Daily mean PM2.5 (\u00b5g/m\u00b3) for the 14 days before the target day. All curves share a 0\u2013${Math.round(ymax)} axis and the dot is the day before. The target day\u2019s value is hidden.`),
+      ui.grid(130, ...rows.map((r, i) => ui.h('div', { class: 'ds-stack' }, ui.h('b', r.en), sparks[i],
+        ui.h('div', { class: 'small mono muted' }, ui.h('div', `Avg ${r.avg.toFixed(0)}`), ui.h('div', `Day before ${r.last.toFixed(0)}`)))))));
     const res = await ctx.order({
-      items: rows.map((r) => ({ id: r.en, label: r.zh, sub: `前 14 天均值 ${r.avg.toFixed(0)} · 前一天 ${r.last.toFixed(0)}`, value: r.val })),
-      direction: 'desc', attempts: 3, title: `${p.date} 谁的空气最脏？`, topLabel: 'PM2.5 最高', bottomLabel: '最低',
+      items: rows.map((r) => ({ id: r.en, label: r.en, sub: `14-day avg ${r.avg.toFixed(0)} \u00b7 day before ${r.last.toFixed(0)}`, value: r.val })),
+      direction: 'desc', attempts: 3, title: `${p.date}: whose air is dirtiest?`, topLabel: 'Highest PM2.5', bottomLabel: 'Lowest',
       format: (v) => `${v.toFixed(1)} µg/m³`,
     });
     const sorted = rows.slice().sort((a, b) => b.val - a.val);
@@ -77,10 +77,10 @@ export default {
     const pct = Math.round(Math.abs(mover.val / mover.avg - 1) * 100);
     const hAvg = heuristicHits(rows, 'avg'), hLast = heuristicHits(rows, 'last');
     res.detail = ui.h('div', { class: 'ds-stack' },
-      ui.table({ columns: [{ key: 'zh', label: '城市' }, { key: 'val', label: '目标日', num: true }, { key: 'avg', label: '两周均值', num: true }, { key: 'last', label: '前一天', num: true }, { key: 'b', label: '等级（EPA）' }],
-        rows: sorted.map((r) => ({ zh: r.zh, val: r.val.toFixed(1), avg: r.avg.toFixed(1), last: r.last.toFixed(1), b: band(r.val) })) }),
-      ui.callout(`答案：${sorted.map((r) => r.zh).join(' > ')}。最脏的是${sorted[0].zh}（${sorted[0].val.toFixed(1)}），最干净的是${sorted[4].zh}（${sorted[4].val.toFixed(1)}）。`, 'good'),
-      ui.callout(`只按两周均值排能对 ${hAvg}/5 个位置，只按前一天的值排能对 ${hLast}/5 个。${mover.zh}偏离自己的均值最多：目标日 ${mover.val.toFixed(0)}，均值 ${mover.avg.toFixed(0)}，${mover.val > mover.avg ? '高' : '低'}了 ${pct}%——${mover.val > mover.avg ? '走势末端的上扬已是预兆，污染在积累' : '风或降水清洗了空气，污染被冲走'}。`));
+      ui.table({ columns: [{ key: 'en', label: 'City', fmt: (v, row) => ui.h('div', {}, v, ui.h('div', { class: 'small muted' }, row.b)) }, { key: 'val', label: 'Target', num: true }, { key: 'avg', label: 'Avg', num: true }, { key: 'last', label: 'Prev.', num: true }],
+        rows: sorted.map((r) => ({ en: r.en, val: r.val.toFixed(1), avg: r.avg.toFixed(1), last: r.last.toFixed(1), b: band(r.val) })) }),
+      ui.callout(`Answer: ${sorted.map((r) => r.en).join(' > ')}. The dirtiest was ${sorted[0].en} (${sorted[0].val.toFixed(1)}), the cleanest ${sorted[4].en} (${sorted[4].val.toFixed(1)}).`, 'good'),
+      ui.callout(`Ranking by the two-week average alone gets ${hAvg}/5 positions right; ranking by the day before gets ${hLast}/5. ${mover.en} strayed furthest from its own average: ${mover.val.toFixed(0)} on the target day against an average of ${mover.avg.toFixed(0)}, ${pct}% ${mover.val > mover.avg ? 'higher' : 'lower'}. ${mover.val > mover.avg ? 'The uptick at the end of the curve was the warning: pollution was building.' : 'Wind or rain scrubbed the air and the pollution washed away.'}`));
     return res;
   },
 };

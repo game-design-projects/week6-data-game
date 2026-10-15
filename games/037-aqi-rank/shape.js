@@ -1,8 +1,8 @@
 // Pure helpers shared by game.js, build/build.mjs and the tests.
 export const mean = (xs) => { const a = xs.filter((x) => x != null); return a.length ? a.reduce((p, q) => p + q, 0) / a.length : null; };
 
-/** US EPA 24h PM2.5 AQI breakpoints (2024 revision), Chinese labels. */
-export const band = (v) => (v <= 9 ? '优' : v <= 35.4 ? '中等' : v <= 55.4 ? '对敏感人群不健康' : v <= 125.4 ? '不健康' : v <= 225.4 ? '非常不健康' : '危险');
+/** US EPA 24h PM2.5 AQI breakpoints (2024 revision). */
+export const band = (v) => (v <= 9 ? 'Good' : v <= 35.4 ? 'Moderate' : v <= 55.4 ? 'Unhealthy for sensitive groups' : v <= 125.4 ? 'Unhealthy' : v <= 225.4 ? 'Very unhealthy' : 'Hazardous');
 
 export const addDays = (iso, n) => new Date(Date.parse(iso + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
 
@@ -34,7 +34,7 @@ export function toLive(raw, day, cities, min = 5) {
     const m = dailyMeans(j);
     const val = m[day] ?? null;
     if (val == null) return;
-    list.push({ en: cities[i].en, zh: cities[i].zh, prev: dates.map((d) => m[d] ?? null), val });
+    list.push({ en: cities[i].en, prev: dates.map((d) => m[d] ?? null), val });
   });
   if (list.length < min) throw new Error('too few cities with data');
   return { date: day, cities: list };
