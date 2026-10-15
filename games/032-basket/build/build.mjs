@@ -6,14 +6,14 @@ const here = path.dirname(new URL(import.meta.url).pathname);
 const raw = (f) => fs.readFileSync(path.join(here, 'raw', f), 'utf8').split('\n').slice(1);
 
 const ITEMS = {
-  702111: ['白面包', '磅', '🍞'], 708111: ['鸡蛋（大号 A 级）', '打', '🥚'], 706111: ['整鸡', '磅', '🐔'],
-  711211: ['香蕉', '磅', '🍌'], 701111: ['面粉', '磅', '🌾'], 701312: ['长粒米', '磅', '🍚'],
-  703111: ['牛肩绞肉', '磅', '🥩'], 704111: ['培根', '磅', '🥓'], 704211: ['带骨猪排', '磅', '🍖'],
-  715211: ['白砂糖', '磅', '🍬'], 717311: ['研磨咖啡', '磅', '☕'], 712311: ['番茄', '磅', '🍅'],
-  713111: ['冷冻橙汁浓缩', '16 盎司', '🧃'], 706212: ['鸡腿', '磅', '🍗'], 718311: ['薯片', '磅', '🍟'],
-  710212: ['切达奶酪', '磅', '🧀'],
-  709112: ['全脂牛奶', '加仑', '🥛'], 710111: ['黄油', '磅', '🧈'], 712112: ['白土豆', '磅', '🥔'],
-  711311: ['脐橙', '磅', '🍊'], 711111: ['红蛇果苹果', '磅', '🍎'], 716141: ['花生酱', '磅', '🥜'], 712211: ['结球生菜', '磅', '🥬'],
+  702111: ['White bread', 'lb', '🍞'], 708111: ['Eggs, large grade A', 'dozen', '🥚'], 706111: ['Whole chicken', 'lb', '🐔'],
+  711211: ['Bananas', 'lb', '🍌'], 701111: ['Flour', 'lb', '🌾'], 701312: ['Long-grain rice', 'lb', '🍚'],
+  703111: ['Ground chuck', 'lb', '🥩'], 704111: ['Bacon', 'lb', '🥓'], 704211: ['Bone-in pork chops', 'lb', '🍖'],
+  715211: ['White sugar', 'lb', '🍬'], 717311: ['Ground coffee', 'lb', '☕'], 712311: ['Tomatoes', 'lb', '🍅'],
+  713111: ['Frozen orange juice concentrate', '16 oz', '🧃'], 706212: ['Chicken legs', 'lb', '🍗'], 718311: ['Potato chips', 'lb', '🍟'],
+  710212: ['Cheddar cheese', 'lb', '🧀'],
+  709112: ['Whole milk', 'gallon', '🥛'], 710111: ['Butter', 'lb', '🧈'], 712112: ['White potatoes', 'lb', '🥔'],
+  711311: ['Navel oranges', 'lb', '🍊'], 711111: ['Red Delicious apples', 'lb', '🍎'], 716141: ['Peanut butter', 'lb', '🥜'], 712211: ['Iceberg lettuce', 'lb', '🥬'],
 };
 const m = {};
 for (const f of ['ap.data.0.Current', 'ap.data.3.Food']) for (const r of raw(f)) {

@@ -37,7 +37,7 @@ test('puzzle() valid for days 1-120', () => {
     assert.ok(p.n >= 40);
     const cents = p.items.map((id) => d.items[id].p[p.year]);
     for (const c of cents) assert.ok(Number.isInteger(c) && c >= 5 && c <= 2000, `${p.year} price ${c}`);
-    for (const id of p.items) { const it = d.items[id]; assert.ok(it.name && it.unit && it.emoji); }
+    for (const id of p.items) { const it = d.items[id]; assert.ok(it.name && it.unit && it.emoji); assert.match(it.name + it.unit, /^[\x20-\x7e]+$/); }
     assert.equal(p.sol.reduce((s, q, i) => s + q * cents[i], 0), 2000);
   }
 });
