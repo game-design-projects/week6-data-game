@@ -7,7 +7,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname !== '/api/fetch') return env.ASSETS.fetch(request);
-    if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('method not allowed', { status: 405 });
+    if (request.method !== 'GET') return new Response('method not allowed', { status: 405 });
 
     const target = upstreamTarget(url.searchParams.get('url'));
     if (!target) return new Response('upstream not allowed', { status: 403 });
