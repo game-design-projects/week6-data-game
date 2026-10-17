@@ -5,6 +5,7 @@ import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { upstreamTarget } from '../worker/allow.js';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = {
@@ -19,6 +20,15 @@ export function startServer(port = 0) {
   const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://x');
+      if (url.pathname === '/api/fetch') {
+        // Local stand-in for worker/index.js: same allowlist, no caching.
+        const target = upstreamTarget(url.searchParams.get('url'));
+        if (!target) { res.writeHead(403, { 'content-type': 'text/plain' }).end('upstream not allowed'); return; }
+        const up = await fetch(target, { headers: { accept: 'application/json, text/plain;q=0.9, */*;q=0.8' } });
+        res.writeHead(up.status, { 'content-type': up.headers.get('content-type') ?? 'application/octet-stream', 'cache-control': 'no-store' });
+        res.end(Buffer.from(await up.arrayBuffer()));
+        return;
+      }
       let p = path.normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
       let file = path.join(ROOT, p);
       if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }

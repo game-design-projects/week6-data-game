@@ -55,6 +55,13 @@ async function fetchWithTimeout(url, { timeout = 10000, ...init } = {}) {
   } finally { clearTimeout(t); }
 }
 
+// Live upstream data goes through the Worker's /api/fetch, which caches each URL until
+// the next UTC midnight; the same max-age lets the browser reuse it for that day.
+const viaProxy = (url) => {
+  const abs = new URL(url, location.href);
+  return abs.origin === location.origin ? url : `/api/fetch?url=${encodeURIComponent(abs.href)}`;
+};
+
 /** fetch JSON with timeout + sessionStorage cache (per URL, per day). */
 async function fetchJSON(url, { timeout, cache = true, log } = {}) {
   const key = `ddg:fetch:${url}`;
@@ -62,7 +69,7 @@ async function fetchJSON(url, { timeout, cache = true, log } = {}) {
     try { const hit = sessionStorage.getItem(key); if (hit) return JSON.parse(hit); } catch { /* ignore */ }
   }
   log?.('fetch', url);
-  const data = await (await fetchWithTimeout(url, { timeout })).json();
+  const data = await (await fetchWithTimeout(viaProxy(url), { timeout })).json();
   if (cache) { try { sessionStorage.setItem(key, JSON.stringify(data)); } catch { /* quota */ } }
   return data;
 }
@@ -253,7 +260,7 @@ export async function boot() {
       data: snapshot,
       asset: (p) => new URL(p, base).href,
       fetchJSON: (url, o = {}) => fetchJSON(url, { ...o, log }),
-      fetchText: async (url, o = {}) => (await fetchWithTimeout(url, o)).text(),
+      fetchText: async (url, o = {}) => (await fetchWithTimeout(viaProxy(url), o)).text(),
       log,
       stage,
       sleep: (ms) => new Promise((r) => setTimeout(r, ms)),

@@ -1,8 +1,10 @@
-// Static site on Cloudflare Workers (assets only, no worker script), served at
-// https://daily-data.<account-subdomain>.workers.dev. Build dist/ first: scripts/dist.sh
+// Static site on Cloudflare Workers, served at https://daily-data.<account-subdomain>.workers.dev.
+// worker/index.js proxies and caches live upstream data at /api/fetch; everything else is
+// static assets from dist/. Build dist/ first: scripts/dist.sh
 {
   "name": "daily-data",
   "compatibility_date": "2026-09-01",
+  "main": "worker/index.js",
   "workers_dev": true,
-  "assets": { "directory": "./dist" }
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/api/*"] }
 }
