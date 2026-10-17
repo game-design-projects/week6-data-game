@@ -1,5 +1,6 @@
 // The site is English-only: no Chinese characters or full-width punctuation in any
-// file that ships (what scripts/dist.sh deploys: pages, engine, games minus build/ and tests).
+// file that ships (what scripts/dist.sh deploys: pages, engine, games minus build/ and tests, plus the
+// Worker source that wrangler bundles).
 //   node --test tests/english.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -24,6 +25,7 @@ const ALLOW = {
 function shipped() {
   const out = ['index.html', 'play.html'];
   for (const f of readdirSync(path.join(ROOT, 'engine'))) if (/\.(js|css)$/.test(f)) out.push(`engine/${f}`);
+  for (const f of readdirSync(path.join(ROOT, 'worker'))) if (/\.js$/.test(f)) out.push(`worker/${f}`);
   const walk = (rel) => {
     for (const e of readdirSync(path.join(ROOT, rel), { withFileTypes: true })) {
       const p = `${rel}/${e.name}`;

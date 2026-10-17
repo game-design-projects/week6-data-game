@@ -5,6 +5,7 @@ import * as dom from './dom.js';
 import * as libs from './libs.js';
 import * as presets from './presets.js';
 import * as store from './store.js';
+import { fetchLive } from './livefetch.js';
 
 const { h } = dom;
 
@@ -45,31 +46,14 @@ export function makeLogger(prefix) {
 }
 
 // ───────── fetch helpers ─────────
-async function fetchWithTimeout(url, { timeout = 10000, ...init } = {}) {
-  const ac = new AbortController();
-  const t = setTimeout(() => ac.abort(), timeout);
-  try {
-    const res = await fetch(url, { ...init, signal: ac.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-    return res;
-  } finally { clearTimeout(t); }
-}
-
-// Live upstream data goes through the Worker's /api/fetch, which caches each URL until
-// the next UTC midnight; the same max-age lets the browser reuse it for that day.
-const viaProxy = (url) => {
-  const abs = new URL(url, location.href);
-  return abs.origin === location.origin ? url : `/api/fetch?url=${encodeURIComponent(abs.href)}`;
-};
-
-/** fetch JSON with timeout + sessionStorage cache (per URL, per day). */
+/** fetch JSON with timeout + sessionStorage cache (per URL, per day). Live hosts go through the Worker cache (engine/livefetch.js). */
 async function fetchJSON(url, { timeout, cache = true, log } = {}) {
   const key = `ddg:fetch:${url}`;
   if (cache) {
     try { const hit = sessionStorage.getItem(key); if (hit) return JSON.parse(hit); } catch { /* ignore */ }
   }
   log?.('fetch', url);
-  const data = await (await fetchWithTimeout(viaProxy(url), { timeout })).json();
+  const data = await (await fetchLive(url, { timeout, reload: !cache })).json();
   if (cache) { try { sessionStorage.setItem(key, JSON.stringify(data)); } catch { /* quota */ } }
   return data;
 }
@@ -260,7 +244,8 @@ export async function boot() {
       data: snapshot,
       asset: (p) => new URL(p, base).href,
       fetchJSON: (url, o = {}) => fetchJSON(url, { ...o, log }),
-      fetchText: async (url, o = {}) => (await fetchWithTimeout(viaProxy(url), o)).text(),
+      fetchText: async (url, { timeout, ...init } = {}) => (await fetchLive(url, { timeout, init })).text(),
+      fetchBuffer: async (url, { timeout, ...init } = {}) => (await fetchLive(url, { timeout, init })).arrayBuffer(),
       log,
       stage,
       sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
