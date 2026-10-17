@@ -5,6 +5,7 @@ import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { handleProxy } from '../worker/proxy.js';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = {
@@ -19,6 +20,12 @@ export function startServer(port = 0) {
   const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://x');
+      if (url.pathname === '/api/fetch') {
+        // Local stand-in for worker/index.js: the same handler, with no browser caching.
+        const r = await handleProxy(new Request(url, { method: req.method }), { browserCache: false });
+        res.writeHead(r.status, Object.fromEntries(r.headers)).end(Buffer.from(await r.arrayBuffer()));
+        return;
+      }
       let p = path.normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
       let file = path.join(ROOT, p);
       if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }

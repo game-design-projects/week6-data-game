@@ -63,12 +63,8 @@ export default {
   async load(ctx) {
     const day = ctx.core.addDays(ctx.date, -1);
     const fetchPng = async (hh) => {
-      const ac = new AbortController(), t = setTimeout(() => ac.abort(), 15000);
-      try {
-        const r = await fetch(livePath(day, hh), { signal: ac.signal });
-        if (!r.ok) throw new Error(`${r.status} ${hh}`);
-        return { hh, img: await decodePNG(await r.arrayBuffer()) };
-      } catch (e) { ctx.log.warn('storm-run composite', hh, String(e)); return null; } finally { clearTimeout(t); }
+      try { return { hh, img: await decodePNG(await ctx.fetchBuffer(livePath(day, hh), { timeout: 15000 })) }; }
+      catch (e) { ctx.log.warn('storm-run composite', hh, String(e)); return null; }
     };
     const imgs = (await Promise.all(LIVE_HOURS.map(fetchPng))).filter(Boolean);
     if (!imgs.length) throw new Error('no composites for ' + day);

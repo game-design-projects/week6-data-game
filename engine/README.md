@@ -51,8 +51,8 @@ export default {
     return { item, decoys: rng.sample(data.items.filter((x) => x !== item), 3) };
   },
 
-  // Optional, browser only: fetch live data (must be CORS-enabled). Return the
-  // same shape as data.json, or throw → the engine falls back to data.json.
+  // Optional, browser only: fetch live data with ctx.fetchJSON/fetchText/fetchBuffer (see "Live data"
+  // below). Return the same shape as data.json, or throw → the engine falls back to data.json.
   async load(ctx) { … },
 
   // UI. Render into ctx.stage, await presets, return a result.
@@ -83,7 +83,7 @@ Presets return this shape already. Compose stages with `ctx.combine([r1, r2])` �
 | `ctx.pick(arr)` | same daily pick as in `puzzle()` |
 | `ctx.stage` | the `<main>` column — append panels here |
 | `ctx.asset(path)` | URL of a file in your folder |
-| `ctx.fetchJSON(url, {timeout})` / `ctx.fetchText` | fetch with timeout (+ session cache for JSON) |
+| `ctx.fetchJSON(url, {timeout, cache})` / `ctx.fetchText` / `ctx.fetchBuffer` | fetch live data with a timeout (JSON also gets a session cache; `cache: false` skips it and the HTTP cache). Hosts in `engine/upstream.js` go through the Worker's per-day cache; see "Live data" |
 | `ctx.log(…)`, `ctx.log.warn`, `ctx.log.error`, `ctx.log.scope('x')` | logging (visible with `?debug=1`, collected by checks). Log key steps. |
 | `ctx.autoplay` / `ctx.practice` / `ctx.smoke` | test & practice flags |
 | `ctx.sleep(ms)` | promise delay |
@@ -240,6 +240,30 @@ module must import cleanly in Node).
 6. Games that "need an LLM" have no runtime model: generate the text/descriptions/groupings **offline at build
    time** (you are the model — write them into data.json from the real data) or use templates/question menus.
    Explain the substitution in `dataNote`.
+
+## Live data
+
+Every live request goes through `ctx.fetchJSON(url, {timeout})`, `ctx.fetchText(url, {timeout})` (text/CSV) or
+`ctx.fetchBuffer(url, {timeout})` (binary, e.g. PNG → `ArrayBuffer`). Do not call `fetch()` yourself.
+
+- **Hosts in `ALLOWED` (`engine/upstream.js`) are proxied.** The browser asks the site's Worker
+  (`/api/fetch?url=…`, `worker/proxy.js`), which fetches the upstream through Cloudflare's cache and keeps it
+  until the next 00:00 UTC; the browser keeps it for the time left in that day. Each URL is therefore fetched
+  once per edge location per UTC day, not once per visit. The Worker serves only what it can check: a PNG, a
+  complete non-empty JSON object/array, or plain text. HTML, `[]`, `{}` and truncated bodies come back as
+  502 and are never served, so the game falls back to its snapshot.
+- **A new host or path must be added to `ALLOWED` in `engine/upstream.js`** (host → path prefixes). Otherwise
+  the request is fetched directly from the browser (CORS must allow it), without the shared cache.
+  `tests/proxy.test.mjs` runs every live game's `load()` and fails if it asks for a URL the list does not cover.
+- **Request closed periods only** (yesterday, or earlier). The cache keeps a 2xx answer until UTC midnight
+  whatever it contains, so a URL whose answer still changes during the day (an open range ending today)
+  would show the same stale answer to everyone.
+- **Only the URL and `timeout` reach the Worker.** Request headers and other `fetch` options given to
+  `fetchText` / `fetchBuffer` apply to direct requests only; the Worker always sends its own `Accept` and a
+  descriptive `User-Agent`.
+- **A missing or failing Worker is not fatal.** On a static host, `file://`, `serve.mjs` without network, or a
+  404/405/5xx from `/api/fetch`, the browser retries the upstream directly (once, within the same time budget).
+  `node scripts/serve.mjs` runs the same handler locally, without caching.
 
 ## Testing (definition of done)
 
