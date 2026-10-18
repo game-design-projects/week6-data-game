@@ -1,0 +1,66 @@
+# Checks the web/ bundle on every PR and push; pushes it to itch.io on main only.
+# Needs secret BUTLER_API_KEY (pull requests never see it).
+name: itch.io
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: itch-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  GAME_DIR: web
+  ITCH_TARGET: stevenli-phoenix-work/week6-data-game:html5
+  BUTLER_VERSION: 15.31.0
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # A build step (e.g. `pnpm install && pnpm build` into web/) goes here once the game needs one.
+      - name: Test the bundle checker
+        run: node --test scripts/check-html5.test.mjs
+      - name: Validate HTML5 bundle
+        run: node scripts/check-html5.mjs "$GAME_DIR"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: ${{ env.GAME_DIR }}
+          retention-days: 7
+
+  publish:
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web
+          path: ${{ env.GAME_DIR }}
+      - name: Install butler
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://broth.itch.zone/butler/linux-amd64/$BUTLER_VERSION/archive/default" -o "$RUNNER_TEMP/butler.zip"
+          unzip -q "$RUNNER_TEMP/butler.zip" -d "$RUNNER_TEMP/butler"
+          chmod +x "$RUNNER_TEMP/butler/butler"
+          "$RUNNER_TEMP/butler/butler" -V
+      - name: Push to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$BUTLER_API_KEY" || { echo '::error::Missing BUTLER_API_KEY secret'; exit 1; }
+          "$RUNNER_TEMP/butler/butler" push "$GAME_DIR" "$ITCH_TARGET" --userversion "$GITHUB_SHA"
+          "$RUNNER_TEMP/butler/butler" status "$ITCH_TARGET"
+          echo "Published $GITHUB_SHA to https://stevenli-phoenix-work.itch.io/week6-data-game" >> "$GITHUB_STEP_SUMMARY"

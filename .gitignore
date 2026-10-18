@@ -1,7 +1,3 @@
 .DS_Store
 node_modules/
-.shots/
-games/*/build/raw/
-*.log
-dist/
-.wrangler/
+.*.bak.*

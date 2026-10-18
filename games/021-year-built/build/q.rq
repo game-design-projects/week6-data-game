@@ -1,7 +1,0 @@
-SELECT ?b ?bLabel ?inc ?img ?lat ?lon WHERE {
-  VALUES ?boro { wd:Q11299 wd:Q18419 wd:Q18426 wd:Q18424 wd:Q18432 }
-  ?b wdt:P131 ?boro .
-  ?b wdt:P571 ?inc . ?b wdt:P18 ?img . ?b wdt:P625 ?c .
-  BIND(geof:latitude(?c) AS ?lat) BIND(geof:longitude(?c) AS ?lon)
-  ?b rdfs:label ?bLabel . FILTER(LANG(?bLabel)="en")
-}

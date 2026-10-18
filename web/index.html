@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 6 · Data Game</title>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --ink: #1d1b16;
+    --muted: #6b665b;
+    --bar: #d9d2c3;
+    --hot: #e0552f;
+    --line: rgba(29, 27, 22, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14130f;
+      --ink: #f1ede4;
+      --muted: #9a9486;
+      --bar: #34312a;
+      --hot: #ff7a4d;
+      --line: rgba(241, 237, 228, .12);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: grid;
+    place-items: center;
+    padding: 24px 16px;
+    overflow: hidden;
+  }
+  main { width: min(720px, 100%); display: grid; gap: 28px; }
+  .eyebrow {
+    font: 600 12px/1 ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-size: clamp(40px, 8vw, 72px);
+    line-height: .95;
+    letter-spacing: -.03em;
+    font-weight: 800;
+  }
+  h1 span { color: var(--hot); }
+  p { color: var(--muted); max-width: 44ch; }
+  .chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 120px;
+    border-bottom: 1px solid var(--line);
+  }
+  .chart i {
+    flex: 1;
+    background: var(--bar);
+    border-radius: 3px 3px 0 0;
+    transform-origin: bottom;
+    animation: grow .9s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  @keyframes grow { from { transform: scaleY(.04); } }
+  .chart i.today { background: var(--hot); }
+  footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font: 12px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--muted);
+  }
+  @media (prefers-reduced-motion: reduce) { .chart i { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">NYU Game Design · Week 6</div>
+  <h1>Something new<br>is <span>loading</span>.</h1>
+  <p>A daily game built from public data. We're settling the idea right now, so this page will change soon.</p>
+  <div class="chart" id="chart" aria-hidden="true"></div>
+  <footer>
+    <span id="date"></span>
+    <span>coming soon</span>
+  </footer>
+</main>
+<script>
+  // Fake "daily data": bar heights seeded by today's UTC date, so every visitor sees the same chart today.
+  const day = new Date().toISOString().slice(0, 10);
+  let seed = [...day].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 2654435761) >>> 0, 2166136261);
+  const rand = () => ((seed = Math.imul(seed ^ (seed >>> 15), 2246822507) >>> 0) % 1000) / 1000;
+  const chart = document.getElementById('chart');
+  Array.from({ length: 28 }, (_, i) => {
+    const bar = document.createElement('i');
+    if (i === 27) bar.className = 'today';
+    bar.style.height = (18 + rand() * 78).toFixed(1) + '%';
+    bar.style.animationDelay = i * 18 + 'ms';
+    chart.append(bar);
+  });
+  document.getElementById('date').textContent = day + ' UTC';
+</script>
+</body>
+</html>

@@ -1,1 +1,0 @@
-node build/build.mjs > build/log.txt 2>&1  62.30s user 0.48s system 56% cpu 1:50.38 total
