@@ -26,7 +26,7 @@ python3 -m http.server -d web 8000   # → http://localhost:8000/
 
 ## Publishing
 
-Every push to `main` publishes `web/` to `stevenli-phoenix-work/week6-data-game:html5` with [butler](https://itch.io/docs/butler/). The build's user version is the commit SHA, so `butler status` shows exactly which commit is live. Pull requests only run the checks and never see the `BUTLER_API_KEY` secret.
+Every push to `main` publishes `web/` to `stevenli-phoenix-work/week6-data-game:html5` with [butler](https://itch.io/docs/butler/). The build's user version is the commit SHA, so `butler status` shows exactly which commit is live. Pull requests only run the checks and never see the `BUTLER_API_KEY` secret. That secret is set on this repo itself: the org-level copy doesn't reach private repos on GitHub's free plan.
 
 Before pushing, run the same checks CI runs:
 
