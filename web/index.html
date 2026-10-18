@@ -2,104 +2,150 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Week 6 · Data Game</title>
-<style>
-  :root {
-    --bg: #f4f1ea;
-    --ink: #1d1b16;
-    --muted: #6b665b;
-    --bar: #d9d2c3;
-    --hot: #e0552f;
-    --line: rgba(29, 27, 22, .12);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #14130f;
-      --ink: #f1ede4;
-      --muted: #9a9486;
-      --bar: #34312a;
-      --hot: #ff7a4d;
-      --line: rgba(241, 237, 228, .12);
-    }
-  }
-  * { box-sizing: border-box; margin: 0; }
-  html, body { height: 100%; }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    display: grid;
-    place-items: center;
-    padding: 24px 16px;
-    overflow: hidden;
-  }
-  main { width: min(720px, 100%); display: grid; gap: 28px; }
-  .eyebrow {
-    font: 600 12px/1 ui-monospace, "SF Mono", Menlo, monospace;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  h1 {
-    font-size: clamp(40px, 8vw, 72px);
-    line-height: .95;
-    letter-spacing: -.03em;
-    font-weight: 800;
-  }
-  h1 span { color: var(--hot); }
-  p { color: var(--muted); max-width: 44ch; }
-  .chart {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    height: 120px;
-    border-bottom: 1px solid var(--line);
-  }
-  .chart i {
-    flex: 1;
-    background: var(--bar);
-    border-radius: 3px 3px 0 0;
-    transform-origin: bottom;
-    animation: grow .9s cubic-bezier(.2, .8, .2, 1) both;
-  }
-  @keyframes grow { from { transform: scaleY(.04); } }
-  .chart i.today { background: var(--hot); }
-  footer {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    font: 12px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
-    color: var(--muted);
-  }
-  @media (prefers-reduced-motion: reduce) { .chart i { animation: none; } }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paint by Words</title>
+<meta name="description" content="A daily color game: an AI describes a secret color, you mix it from real paint, drop by drop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='13' r='9' fill='%23009FE3'/%3E%3Ccircle cx='20' cy='13' r='9' fill='%23E5007D' fill-opacity='.85'/%3E%3Ccircle cx='16' cy='20' r='9' fill='%23FFE100' fill-opacity='.85'/%3E%3C/svg%3E">
 </head>
 <body>
-<main>
-  <div class="eyebrow">NYU Game Design · Week 6</div>
-  <h1>Something new<br>is <span>loading</span>.</h1>
-  <p>A daily game built from public data. We're settling the idea right now, so this page will change soon.</p>
-  <div class="chart" id="chart" aria-hidden="true"></div>
-  <footer>
-    <span id="date"></span>
-    <span>coming soon</span>
-  </footer>
-</main>
-<script>
-  // Fake "daily data": bar heights seeded by today's UTC date, so every visitor sees the same chart today.
-  const day = new Date().toISOString().slice(0, 10);
-  let seed = [...day].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 2654435761) >>> 0, 2166136261);
-  const rand = () => ((seed = Math.imul(seed ^ (seed >>> 15), 2246822507) >>> 0) % 1000) / 1000;
-  const chart = document.getElementById('chart');
-  Array.from({ length: 28 }, (_, i) => {
-    const bar = document.createElement('i');
-    if (i === 27) bar.className = 'today';
-    bar.style.height = (18 + rand() * 78).toFixed(1) + '%';
-    bar.style.animationDelay = i * 18 + 'ms';
-    chart.append(bar);
-  });
-  document.getElementById('date').textContent = day + ' UTC';
-</script>
+<div class="app" id="app">
+  <header class="bar">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="15" cy="16" r="10" fill="#009FE3"/>
+        <circle cx="25" cy="16" r="10" fill="#E5007D" style="mix-blend-mode:multiply"/>
+        <circle cx="20" cy="25" r="10" fill="#FFE100" style="mix-blend-mode:multiply"/>
+      </svg>
+      <div>
+        <h1>Paint by Words</h1>
+        <p class="sub" id="puzzle-label">#1</p>
+      </div>
+    </div>
+    <nav class="tools">
+      <button class="icon" id="btn-help" aria-label="How to play" title="How to play (?)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><circle cx="12" cy="16.8" r=".6" class="fill"/></svg>
+      </button>
+      <button class="icon" id="btn-archive" aria-label="Past colors" title="Past colors">
+        <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
+      </button>
+      <button class="icon" id="btn-stats" aria-label="Your stats" title="Your stats">
+        <svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
+      </button>
+      <button class="icon" id="btn-sound" aria-label="Sound on" title="Sound">
+        <svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="mute" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <main class="stage">
+    <section class="studio" aria-label="Mixing pot">
+      <div class="pot-wrap">
+        <svg class="ring" id="ring" viewBox="0 0 300 300" aria-hidden="true"></svg>
+        <div class="dish">
+          <div class="pot" id="pot" role="img" aria-label="Empty pot">
+            <div class="pot-empty" id="pot-empty">
+              <span>add paint</span>
+            </div>
+            <div class="reveal" id="reveal" hidden>
+              <span class="half mine"><b>your mix</b><i id="reveal-mine"></i></span>
+              <span class="half truth"><b>the color</b><i id="reveal-truth"></i></span>
+            </div>
+          </div>
+        </div>
+        <p class="drops" id="drops">0 / 30 drops</p>
+      </div>
+
+      <div class="tubes" id="tubes" role="group" aria-label="Paints"></div>
+
+      <div class="actions" id="actions">
+        <button class="ghost" id="btn-undo" title="Take back the last drop (Backspace)">
+          <svg viewBox="0 0 24 24"><path d="M9 7 4.5 11.5 9 16"/><path d="M5 11.5h9.5a5 5 0 0 1 0 10H12"/></svg>
+          Undo
+        </button>
+        <button class="primary" id="btn-test" title="Compare your pot with the color (Enter)">Test mix</button>
+        <button class="secondary" id="btn-lock" title="End the round with your best test (L)">Lock in</button>
+      </div>
+    </section>
+
+    <section class="desk">
+      <article class="card clue-card" id="clue-card">
+        <header class="eyebrow">
+          <span>Described by an AI</span>
+          <span id="clue-count">clue 1 of 3</span>
+        </header>
+        <ol class="clues" id="clues"></ol>
+        <button class="link" id="btn-clue">Another clue <span class="cost">−5 pts</span></button>
+      </article>
+
+      <article class="card tests-card" id="tests-card">
+        <header class="eyebrow">
+          <span>Tests</span>
+          <span id="tests-count">0 of 6</span>
+        </header>
+        <ol class="tests" id="tests"></ol>
+        <p class="empty-note" id="tests-empty">Mix something, then press <b>Test mix</b>. You'll see how close you are and which way to go.</p>
+        <footer class="score-line" id="score-line"></footer>
+      </article>
+
+      <article class="card result-card" id="result" hidden>
+        <div class="result-top">
+          <div>
+            <p class="eyebrow-plain" id="result-kicker">Locked in</p>
+            <p class="big-score"><span id="result-points">0</span><small>pts</small></p>
+          </div>
+          <div class="result-meta" id="result-meta"></div>
+        </div>
+        <p class="crowd">The crowd calls it <b id="result-name"></b> <code id="result-hex"></code></p>
+        <p class="crowd-note">Name from the xkcd Color Survey (222,500 people naming random colors).</p>
+        <div class="par" id="result-par"></div>
+        <div class="result-actions">
+          <button class="primary" id="btn-share">
+            <svg viewBox="0 0 24 24"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg>
+            Share result
+          </button>
+          <button class="secondary" id="btn-more">Past colors</button>
+        </div>
+        <textarea class="share-text" id="share-text" rows="3" readonly hidden aria-label="Result to copy"></textarea>
+        <p class="next" id="next"></p>
+      </article>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="dlg-help" class="sheet">
+  <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+  <h2>How to play</h2>
+  <ol class="steps">
+    <li><span class="n">1</span><div><b>Read the clue.</b> An AI looked at today's secret color and described it in words, without naming it.</div></li>
+    <li><span class="n">2</span><div><b>Drop paint into the pot.</b> Press a paint or its key (W K C M Y). It mixes like real paint: cyan + yellow makes green, magenta + yellow makes red.</div></li>
+    <li><span class="n">3</span><div><b>Test your mix.</b> You get a match % and which way to go: lighter or darker, redder or greener, yellower or bluer. Paint you've tested stays in the pot for good.</div></li>
+    <li><span class="n">4</span><div><b>Lock in.</b> Your score is your best match, minus 3 for each test after the first and 5 for each extra clue. Up to 6 tests, 30 drops.</div></li>
+  </ol>
+  <p class="fine">A new color every day at midnight. Clues are written by an AI (<span id="clue-model">an LLM</span>) and only kept if a second AI, reading them cold, can get close to the color. Colors come from the <a href="https://xkcd.com/color/rgb/" target="_blank" rel="noopener">xkcd Color Survey</a> (public domain); paint mixing uses the Kubelka–Munk model via <a href="https://github.com/rvanwijnen/spectral.js" target="_blank" rel="noopener">spectral.js</a>.</p>
+  <form method="dialog"><button class="primary wide" autofocus>Start mixing</button></form>
+</dialog>
+
+<dialog id="dlg-archive" class="sheet">
+  <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+  <h2>Past colors</h2>
+  <p class="fine">Every day so far. Finished ones show the color you were after.</p>
+  <div class="archive" id="archive"></div>
+</dialog>
+
+<dialog id="dlg-stats" class="sheet">
+  <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+  <h2>Your stats</h2>
+  <div class="stat-row" id="stat-row"></div>
+  <h3>Scores</h3>
+  <div class="histogram" id="histogram"></div>
+</dialog>
+
+<script type="module" src="game.js"></script>
 </body>
 </html>

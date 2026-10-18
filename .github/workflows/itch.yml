@@ -26,9 +26,9 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-      # A build step (e.g. `pnpm install && pnpm build` into web/) goes here once the game needs one.
-      - name: Test the bundle checker
-        run: node --test scripts/check-html5.test.mjs
+      # No build step: web/ is plain ES modules. Levels are generated offline (scripts/build-levels.mjs) and committed.
+      - name: Unit tests (rules, color math, level data, bundle checker)
+        run: node --test tests/*.test.mjs scripts/*.test.mjs
       - name: Validate HTML5 bundle
         run: node scripts/check-html5.mjs "$GAME_DIR"
       - uses: actions/upload-artifact@v7
