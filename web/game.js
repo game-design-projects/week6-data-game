@@ -1,17 +1,18 @@
 // DOM layer: renders state.js games and feeds them input. All rules live in state.js.
 import { MAX_TESTS, TEST_PENALTY, MATCH, square, oklab, rgb, hsvToHex, hexToHsv } from './color.js';
 import * as S from './state.js';
-import { EPOCH, LEVELS, CLUE_MODEL } from './levels.js';
+import * as P from './painting.js';
+import { EPOCH, LEVELS } from './levels.js';
 
 const GAME_URL = 'https://stevenli-phoenix-work.itch.io/week6-data-game';
-const log = (...args) => console.debug('[paint-by-words]', ...args);
+const log = (...args) => console.debug('[restoration]', ...args);
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
 // Storage can be missing or throw (private mode, blocked cookies in the itch iframe); the game still plays.
 const store = {
-  get(k) { try { return JSON.parse(localStorage.getItem('pbw:v1:' + k)); } catch { return null; } },
-  set(k, v) { try { localStorage.setItem('pbw:v1:' + k, JSON.stringify(v)); } catch { /* play without saving */ } },
+  get(k) { try { return JSON.parse(localStorage.getItem('rst:v1:' + k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem('rst:v1:' + k, JSON.stringify(v)); } catch { /* play without saving */ } },
 };
 
 const today = Math.max(1, S.dayNumber(new Date(), EPOCH));
@@ -22,8 +23,9 @@ const isLight = hex => oklab(hex)[0] > 0.7;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let n = today, level, game;
-let fresh = { test: false, clue: false };
+let fresh = { test: false };
 let hsv = { h: 0, s: 0.5, v: 0.75 }; // picker position; kept here because a gray hex has no hue to recover
+let showOriginal = true; // after the round: the original painting, or the player's version
 
 // ---------- sound: tiny synthesized plips, no assets ----------
 let audio = null;
@@ -101,6 +103,50 @@ svThumb.addEventListener('keydown', e => {
   e.preventDefault();
 });
 
+// ---------- the painting ----------
+const canvas = $('art'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+let art = null; // { n, base, work, idx, off, edge, full } for the level on screen
+let artFrame = 0;
+
+const loadImage = src => new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(new Error(`could not load ${src}`)); img.src = src; });
+
+async function loadArt(num, lv) {
+  art = null;
+  $('art-status').textContent = 'Loading the painting…';
+  canvas.width = lv.w;
+  canvas.height = lv.h;
+  ctx.clearRect(0, 0, lv.w, lv.h);
+  try {
+    const img = await loadImage(`paintings/${lv.id}.jpg`);
+    if (num !== n) return; // the player moved on to another day while this loaded
+    ctx.drawImage(img, 0, 0, lv.w, lv.h);
+    const base = ctx.getImageData(0, 0, lv.w, lv.h);
+    const idx = P.regionIndices(lv.mask);
+    art = { n: num, base: base.data, work: new ImageData(new Uint8ClampedArray(base.data), lv.w, lv.h), idx, off: P.offsets(base.data, idx), edge: P.edgeIndices(idx, lv.w, lv.h), full: null };
+    $('art-status').textContent = '';
+    drawArt();
+    loadImage(`paintings/${lv.id}-full.jpg`).then(full => { if (art?.n === num) { art.full = full; drawArt(); } }, () => {});
+  } catch (e) {
+    // getImageData throws on file:// pages; the game needs to be served over http(s)
+    log('painting failed', e);
+    $('art-status').textContent = location.protocol === 'file:' ? 'Open this page through a web server to see the painting.' : 'The painting did not load. Try reloading.';
+  }
+}
+
+/** Repaint on the next frame; dragging the picker calls this many times a frame. */
+function drawArt() {
+  if (artFrame) return;
+  artFrame = requestAnimationFrame(() => {
+    artFrame = 0;
+    if (!art || art.n !== n) return;
+    if (game.done && showOriginal && art.full) { ctx.drawImage(art.full, 0, 0, canvas.width, canvas.height); return; }
+    const hex = game.done ? S.best(game).hex : game.pick;
+    P.repaint(art.work.data, art.base, art.idx, art.off, hex);
+    if (!hex) for (const p of art.edge) art.work.data.set([255, 255, 255], p * 4); // outline the patch until it has a color
+    ctx.putImageData(art.work, 0, 0);
+  });
+}
+
 // ---------- actions ----------
 function save() { store.set('game:' + n, game); }
 
@@ -127,20 +173,11 @@ function finish() {
   const results = store.get('results') || {};
   if (!results[n]) {
     const b = S.best(game);
-    results[n] = { pts: S.points(game), acc: b.acc, tests: game.tests.length, clues: game.clues, on: localDate(), hex: level.hex };
+    results[n] = { pts: S.points(game), acc: b.acc, tests: game.tests.length, on: localDate(), hex: level.hex };
     store.set('results', results);
   }
   log('finished', n, results[n]);
   [523, 659, 784].forEach((f, i) => tone(f, { dur: 0.3, type: 'triangle', slide: 1, at: i * 0.08, gain: 0.06 }));
-  render();
-}
-
-function clue() {
-  if (!S.canClue(game, level)) return;
-  game = S.revealClue(game, level);
-  fresh.clue = true;
-  save();
-  tone(698, { dur: 0.1, slide: 1.3, gain: 0.05 });
   render();
 }
 
@@ -192,27 +229,15 @@ function renderPicker() {
   const shown = game.done ? S.best(game).hex : game.pick;
   swatch.classList.toggle('is-empty', !shown);
   if (shown) paint(mine, shown); else mine.style.removeProperty('--c');
-  $('swatch-label').textContent = game.done ? 'your best' : shown ? (S.canTest(game) ? 'your pick' : 'already tested') : 'drag to pick a color';
+  $('swatch-label').textContent = game.done ? 'your best' : shown ? (S.canTest(game) ? 'your pick' : 'already tested') : 'pick a color';
   $('swatch-hex').textContent = shown || '';
-  $('swatch-truth').hidden = !game.done;
-  if (game.done) { paint($('swatch-truth'), level.hex); $('truth-hex').textContent = level.hex; }
-  swatch.setAttribute('aria-label', game.done ? `Your best ${shown}, the color ${level.hex}` : shown ? `Your pick ${shown}` : 'No color picked yet');
+  swatch.setAttribute('aria-label', shown ? `${game.done ? 'Your best' : 'Your pick'} ${shown}` : 'No color picked yet');
+  drawArt();
 }
 
-function renderClues() {
-  const list = $('clues');
-  const shown = game.done ? level.clues.length : game.clues;
-  if (list.children.length !== shown || list.dataset.n !== String(n)) {
-    list.replaceChildren(...level.clues.slice(0, shown).map((text, i) => {
-      const li = el('li', fresh.clue && i === shown - 1 ? 'fresh' : '', text);
-      return li;
-    }));
-    list.dataset.n = n;
-  }
-  $('clue-card').classList.toggle('done', game.done);
-  $('clue-count').textContent = game.done ? `${game.clues} of ${level.clues.length} used` : `clue ${game.clues} / ${level.clues.length}`;
-  const btn = $('btn-clue');
-  btn.hidden = game.done || !S.canClue(game, level);
+function renderInfo() {
+  $('art-title').textContent = level.title;
+  $('art-meta').textContent = [level.artist, level.date].filter(Boolean).join(' · ');
 }
 
 function renderTests() {
@@ -239,30 +264,31 @@ function renderTests() {
     const b = S.best(game);
     const left = el('span');
     left.append('Lock in now: ', el('b', null, `${S.points(game)} pts`));
-    const costs = [];
-    if (game.tests.length > 1) costs.push(`${TEST_PENALTY * (game.tests.length - 1)} for tests`);
-    if (game.clues > 1) costs.push(`${S.CLUE_COST * (game.clues - 1)} for clues`);
-    line.append(left, el('span', null, `best ${Math.round(b.acc)}%${costs.length ? ' − ' + costs.join(' − ') : ''}`));
+    const cost = game.tests.length > 1 ? ` − ${TEST_PENALTY * (game.tests.length - 1)} for tests` : '';
+    line.append(left, el('span', null, `best ${Math.round(b.acc)}%${cost}`));
   }
 }
 
 function shareText() {
   const grid = game.tests.map(t => square(t.acc)).join('');
-  return `Paint by Words #${n} · ${S.points(game)} pts\n${grid} ${game.tests.length} test${game.tests.length > 1 ? 's' : ''} · ${game.clues} clue${game.clues > 1 ? 's' : ''}\n${GAME_URL}`;
+  return `Restoration #${n} · ${level.title} · ${S.points(game)} pts\n${grid} ${game.tests.length} test${game.tests.length > 1 ? 's' : ''}\n${GAME_URL}`;
 }
 
 function renderResult() {
   const card = $('result');
   card.hidden = !game.done;
   $('tests-card').hidden = game.done;
-  $('actions').hidden = game.done;
+  $('mixer').hidden = game.done;
+  const compare = $('btn-compare');
+  compare.hidden = !game.done;
+  compare.textContent = showOriginal ? 'Show my version' : 'Show the original';
   if (!game.done) return;
   const b = S.best(game);
   $('result-kicker').textContent = b.acc >= 98 ? 'Spot on' : b.acc >= MATCH ? 'A match' : b.acc >= 80 ? 'Close' : 'Locked in';
   $('result-points').textContent = S.points(game);
   const meta = $('result-meta');
-  meta.replaceChildren(el('div', 'grid', game.tests.map(t => square(t.acc)).join('')), el('div', null, `best match ${Math.round(b.acc)}%`), el('div', null, `${game.tests.length} test${game.tests.length > 1 ? 's' : ''} · ${game.clues} clue${game.clues > 1 ? 's' : ''}`));
-  $('result-name').textContent = level.name;
+  meta.replaceChildren(el('div', 'grid', game.tests.map(t => square(t.acc)).join('')), el('div', null, `best match ${Math.round(b.acc)}%`), el('div', null, `${game.tests.length} test${game.tests.length > 1 ? 's' : ''}`));
+  $('result-name').textContent = level.crowd;
   $('result-hex').textContent = level.hex;
   // Side by side in RGB, so the miss is concrete: which channel was off and by how much.
   const par = $('result-par');
@@ -272,8 +298,15 @@ function renderResult() {
     return [dot, el('span', null, label), el('code', null, `${hex}  rgb(${rgb(hex).join(', ')})`)];
   };
   const diff = rgb(level.hex).map((t, i) => t - rgb(b.hex)[i]);
-  par.replaceChildren(...row('Your best', b.hex), ...row('The color', level.hex),
+  par.replaceChildren(...row('Your best', b.hex), ...row('The original', level.hex),
     el('span'), el('span'), el('span', null, `Off by R ${fmtDiff(diff[0])} · G ${fmtDiff(diff[1])} · B ${fmtDiff(diff[2])}`));
+  const credit = $('result-credit');
+  credit.replaceChildren(`${level.title}, ${level.artist}${level.date ? ', ' + level.date : ''}. `);
+  const a = el('a', null, 'Art Institute of Chicago');
+  a.href = level.url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  credit.append(a, level.credit ? ` · ${level.credit}` : '');
   $('share-text').hidden = true;
   tickNext();
 }
@@ -287,20 +320,20 @@ function tickNext() {
   const now = new Date();
   const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const s = Math.max(0, Math.floor((midnight - now) / 1000));
-  next.textContent = `Next color in ${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  next.textContent = `Next painting in ${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 setInterval(tickNext, 1000);
 
 function render() {
   $('puzzle-label').textContent = `#${n} · ${fmtDate(S.dateOf(n, EPOCH))}${n < today ? ' · from the archive' : n > today ? ' · preview' : ''}`;
   renderPicker();
-  renderClues();
+  renderInfo();
   renderTests();
   renderResult();
   $('btn-test').disabled = !S.canTest(game);
   $('btn-lock').disabled = !S.canLock(game);
   $('btn-lock').textContent = game.tests.length ? `Lock in · ${S.points(game)}` : 'Lock in';
-  fresh = { test: false, clue: false };
+  fresh = { test: false };
 }
 
 function load(num) {
@@ -308,8 +341,9 @@ function load(num) {
   level = levelFor(n);
   game = S.revive(store.get('game:' + n));
   hsv = game.pick ? hexToHsv(game.pick) : { h: 0, s: 0.5, v: 0.75 };
+  showOriginal = true;
+  loadArt(n, level);
   log('load', n, { tests: game.tests.length, done: game.done });
-  $('clues').dataset.n = '';
   render();
 }
 
@@ -383,7 +417,6 @@ async function share() {
 // ---------- wiring ----------
 $('btn-test').addEventListener('click', runTest);
 $('btn-lock').addEventListener('click', lockIn);
-$('btn-clue').addEventListener('click', clue);
 $('btn-share').addEventListener('click', share);
 $('btn-more').addEventListener('click', openArchive);
 $('btn-archive').addEventListener('click', openArchive);
@@ -404,7 +437,7 @@ document.addEventListener('keydown', e => {
   else if (k === '?') $('dlg-help').showModal();
 });
 
-$('clue-model').textContent = CLUE_MODEL;
+$('btn-compare').addEventListener('click', () => { showOriginal = !showOriginal; render(); });
 
 // #day=N opens a specific puzzle (handy for testing future levels locally).
 const hashDay = +(location.hash.match(/day=(\d+)/)?.[1] || 0);

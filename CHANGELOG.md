@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.0] - 2026-10-19
+
+The game is now **Restoration**. The previous game (Paint by Words) is kept on the `archive/paint-by-words` branch.
+
+### Added
+
+- Each day is a public-domain painting from the Art Institute of Chicago with one region's color taken out. The player repaints it with the color picker and sees the result live in the painting. After the round you can switch between your version and the original.
+- `scripts/build_paintings.py`: automated levels. It fetches the museum's highlighted public-domain paintings and segments each one (SLIC superpixels merged by color, weighting hue over lightness). It then picks a region that stands out from its surroundings, takes the region's mean OKLab color as the answer, and stores the region as neutral gray plus per-pixel offsets so the game can repaint it while keeping the shading. It also writes a contact sheet for review.
+- `web/painting.js`: decodes and repaints the region.
+- The result shows the painting's credit and a link to it on the museum's site, plus the answer's xkcd survey name.
+
+### Changed
+
+- Score is the best match minus 3 for each extra test. There are no clues.
+- `color.js` does the OKLab math itself, the same way the builder does.
+- Saves use a new storage key, so stats from Paint by Words don't mix with the new game.
+
+### Removed
+
+- AI-written clues, the LLM level builder and the clue experiment, and `spectral.js` paint mixing.
+
 ## [0.2.0] - 2026-10-19
 
 ### Changed
