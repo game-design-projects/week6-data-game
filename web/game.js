@@ -2,6 +2,7 @@
 import { MAX_TESTS, TEST_PENALTY, MATCH, square, oklab, rgb, hsvToHex, hexToHsv } from './color.js';
 import * as S from './state.js';
 import * as P from './painting.js';
+import * as Net from './scores.js';
 import { EPOCH, LEVELS } from './levels.js';
 
 const GAME_URL = 'https://stevenli-phoenix-work.itch.io/week6-data-game';
@@ -15,6 +16,13 @@ const store = {
   set(k, v) { try { localStorage.setItem('rst:v1:' + k, JSON.stringify(v)); } catch { /* play without saving */ } },
 };
 
+// An anonymous id for the score server, so a player's rounds add up without an account.
+const device = store.get('device') || (() => {
+  const id = globalThis.crypto?.randomUUID?.() || `d-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  store.set('device', id);
+  return id;
+})();
+
 const today = Math.max(1, S.dayNumber(new Date(), EPOCH));
 const levelFor = n => LEVELS[(n - 1) % LEVELS.length];
 const localDate = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -26,6 +34,7 @@ let n = today, level, game;
 let fresh = { test: false };
 let hsv = { h: 0, s: 0.5, v: 0.75 }; // picker position; kept here because a gray hex has no hue to recover
 let showOriginal = true; // after the round: the original painting, or the player's version
+let everyone = null; // the score server's results for the day on screen, once it answers
 
 // ---------- sound: tiny synthesized plips, no assets ----------
 let audio = null;
@@ -48,7 +57,7 @@ function tone(freq, { dur = 0.12, type = 'sine', gain = 0.07, at = 0, slide = 0.
 
 // ---------- the picker: hue ring around a saturation/brightness square ----------
 const picker = $('picker'), sv = $('sv'), hueThumb = $('hue-thumb'), svThumb = $('sv-thumb');
-const RING_MID = 0.443; // ring centerline as a fraction of the picker width (the ring is the outer 22.6% of the radius)
+const RING_MID = 0.4575; // ring centerline as a fraction of the picker width (the ring is the outer 17% of the radius)
 const clamp01 = x => Math.min(1, Math.max(0, x));
 let drag = null;
 
@@ -75,7 +84,7 @@ picker.addEventListener('pointerdown', e => {
   if (!S.canPick(game)) return;
   const r = picker.getBoundingClientRect(), q = sv.getBoundingClientRect(), pad = 12;
   const dist = Math.hypot(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2) / (r.width / 2);
-  if (e.target === hueThumb || (dist > 0.72 && dist <= 1.04)) drag = 'hue';
+  if (e.target === hueThumb || (dist > 0.78 && dist <= 1.04)) drag = 'hue';
   else if (e.clientX > q.left - pad && e.clientX < q.right + pad && e.clientY > q.top - pad && e.clientY < q.bottom + pad) drag = 'sv';
   else return;
   picker.setPointerCapture(e.pointerId);
@@ -177,8 +186,109 @@ function finish() {
     store.set('results', results);
   }
   log('finished', n, results[n]);
+  sync(n);
   [523, 659, 784].forEach((f, i) => tone(f, { dur: 0.3, type: 'triangle', slide: 1, at: i * 0.08, gain: 0.06 }));
   render();
+}
+
+// ---------- everyone else ----------
+/** Send the finished round (the server keeps the first one it gets) and show how everyone did. */
+async function sync(num) {
+  const data = await Net.submit(device, store.get('name') || '', num, game.tests.map(t => t.hex));
+  if (num !== n) return;
+  everyone = data;
+  renderEveryone();
+}
+
+function picksStrip(node, data, answer) {
+  node.replaceChildren();
+  const first = el('i', 'answer');
+  first.style.setProperty('--c', answer);
+  first.title = `The original, ${answer}`;
+  node.append(first);
+  for (const p of data.picks) {
+    const i = el('i');
+    i.style.setProperty('--c', p.hex);
+    i.title = `${p.hex} · ${Math.round(p.acc)}%`;
+    node.append(i);
+  }
+  node.setAttribute('aria-label', `Best colors of ${data.total} players, closest first`);
+}
+
+function renderEveryone() {
+  const box = $('everyone');
+  box.hidden = !game.done || !everyone || everyone.day !== n;
+  if (box.hidden) return;
+  const { total, mine } = everyone;
+  const line = $('everyone-line');
+  line.replaceChildren(total <= 1 ? 'You are the first to restore this one.'
+    : `You beat ${Math.round((100 * (mine?.beat ?? 0)) / (total - 1))}% of ${total - 1} other player${total > 2 ? 's' : ''} · #${mine?.rank ?? '?'} today`);
+  if (!store.get('name')) {
+    const add = el('button', 'link', 'Add your name');
+    add.addEventListener('click', () => openBoard('day'));
+    line.append(' · ', add);
+  }
+  picksStrip($('picks'), everyone, level.hex);
+}
+
+// ---------- leaderboard ----------
+let boardTab = 'day';
+
+function boardRow(rank, { name, me }, right, hex) {
+  const row = el('li', 'brow' + (me ? ' me' : ''));
+  row.append(el('span', 'rank', rank));
+  const who = el('span', 'who');
+  if (hex) { const sw = el('i', 'sw'); sw.style.setProperty('--c', hex); who.append(sw); }
+  who.append(el('span', null, me ? `${name} (you)` : name));
+  row.append(who, right);
+  return row;
+}
+
+async function renderBoard() {
+  $('tab-day').setAttribute('aria-selected', boardTab === 'day');
+  $('tab-all').setAttribute('aria-selected', boardTab === 'all');
+  $('tab-day').textContent = n === today ? 'Today' : `#${n}`;
+  const board = $('board');
+  board.replaceChildren(el('p', 'fine', 'Loading…'));
+  const num = n, tab = boardTab;
+  const data = tab === 'day' ? await Net.dayResults(device, num) : await Net.leaderboard(device);
+  if (tab !== boardTab || num !== n) return;
+  if (!data) { board.replaceChildren(el('p', 'fine', "Scores aren't reachable right now. Your own stats are still saved on this device.")); return; }
+  const list = el('ol', 'blist');
+  if (tab === 'day') {
+    if (!data.total) { board.replaceChildren(el('p', 'fine', 'Nobody has finished this painting yet.')); return; }
+    data.top.forEach((r, i) => list.append(boardRow(i + 1, r, el('span', 'pts', `${r.pts}`), r.hex)));
+    if (data.mine && !data.top.some(r => r.me)) list.append(boardRow(data.mine.rank, { name: 'You', me: false }, el('span', 'pts', `${data.mine.pts}`)));
+    const strip = el('div', 'picks');
+    picksStrip(strip, data, level.hex);
+    board.replaceChildren(el('p', 'fine', `${data.total} player${data.total > 1 ? 's' : ''} finished ${level.title}. Everyone's best color, closest first:`), strip, list);
+  } else {
+    if (!data.top.length) { board.replaceChildren(el('p', 'fine', 'No finished rounds yet.')); return; }
+    data.top.forEach((r, i) => {
+      const row = boardRow(i + 1, r, el('span', 'pts', `${r.total}`), null);
+      row.title = `${r.days} day${r.days > 1 ? 's' : ''}, ${r.avg} on average`;
+      list.append(row);
+    });
+    if (data.mine && !data.top.some(r => r.me)) list.append(boardRow(data.mine.rank, { name: 'You', me: false }, el('span', 'pts', `${data.mine.total}`)));
+    board.replaceChildren(el('p', 'fine', 'Total points over every painting you have finished.'), list);
+  }
+}
+
+function openBoard(tab = boardTab) {
+  boardTab = tab;
+  $('name-input').value = store.get('name') || '';
+  $('dlg-board').showModal();
+  renderBoard();
+}
+
+async function saveName(e) {
+  e.preventDefault();
+  const name = $('name-input').value.replace(/\s+/g, ' ').trim().slice(0, 24);
+  store.set('name', name);
+  toast(name ? `You are ${name}` : 'Name cleared');
+  await Net.rename(device, name);
+  renderEveryone();
+  renderBoard();
 }
 
 function toast(msg) {
@@ -308,6 +418,7 @@ function renderResult() {
   a.rel = 'noopener';
   credit.append(a, level.credit ? ` · ${level.credit}` : '');
   $('share-text').hidden = true;
+  renderEveryone();
   tickNext();
 }
 
@@ -342,7 +453,9 @@ function load(num) {
   game = S.revive(store.get('game:' + n));
   hsv = game.pick ? hexToHsv(game.pick) : { h: 0, s: 0.5, v: 0.75 };
   showOriginal = true;
+  everyone = null;
   loadArt(n, level);
+  if (game.done) sync(n);
   log('load', n, { tests: game.tests.length, done: game.done });
   render();
 }
@@ -418,7 +531,11 @@ async function share() {
 $('btn-test').addEventListener('click', runTest);
 $('btn-lock').addEventListener('click', lockIn);
 $('btn-share').addEventListener('click', share);
-$('btn-more').addEventListener('click', openArchive);
+$('btn-more').addEventListener('click', () => openBoard('day'));
+$('btn-board').addEventListener('click', () => openBoard());
+$('tab-day').addEventListener('click', () => { boardTab = 'day'; renderBoard(); });
+$('tab-all').addEventListener('click', () => { boardTab = 'all'; renderBoard(); });
+$('name-form').addEventListener('submit', saveName);
 $('btn-archive').addEventListener('click', openArchive);
 $('btn-stats').addEventListener('click', openStats);
 $('btn-help').addEventListener('click', () => $('dlg-help').showModal());

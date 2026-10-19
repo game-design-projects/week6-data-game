@@ -5,3 +5,6 @@ node_modules/
 # painting builder: API replies, downloads, the review contact sheet
 data/aic-cache/
 __pycache__/
+
+# wrangler dev / deploy scratch
+.wrangler/
