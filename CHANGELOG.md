@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- The score server is live at https://restoration.lishuyustevenli.workers.dev, so everyone's results and the leaderboard now show up in the game. `worker/wrangler.jsonc` points at its D1 database, and `npx wrangler deploy` from `worker/` redeploys it.
+
 ## [1.1.0] - 2026-10-19
 
 ### Added
