@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.0] - 2026-10-19
+
+### Added
+
+- Everyone's results: after a round you see where you placed among everyone who finished that painting, plus a strip of every player's best color, closest first.
+- Leaderboard (trophy button, or the button on the result card): today's top 10 and all-time totals, with your own rank, and an optional display name.
+- `worker/`: the score server, a Cloudflare Worker with a D1 table. It re-scores every round from the tested colors using the game's own levels and rules, keeps the first round per player per day, and never sends device ids back. If it can't be reached, the game still plays without these features.
+
+### Changed
+
+- Bigger color picker: the wheel is 250 px instead of 196 px on desktop and larger on phones, with a thinner ring and a bigger saturation/brightness square.
+
 ## [1.0.0] - 2026-10-19
 
 The game is now **Restoration**. The previous game (Paint by Words) is kept on the `archive/paint-by-words` branch.

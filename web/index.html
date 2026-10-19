@@ -32,6 +32,9 @@
       <button class="icon" id="btn-archive" aria-label="Past paintings" title="Past paintings">
         <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
       </button>
+      <button class="icon" id="btn-board" aria-label="Leaderboard" title="Leaderboard">
+        <svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4.5a3 3 0 0 0 3.5 4M16 6h3.5a3 3 0 0 1-3.5 4M12 13v4M8.5 20h7M10 17h4"/></svg>
+      </button>
       <button class="icon" id="btn-stats" aria-label="Your stats" title="Your stats">
         <svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
       </button>
@@ -96,13 +99,17 @@
         </div>
         <p class="crowd">The original color <code id="result-hex"></code> is what the crowd would call <b id="result-name"></b></p>
         <div class="par" id="result-par"></div>
+        <div class="everyone" id="everyone" hidden>
+          <p class="everyone-line" id="everyone-line"></p>
+          <div class="picks" id="picks" role="img"></div>
+        </div>
         <p class="crowd-note" id="result-credit"></p>
         <div class="result-actions">
           <button class="primary" id="btn-share">
             <svg viewBox="0 0 24 24"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg>
             Share result
           </button>
-          <button class="secondary" id="btn-more">Past paintings</button>
+          <button class="secondary" id="btn-more">Leaderboard</button>
         </div>
         <textarea class="share-text" id="share-text" rows="3" readonly hidden aria-label="Result to copy"></textarea>
         <p class="next" id="next"></p>
@@ -131,6 +138,21 @@
   <h2>Past paintings</h2>
   <p class="fine">Every day so far. Finished ones show the color you were restoring.</p>
   <div class="archive" id="archive"></div>
+</dialog>
+
+<dialog id="dlg-board" class="sheet">
+  <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+  <h2>Leaderboard</h2>
+  <form class="name-form" id="name-form">
+    <label for="name-input">Your name</label>
+    <input id="name-input" maxlength="24" autocomplete="nickname" placeholder="Anonymous">
+    <button class="secondary" id="name-save">Save</button>
+  </form>
+  <div class="tabs" role="tablist">
+    <button role="tab" class="tab" id="tab-day" aria-selected="true">Today</button>
+    <button role="tab" class="tab" id="tab-all" aria-selected="false">All time</button>
+  </div>
+  <div id="board"></div>
 </dialog>
 
 <dialog id="dlg-stats" class="sheet">

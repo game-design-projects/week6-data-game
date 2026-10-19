@@ -110,19 +110,20 @@ h1 { margin: 0; font: 650 21px/1 var(--serif); letter-spacing: -.01em; font-vari
 .art-meta { margin: 0; color: var(--muted); font-size: 13px; }
 
 /* ---------- the picker ---------- */
-/* Ring = hue (red at the top, clockwise). Square = saturation left→right, brightness bottom→top. */
+/* Ring = hue (red at the top, clockwise), the outer 17% of the radius; RING_MID in game.js follows it.
+   Square = saturation left→right, brightness bottom→top, as big as fits inside the ring. */
 .mixer { display: flex; align-items: center; gap: 16px; padding: 2px 0; }
 .mixer .side { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.picker { position: relative; flex: none; width: 196px; aspect-ratio: 1; touch-action: none; user-select: none; -webkit-user-select: none; }
+.picker { position: relative; flex: none; width: 250px; aspect-ratio: 1; touch-action: none; user-select: none; -webkit-user-select: none; }
 .wheel {
   position: absolute; inset: 0; border-radius: 50%;
   background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
-  -webkit-mask: radial-gradient(farthest-side, transparent 77%, #000 77.6%);
-  mask: radial-gradient(farthest-side, transparent 77%, #000 77.6%);
+  -webkit-mask: radial-gradient(farthest-side, transparent 83%, #000 83.6%);
+  mask: radial-gradient(farthest-side, transparent 83%, #000 83.6%);
   cursor: crosshair;
 }
 .sv {
-  position: absolute; inset: 25%; border-radius: 6px; cursor: crosshair;
+  position: absolute; inset: 22.5%; border-radius: 6px; cursor: crosshair;
   background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(var(--hue, 0) 100% 50%));
   box-shadow: 0 0 0 1px var(--line);
 }
@@ -132,8 +133,8 @@ h1 { margin: 0; font: 650 21px/1 var(--serif); letter-spacing: -.01em; font-vari
   cursor: grab;
 }
 .thumb:focus-visible { outline: none; box-shadow: 0 0 0 3px #fff, 0 0 0 5.5px var(--ink), 0 3px 10px rgba(0, 0, 0, .3); }
-.hue-thumb { width: 13%; aspect-ratio: 1; }
-.sv-thumb { width: 18px; height: 18px; }
+.hue-thumb { width: 11%; aspect-ratio: 1; }
+.sv-thumb { width: 20px; height: 20px; }
 .picker.off .wheel, .picker.off .sv, .picker.off .thumb { cursor: default; }
 .picker.off { opacity: .55; }
 
@@ -225,6 +226,38 @@ h1 { margin: 0; font: 650 21px/1 var(--serif); letter-spacing: -.01em; font-vari
 .share-text { width: 100%; margin-top: 10px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink); font: 12px/1.4 ui-monospace, Menlo, monospace; resize: none; }
 .next { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
+/* ---------- everyone's results ---------- */
+.everyone { margin-top: 10px; }
+.everyone-line { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+.everyone-line .link { font-size: inherit; }
+.picks { display: flex; height: 22px; border-radius: 6px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
+.picks i { flex: 1 1 0; min-width: 1px; max-width: 18px; background: var(--c); }
+.picks i.answer { flex: none; width: 22px; max-width: none; margin-right: 3px; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .7); }
+.link {
+  border: 0; background: none; padding: 0; color: var(--ink); font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line-strong);
+}
+
+/* ---------- leaderboard ---------- */
+.name-form { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+.name-form input {
+  flex: 1; min-width: 0; height: 38px; padding: 0 12px; border-radius: 11px; border: 1px solid var(--line-strong);
+  background: var(--paper); color: var(--ink); font: inherit; font-size: 15px;
+}
+.name-form .secondary { height: 38px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 10px; padding: 3px; border-radius: 12px; background: var(--paper); }
+.tab { flex: 1; height: 32px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 600; font-size: 13.5px; }
+.tab[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .12); }
+#board .picks { margin-bottom: 10px; }
+.blist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.brow { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; font-size: 14px; }
+.brow.me { background: var(--line); font-weight: 600; }
+.brow .rank { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.brow .who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.brow .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brow .sw { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
+.brow .pts { font-weight: 650; font-variant-numeric: tabular-nums; }
+
 /* ---------- toast ---------- */
 .toast {
   position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 20px); opacity: 0; z-index: 30;
@@ -280,21 +313,21 @@ h1 { margin: 0; font: 650 21px/1 var(--serif); letter-spacing: -.01em; font-vari
   .frame { padding: 6px; }
   #art { max-height: 50vh; }
   .score-line { flex-direction: column; gap: 2px; }
-  .picker { width: 168px; }
+  .picker { width: min(220px, 58vw); }
   .tests { max-height: none; }
   h1 { font-size: 19px; white-space: nowrap; }
   .tools { gap: 0; }
   .icon { width: 34px; }
 }
 @media (max-width: 360px) {
-  .picker { width: 148px; }
+  .picker { width: 180px; }
   .primary, .secondary { padding: 0 13px; }
 }
 /* itch.io embed is 960×600: keep everything above the fold */
 @media (min-width: 761px) and (max-height: 640px) {
   .app { padding-top: 8px; gap: 8px; }
   .card { padding: 11px 16px; }
-  .picker { width: 172px; }
+  .picker { width: 224px; }
   .swatch { height: 50px; }
   .desk { gap: 8px; }
   .art-title { font-size: 20px; }
@@ -302,6 +335,9 @@ h1 { margin: 0; font: 650 21px/1 var(--serif); letter-spacing: -.01em; font-vari
   .tests { max-height: 118px; }
   .score-line { display: none; } /* the Lock in button already shows the points */
   .big-score { font-size: 46px; }
+  .result-actions { margin-top: 10px; }
+  .crowd { margin-top: 8px; }
+  .par { margin-top: 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

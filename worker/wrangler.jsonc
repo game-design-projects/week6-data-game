@@ -1,0 +1,12 @@
+// Restoration's score server: https://restoration.<account-subdomain>.workers.dev
+// First deploy (see README, "Score server"): create the D1 database, put its id below,
+// apply schema.sql, then `npx wrangler deploy` from this folder.
+{
+  "name": "restoration",
+  "compatibility_date": "2026-09-01",
+  "main": "index.js",
+  "workers_dev": true,
+  "d1_databases": [
+    { "binding": "DB", "database_name": "restoration", "database_id": "PUT-YOUR-D1-DATABASE-ID-HERE" }
+  ]
+}
