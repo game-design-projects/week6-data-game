@@ -22,6 +22,7 @@ import argparse
 import json
 import random
 import urllib.request
+from multiprocessing import Pool
 from pathlib import Path
 
 import numpy as np
@@ -239,6 +240,16 @@ def build(art, names, survey_labs):
     }
 
 
+def try_build(art):
+    try:
+        lv = build(art, *SURVEY)
+    except Exception as e:  # one bad download shouldn't sink the build
+        print(f"[paintings] {art['id']} {art['title']}: {e}", flush=True)
+        return None
+    print(f"[paintings] {art['id']} {lv['hex'] + ' ' + lv['crowd'] if lv else 'no usable region':<30} {art['title'][:50]}", flush=True)
+    return lv
+
+
 def contact_sheet(levels, path):
     tiles = []
     for lv in levels:
@@ -275,32 +286,29 @@ def daily_order(levels, seed):
     return out
 
 
+SURVEY = survey()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--days', type=int, default=60)
     ap.add_argument('--pages', type=int, default=4)
     ap.add_argument('--epoch', default='2026-10-17')
     ap.add_argument('--seed', type=int, default=4553)
+    ap.add_argument('--jobs', type=int, default=4)
     ap.add_argument('--skip', default='', help='comma-separated artwork ids to leave out after reviewing the contact sheet')
     args = ap.parse_args()
     CACHE.mkdir(parents=True, exist_ok=True)
     skip = set(filter(None, args.skip.split(',')))
-    names, labs = survey()
-    levels = []
+    todo = []
     for art in artworks(args.pages):
-        if str(art['id']) in skip:
-            continue
         thumb = art.get('thumbnail') or {}
-        if thumb.get('width') and thumb.get('height') and not 0.45 < thumb['width'] / thumb['height'] < 2.2:
-            continue  # scrolls and panoramas don't fit the screen
-        try:
-            lv = build(art, names, labs)
-        except Exception as e:  # one bad download shouldn't sink the build
-            print(f"[paintings] {art['id']} {art['title']}: {e}")
-            continue
-        if lv:
-            levels.append(lv)
-            print(f"[paintings] {len(levels):3} {lv['id']} {lv['hex']} {lv['crowd']:<22} {lv['title'][:50]}")
+        if str(art['id']) in skip or (thumb.get('width') and thumb.get('height') and not 0.45 < thumb['width'] / thumb['height'] < 2.2):
+            continue  # left out by hand, or a scroll or panorama that won't fit the screen
+        todo.append(art)
+    with Pool(args.jobs) as pool:  # map keeps the API's order, so the output doesn't depend on timing
+        levels = [lv for lv in pool.map(try_build, todo) if lv]
+    print(f'[paintings] {len(levels)} of {len(todo)} paintings have a usable region')
     levels = daily_order(levels, args.seed)[:args.days]
     contact_sheet(levels, CACHE / 'review.jpg')
     keep = {f'{lv["id"]}.jpg' for lv in levels} | {f'{lv["id"]}-full.jpg' for lv in levels}
