@@ -99,7 +99,9 @@ Everyone's results and the leaderboard come from a small Cloudflare Worker in `w
 | `GET /api/day/:n?device=…` | Count, top 10, everyone's best colors (up to 300, closest first), a score histogram, and the asking player's rank. |
 | `GET /api/leaderboard?device=…` | All-time totals, top 20, and the asking player's rank. |
 
-First deploy, from the `worker/` folder, logged in to the Cloudflare account (`npx wrangler login`):
+The server is live (deployed 2026-10-19). Its D1 database `restoration` already exists and `wrangler.jsonc` holds its id, so a redeploy is just `npx wrangler deploy` from the `worker/` folder, logged in to the Cloudflare account (`npx wrangler login`).
+
+Setting it up from scratch (a new account or a fresh database):
 
 ```bash
 npx wrangler d1 create restoration                     # copy the database_id it prints into wrangler.jsonc
