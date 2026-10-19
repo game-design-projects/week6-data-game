@@ -1,8 +1,7 @@
 .DS_Store
 node_modules/
 .*.bak.*
-# raw LLM replies from the hint experiment (results/*.json keeps every hint and decode)
-experiments/llm-hints/raw/
-experiments/llm-hints/results/*.log
-data/build-levels.log
-data/llm-cache/
+
+# painting builder: API replies, downloads, the review contact sheet
+data/aic-cache/
+__pycache__/

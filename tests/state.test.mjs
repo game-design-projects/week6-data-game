@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { MAX_TESTS } from '../web/color.js';
 import * as S from '../web/state.js';
 
-const level = { hex: '#FF724C', clues: ['a', 'b', 'c'] };
+const level = { hex: '#FF724C' };
 const tryHex = (g, hex) => S.test(S.pick(g, hex), level);
 
 test('day numbers count local calendar days from the epoch', () => {
@@ -43,20 +43,13 @@ test('the sixth test locks the game in', () => {
   assert.equal(g.done, true);
   assert.equal(S.canPick(g), false);
 });
-test('points: best test, -3 per extra test, -5 per extra clue', () => {
+test('points: best test, -3 per extra test', () => {
   let g = tryHex(S.newGame(), '#FF8050');
   const first = g.tests[0].acc;
   assert.equal(S.points(g), Math.round(first));
-  g = S.revealClue(g, level);
-  assert.equal(S.points(g), Math.round(first - 5));
   g = tryHex(g, '#202020'); // worse
-  assert.equal(S.points(g), Math.round(first - 5 - 3));
+  assert.equal(S.points(g), Math.round(first - 3));
   assert.equal(S.best(g).acc, first);
-});
-test('clues stop at the last one', () => {
-  let g = S.newGame();
-  for (let i = 0; i < 5; i++) g = S.revealClue(g, level);
-  assert.equal(g.clues, 3);
 });
 test('lock needs at least one test, then freezes the game', () => {
   let g = S.lock(S.pick(S.newGame(), '#FFE100'));
@@ -71,12 +64,4 @@ test('revive restores a saved game and rejects junk', () => {
   assert.deepEqual(S.revive({ pick: '#123456', tests: [{ hex: 'nope' }] }), S.newGame());
   assert.deepEqual(S.revive('nope'), S.newGame());
   assert.deepEqual(S.revive({ pick: 'nope', tests: [] }), S.newGame());
-});
-test('revive keeps tests saved by the paint-mixing version', () => {
-  const old = { committed: [0, 0, 0, 1, 1], pending: [4], tests: [{ counts: [0, 0, 0, 1, 1], hex: '#F04030', acc: 70.1, hint: [] }], clues: 2, done: false };
-  const g = S.revive(old);
-  assert.equal(g.pick, '#F04030');
-  assert.deepEqual(g.tests, [{ hex: '#F04030', acc: 70.1, hint: [] }]);
-  assert.equal(g.clues, 2);
-  assert.equal(S.canTest(g), false);
 });
