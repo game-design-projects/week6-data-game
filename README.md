@@ -28,7 +28,7 @@ At the end you can flip between your version and the original. You also see both
 | **Replayable** | A new painting every day; every past day stays playable in the archive. |
 | **Skill expression** | Easy: drag, press Test. Hard: reading color in context (a patch looks different next to its neighbours), turning three arrows into the right move on the wheel, and knowing when another test (−3) is worth it. |
 | **External data** | The paintings and their metadata come from the Art Institute of Chicago's public API (artwork data CC0, public-domain images). Color names come from the xkcd Color Survey (CC0), in `data/xkcd-rgb.txt`. |
-| **At least 7 days of levels** | `web/levels.js` holds LEVEL_COUNT days starting 2026-10-17. CI fails if it drops below 7. |
+| **At least 7 days of levels** | `web/levels.js` holds 80 days, 2026-10-17 to 2027-01-04. CI fails if it drops below 7. |
 | **Novel** | Daily color games (Hexcodle, Colordle, Hued, Colorfle) match a color through numeric feedback against a bare swatch. Here the target only exists in context, inside a real painting, and you see your guess in place. |
 | **Bonus: automated levels** | `scripts/build_paintings.py` generates every level end to end (below). |
 
@@ -52,8 +52,11 @@ The game repaints the region as `pick + offset`, so the shading and brushwork su
 
 ```bash
 pip install -r scripts/requirements.txt
-python3 scripts/build_paintings.py --days 90
+# the shipped levels; --skip drops 11 paintings whose region looked wrong on the contact sheet
+python3 scripts/build_paintings.py --days 90 --pages 2 --skip 88793,185651,16551,57051,16362,110663,49195,869,64724,28849,14591
 ```
+
+Of the museum's 117 highlighted public-domain paintings, 80 make it into the game. The rest are panoramas, have no region that passes the scoring, or were dropped on review.
 
 ## Layout
 
