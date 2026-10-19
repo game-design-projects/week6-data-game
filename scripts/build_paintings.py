@@ -34,7 +34,9 @@ CACHE = ROOT / 'data' / 'aic-cache'
 OUT_IMG = ROOT / 'web' / 'paintings'
 API = 'https://api.artic.edu/api/v1/artworks/search'
 IIIF = 'https://www.artic.edu/iiif/2/{}/full/843,/0/default.jpg'
-HEADERS = {'AIC-User-Agent': 'week6-data-game (https://github.com/game-design-projects/week6-data-game)', 'Content-Type': 'application/json'}
+UA = 'week6-data-game/1.0 (+https://github.com/game-design-projects/week6-data-game)'
+# The museum asks for AIC-User-Agent; its image server turns away Python's default User-Agent.
+HEADERS = {'AIC-User-Agent': UA, 'User-Agent': UA, 'Content-Type': 'application/json'}
 FIELDS = ['id', 'title', 'artist_title', 'artist_display', 'date_display', 'image_id', 'thumbnail', 'credit_line', 'place_of_origin']
 MAX_SIDE = 560
 NEUTRAL = np.array([0.62, 0.0, 0.0])  # what an unpainted region is stored as; must match NEUTRAL in web/painting.js
