@@ -1,5 +1,5 @@
 // DOM layer: renders state.js games and feeds them input. All rules live in state.js.
-import { PAINTS, POT_CAPACITY, MAX_TESTS, TEST_PENALTY, MATCH, square, oklab } from './color.js';
+import { MAX_TESTS, TEST_PENALTY, MATCH, square, oklab, rgb, hsvToHex, hexToHsv } from './color.js';
 import * as S from './state.js';
 import { EPOCH, LEVELS, CLUE_MODEL } from './levels.js';
 
@@ -23,6 +23,7 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let n = today, level, game;
 let fresh = { test: false, clue: false };
+let hsv = { h: 0, s: 0.5, v: 0.75 }; // picker position; kept here because a gray hex has no hue to recover
 
 // ---------- sound: tiny synthesized plips, no assets ----------
 let audio = null;
@@ -42,60 +43,66 @@ function tone(freq, { dur = 0.12, type = 'sine', gain = 0.07, at = 0, slide = 0.
     o.stop(t + dur + 0.02);
   } catch { /* no audio, no problem */ }
 }
-const PITCH = { W: 880, K: 294, C: 659, M: 587, Y: 784 };
 
-// ---------- the ring: one slot per drop of pot capacity ----------
-const ring = $('ring');
-const slots = [];
-(function buildRing() {
-  const cx = 150, cy = 150, r1 = 147, r0 = 137, step = 360 / POT_CAPACITY, gap = 1.6;
-  const pt = (r, deg) => { const a = (deg - 90) * Math.PI / 180; return `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`; };
-  for (let i = 0; i < POT_CAPACITY; i++) {
-    const a0 = i * step + gap / 2, a1 = (i + 1) * step - gap / 2;
-    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    p.setAttribute('d', `M${pt(r1, a0)} A${r1} ${r1} 0 0 1 ${pt(r1, a1)} L${pt(r0, a1)} A${r0} ${r0} 0 0 0 ${pt(r0, a0)}Z`);
-    ring.append(p);
-    slots.push(p);
+// ---------- the picker: hue ring around a saturation/brightness square ----------
+const picker = $('picker'), sv = $('sv'), hueThumb = $('hue-thumb'), svThumb = $('sv-thumb');
+const RING_MID = 0.443; // ring centerline as a fraction of the picker width (the ring is the outer 22.6% of the radius)
+const clamp01 = x => Math.min(1, Math.max(0, x));
+let drag = null;
+
+function setHsv(next) {
+  if (!S.canPick(game)) return;
+  hsv = { ...hsv, ...next };
+  game = S.pick(game, hsvToHex(hsv.h, hsv.s, hsv.v));
+  save();
+  render();
+}
+
+function pointAt(e) {
+  if (drag === 'hue') {
+    const r = picker.getBoundingClientRect();
+    const x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2;
+    setHsv({ h: (Math.atan2(x, -y) * 180 / Math.PI + 360) % 360 });
+  } else {
+    const r = sv.getBoundingClientRect();
+    setHsv({ s: clamp01((e.clientX - r.left) / r.width), v: 1 - clamp01((e.clientY - r.top) / r.height) });
   }
-})();
+}
 
-// ---------- paints ----------
-const tubes = PAINTS.map((paint, i) => {
-  const b = el('button', 'tube');
-  b.type = 'button';
-  b.setAttribute('aria-label', `Add a drop of ${paint.name}`);
-  b.title = `${paint.name} (${paint.key.toUpperCase()})`;
-  const blob = el('span', 'blob');
-  blob.style.setProperty('--c', paint.hex);
-  const count = el('span', 'count');
-  blob.append(count);
-  const name = el('span', 'name', paint.name);
-  name.append(el('kbd', null, paint.key.toUpperCase()));
-  b.append(blob, name);
-  b.addEventListener('click', () => drop(i, blob));
-  $('tubes').append(b);
-  return { b, blob, count };
+picker.addEventListener('pointerdown', e => {
+  if (!S.canPick(game)) return;
+  const r = picker.getBoundingClientRect(), q = sv.getBoundingClientRect(), pad = 12;
+  const dist = Math.hypot(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2) / (r.width / 2);
+  if (e.target === hueThumb || (dist > 0.72 && dist <= 1.04)) drag = 'hue';
+  else if (e.clientX > q.left - pad && e.clientX < q.right + pad && e.clientY > q.top - pad && e.clientY < q.bottom + pad) drag = 'sv';
+  else return;
+  picker.setPointerCapture(e.pointerId);
+  (drag === 'hue' ? hueThumb : svThumb).focus({ preventScroll: true });
+  e.preventDefault();
+  pointAt(e);
+});
+picker.addEventListener('pointermove', e => { if (drag) pointAt(e); });
+const endDrag = () => { if (drag) tone(520, { dur: 0.06, type: 'triangle', slide: 1.1, gain: 0.035 }); drag = null; };
+picker.addEventListener('pointerup', endDrag);
+picker.addEventListener('pointercancel', endDrag);
+
+// Arrow keys nudge the focused thumb; Shift moves further.
+hueThumb.addEventListener('keydown', e => {
+  const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+  if (!step) return;
+  setHsv({ h: (hsv.h + step * (e.shiftKey ? 15 : 2) + 360) % 360 });
+  e.preventDefault();
+});
+svThumb.addEventListener('keydown', e => {
+  const d = (e.shiftKey ? 0.1 : 0.02);
+  const move = { ArrowRight: { s: hsv.s + d }, ArrowLeft: { s: hsv.s - d }, ArrowUp: { v: hsv.v + d }, ArrowDown: { v: hsv.v - d } }[e.key];
+  if (!move) return;
+  setHsv(Object.fromEntries(Object.entries(move).map(([k, x]) => [k, clamp01(x)])));
+  e.preventDefault();
 });
 
 // ---------- actions ----------
 function save() { store.set('game:' + n, game); }
-
-function drop(i, from) {
-  if (!S.canDrop(game)) return;
-  game = S.addDrop(game, i);
-  save();
-  tone(PITCH[PAINTS[i].id] * (0.96 + Math.random() * 0.08), { slide: 0.55 });
-  fly(PAINTS[i].hex, from);
-  render();
-}
-
-function undo() {
-  if (!S.canUndo(game)) return;
-  game = S.undo(game);
-  save();
-  tone(330, { dur: 0.08, type: 'triangle', slide: 0.8, gain: 0.05 });
-  render();
-}
 
 function runTest() {
   if (!S.canTest(game)) return;
@@ -137,36 +144,6 @@ function clue() {
   render();
 }
 
-// ---------- animation ----------
-function fly(color, from) {
-  const pot = $('pot');
-  const splash = () => {
-    if (reduceMotion) return;
-    const s = el('div', 'splash');
-    s.style.background = color;
-    pot.append(s);
-    s.animate([
-      { transform: 'scale(.15) rotate(0deg)', opacity: 1 },
-      { transform: 'scale(1.25) rotate(140deg)', opacity: 0 },
-    ], { duration: 650, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => s.remove();
-  };
-  if (reduceMotion || !from) return splash();
-  const a = from.getBoundingClientRect(), b = pot.getBoundingClientRect();
-  const x0 = a.left + a.width / 2, y0 = a.top + a.height / 2;
-  const x1 = b.left + b.width / 2 + (Math.random() - 0.5) * b.width * 0.3, y1 = b.top + b.height / 2 + (Math.random() - 0.5) * b.height * 0.3;
-  const f = el('div', 'flyer');
-  f.style.background = color;
-  f.style.left = x0 + 'px';
-  f.style.top = y0 + 'px';
-  document.body.append(f);
-  const peak = Math.min(y0, y1) - 60;
-  f.animate([
-    { transform: 'translate(0,0) rotate(-45deg) scale(1)' },
-    { transform: `translate(${(x1 - x0) / 2}px, ${peak - y0}px) rotate(-45deg) scale(1.1)`, offset: 0.45 },
-    { transform: `translate(${x1 - x0}px, ${y1 - y0}px) rotate(-45deg) scale(.6)` },
-  ], { duration: 360, easing: 'cubic-bezier(.4,0,.6,1)' }).onfinish = () => { f.remove(); splash(); };
-}
-
 function toast(msg) {
   const t = $('toast');
   t.textContent = msg;
@@ -191,41 +168,35 @@ function chip(h) {
   return c;
 }
 
-function renderPot() {
-  const pot = $('pot');
-  const hex = S.potHex(game);
-  const counts = S.potCounts(game);
-  pot.classList.toggle('is-empty', !hex);
-  pot.style.setProperty('--pot', hex || 'transparent');
-  pot.setAttribute('aria-label', hex ? `Pot: ${PAINTS.map((p, i) => counts[i] ? `${counts[i]} ${p.name}` : '').filter(Boolean).join(', ')}` : 'Empty pot');
-  // Ring: committed drops grouped by paint, then the untested ones in the order they went in.
-  const seq = [];
-  game.committed.forEach((c, i) => { for (let k = 0; k < c; k++) seq.push([i, false]); });
-  game.pending.forEach(i => seq.push([i, true]));
-  slots.forEach((s, k) => {
-    const d = seq[k];
-    s.setAttribute('class', d ? (d[1] ? 'pending' : '') : 'slot');
-    s.style.fill = d ? PAINTS[d[0]].hex : '';
-  });
-  const total = S.potTotal(game);
-  $('drops').textContent = game.done ? `${total} drops` : `${total} / ${POT_CAPACITY} drops${game.pending.length && game.tests.length ? ` · ${game.pending.length} untested` : ''}`;
-  tubes.forEach((t, i) => {
-    t.b.disabled = !S.canDrop(game);
-    t.count.textContent = counts[i] || '';
-  });
+function paint(node, hex) {
+  node.style.setProperty('--c', hex);
+  node.style.setProperty('--on', isLight(hex) ? '#1b1a19' : '#fff');
+}
 
-  const reveal = $('reveal');
-  reveal.hidden = !game.done;
-  if (game.done) {
-    const mine = S.best(game).hex;
-    const halves = reveal.querySelectorAll('.half');
-    halves[0].style.background = mine;
-    halves[0].style.color = isLight(mine) ? '#1b1a19' : '#fff';
-    halves[1].style.background = level.hex;
-    halves[1].style.color = isLight(level.hex) ? '#1b1a19' : '#fff';
-    $('reveal-mine').textContent = mine;
-    $('reveal-truth').textContent = level.hex;
-  }
+function renderPicker() {
+  const hue = hsvToHex(hsv.h, 1, 1);
+  const a = hsv.h * Math.PI / 180;
+  sv.style.setProperty('--hue', hsv.h.toFixed(1));
+  hueThumb.style.left = `${50 + 100 * RING_MID * Math.sin(a)}%`;
+  hueThumb.style.top = `${50 - 100 * RING_MID * Math.cos(a)}%`;
+  hueThumb.style.setProperty('--c', hue);
+  hueThumb.setAttribute('aria-valuenow', Math.round(hsv.h));
+  svThumb.style.left = `${hsv.s * 100}%`;
+  svThumb.style.top = `${(1 - hsv.v) * 100}%`;
+  svThumb.style.setProperty('--c', hsvToHex(hsv.h, hsv.s, hsv.v));
+  svThumb.setAttribute('aria-valuetext', `${Math.round(hsv.s * 100)}% saturation, ${Math.round(hsv.v * 100)}% brightness`);
+  picker.classList.toggle('off', !S.canPick(game));
+  for (const t of [hueThumb, svThumb]) t.tabIndex = S.canPick(game) ? 0 : -1;
+
+  const swatch = $('swatch'), mine = swatch.querySelector('.mine');
+  const shown = game.done ? S.best(game).hex : game.pick;
+  swatch.classList.toggle('is-empty', !shown);
+  if (shown) paint(mine, shown); else mine.style.removeProperty('--c');
+  $('swatch-label').textContent = game.done ? 'your best' : shown ? (S.canTest(game) ? 'your pick' : 'already tested') : 'drag to pick a color';
+  $('swatch-hex').textContent = shown || '';
+  $('swatch-truth').hidden = !game.done;
+  if (game.done) { paint($('swatch-truth'), level.hex); $('truth-hex').textContent = level.hex; }
+  swatch.setAttribute('aria-label', game.done ? `Your best ${shown}, the color ${level.hex}` : shown ? `Your pick ${shown}` : 'No color picked yet');
 }
 
 function renderClues() {
@@ -293,20 +264,21 @@ function renderResult() {
   meta.replaceChildren(el('div', 'grid', game.tests.map(t => square(t.acc)).join('')), el('div', null, `best match ${Math.round(b.acc)}%`), el('div', null, `${game.tests.length} test${game.tests.length > 1 ? 's' : ''} · ${game.clues} clue${game.clues > 1 ? 's' : ''}`));
   $('result-name').textContent = level.name;
   $('result-hex').textContent = level.hex;
+  // Side by side in RGB, so the miss is concrete: which channel was off and by how much.
   const par = $('result-par');
-  par.replaceChildren(document.createTextNode('Fewest drops for a 95% match:'));
-  level.par.counts.forEach((c, i) => {
-    if (!c) return;
-    const d = el('span', 'dot');
-    const dot = el('i');
-    dot.style.setProperty('--c', PAINTS[i].hex);
-    d.append(dot, `${c} ${PAINTS[i].name}`);
-    par.append(d);
-  });
-  par.append(document.createTextNode(`(${level.par.total} drops; best possible ${level.best.acc}%)`));
+  const row = (label, hex) => {
+    const dot = el('i', 'dot');
+    dot.style.setProperty('--c', hex);
+    return [dot, el('span', null, label), el('code', null, `${hex}  rgb(${rgb(hex).join(', ')})`)];
+  };
+  const diff = rgb(level.hex).map((t, i) => t - rgb(b.hex)[i]);
+  par.replaceChildren(...row('Your best', b.hex), ...row('The color', level.hex),
+    el('span'), el('span'), el('span', null, `Off by R ${fmtDiff(diff[0])} · G ${fmtDiff(diff[1])} · B ${fmtDiff(diff[2])}`));
   $('share-text').hidden = true;
   tickNext();
 }
+
+const fmtDiff = d => (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.abs(d);
 
 function tickNext() {
   const next = $('next');
@@ -321,11 +293,10 @@ setInterval(tickNext, 1000);
 
 function render() {
   $('puzzle-label').textContent = `#${n} · ${fmtDate(S.dateOf(n, EPOCH))}${n < today ? ' · from the archive' : n > today ? ' · preview' : ''}`;
-  renderPot();
+  renderPicker();
   renderClues();
   renderTests();
   renderResult();
-  $('btn-undo').disabled = !S.canUndo(game);
   $('btn-test').disabled = !S.canTest(game);
   $('btn-lock').disabled = !S.canLock(game);
   $('btn-lock').textContent = game.tests.length ? `Lock in · ${S.points(game)}` : 'Lock in';
@@ -336,6 +307,7 @@ function load(num) {
   n = num;
   level = levelFor(n);
   game = S.revive(store.get('game:' + n));
+  hsv = game.pick ? hexToHsv(game.pick) : { h: 0, s: 0.5, v: 0.75 };
   log('load', n, { tests: game.tests.length, done: game.done });
   $('clues').dataset.n = '';
   render();
@@ -409,7 +381,6 @@ async function share() {
 }
 
 // ---------- wiring ----------
-$('btn-undo').addEventListener('click', undo);
 $('btn-test').addEventListener('click', runTest);
 $('btn-lock').addEventListener('click', lockIn);
 $('btn-clue').addEventListener('click', clue);
@@ -428,10 +399,7 @@ document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey || document.querySelector('dialog[open]')) return;
   if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('button')) return; // let the focused button handle it
   const k = e.key.toLowerCase();
-  const p = PAINTS.findIndex(x => x.key === k);
-  if (p >= 0) { drop(p, tubes[p].blob); e.preventDefault(); }
-  else if (k === 'backspace' || k === 'z') { undo(); e.preventDefault(); }
-  else if (k === 'enter') { runTest(); e.preventDefault(); }
+  if (k === 'enter') { runTest(); e.preventDefault(); }
   else if (k === 'l') lockIn();
   else if (k === '?') $('dlg-help').showModal();
 });

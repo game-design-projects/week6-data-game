@@ -1,35 +1,35 @@
 # Paint by Words
 
-![Paint by Words: the clue card, the pot with its drop ring, and two tests](./docs/screenshot.png)
+![Paint by Words: the clue card, the color picker, and two tests](./docs/screenshot.png)
 
-**One color a day. An AI describes it. You mix it, drop by drop.**
+**One color a day. An AI describes it. You find it on the color wheel.**
 
-A daily data game for NYU Game Design (Fall 2026), Week 6. Each day's secret color is a vivid color from the [xkcd Color Survey](https://xkcd.com/color/rgb/), where 222,500 people named 3.4 million random colors. A language model wrote three clues about it without naming it. You read the clue, mix white, black, cyan, magenta and yellow paint in a pot (it mixes like real pigment: cyan + yellow is green), and test your mix against the hidden color.
+A daily data game for NYU Game Design (Fall 2026), Week 6. Each day's secret color is a vivid color from the [xkcd Color Survey](https://xkcd.com/color/rgb/), where 222,500 people named 3.4 million random colors. A language model wrote three clues about it without naming it. You read the clue, pick a color on a hue ring and saturation/brightness square, and test it against the hidden color.
 
 ## Play
 
 <https://stevenli-phoenix-work.itch.io/week6-data-game>
 
 1. **Read the clue.** "Late afternoon light on a beach towel left out to dry."
-2. **Drop paint into the pot.** Click a paint or press W K C M Y. Up to 30 drops.
-3. **Test.** You get a match % and three arrows: lighter/darker, redder/greener, yellower/bluer. Tested paint stays in the pot; only untested drops can be undone.
+2. **Pick a color.** Drag the ring for hue, the square for saturation (left–right) and brightness (up–down). Arrow keys nudge the focused handle, Shift for bigger steps.
+3. **Test.** You get a match % and three arrows: lighter/darker, redder/greener, yellower/bluer. The picker stays free, so move it and test again; a color you already tested can't be tested twice.
 4. **Lock in.** Score = best match − 3 for each test after the first − 5 for each extra clue. Six tests at most.
 
-At the end you see your mix next to the real color, the name the survey crowd gave it, and the fewest-drops recipe that reaches a 95% match. Past days are in the archive; stats, streak and a Wordle-style share grid are kept in the browser.
+At the end you see your best pick next to the real color, the name the survey crowd gave it, and both colors in RGB with how far off each channel was. Past days are in the archive; stats, streak and a Wordle-style share grid are kept in the browser.
 
 ## How it meets the brief
 
 | Criterion (Lecture 6) | How |
 |---|---|
-| **Objective**, one right answer and a score | The answer is a single sRGB color from the survey. Match % is a fixed function of OKLab distance (Gaussian, σ = 0.15: 0.05 → 89%, 0.10 → 64%), so two players with the same mix get the same number. |
-| **Reasonable** for an average player | Every level is proved reachable before it ships: the builder searches all ~250,000 pots of ≤ 30 drops and keeps only colors where some recipe reaches ≥ 96%. The fewest-drops "par" is shown at the end; half the days need 8 drops or fewer. Clues ship only if a second AI, reading them cold, lands close (86% on average). |
+| **Objective**, one right answer and a score | The answer is a single sRGB color from the survey. Match % is a fixed function of OKLab distance (Gaussian, σ = 0.15: 0.05 → 89%, 0.10 → 64%), so two players with the same pick get the same number. |
+| **Reasonable** for an average player | The picker reaches every sRGB color, and nothing carries over between tests, so one bad guess never locks you out. Clues ship only if a second AI, reading them cold, lands close (86% on average). |
 | **Competitive** | One number per day, shareable as `🟨🟧🟩 3 tests · 1 clue · 86 pts`. Fewer tests and clues score higher, so skill shows. |
-| **Learnable** | The feedback axes are the opponent-color axes your eyes use, and the paints behave like real paint, so players learn rules that carry over ("too green? add magenta, not red"). Each result shows the par recipe to learn from. |
+| **Learnable** | The feedback axes are the opponent-color axes your eyes use, so players learn how the hints map onto the wheel ("redder" pulls the hue toward magenta or orange, "lighter" is up in the square). Each result shows the RGB miss per channel. |
 | **Replayable** | A fresh color every day, and every past day stays playable in the archive. 164 survey colors pass the vivid + reachable filter, about five months without a repeat; widening the palette or the survey adds more. |
-| **Skill expression** | Easy: tap paints, press Test. Hard: picturing the color from words, knowing what each drop does, committing paint you can't take back, and deciding when another test (−3) or clue (−5) is worth it. |
+| **Skill expression** | Easy: drag, press Test. Hard: picturing the color from words, turning three arrows into the right move on the wheel, and deciding when another test (−3) or clue (−5) is worth it. |
 | **External data** | Colors and their crowd names come from the xkcd Color Survey (CC0), shipped in `data/xkcd-rgb.txt`. |
 | **At least 7 days of levels** | `web/levels.js` holds 90 days, 2026-10-17 to 2027-01-14. CI fails if it drops below 7. |
-| **Novel** | The daily color games we found (Hexcodle, Colordle, Hued, Colorfle) are about matching or homing in on a color through numeric feedback. We found none where the target exists only as words and you build it from subtractive paint you can't take back. |
+| **Novel** | The daily color games we found (Hexcodle, Colordle, Hued, Colorfle) are about matching or homing in on a color through numeric feedback. We found none where the target exists only as words, written by an AI and checked by a second one. |
 | **Bonus: automated levels** | `scripts/build-levels.mjs` generates every level end to end (below). |
 | **Bonus: AI** | An LLM writes the clues; a second LLM tries to decode them and rejects the ones that mislead. The experiment below measures how well that works. |
 
@@ -38,7 +38,7 @@ At the end you see your mix next to the real color, the name the survey crowd ga
 ```
 xkcd survey (949 named colors)
   → vivid only (OKLCH chroma ≥ 0.15), minus the survey's bathroom-humor names
-  → reachable only (some pot of ≤ 30 drops matches ≥ 96%; records par and best recipe)
+  → reachable by the original five-paint pot (some mix of ≤ 30 drops matches ≥ 96%); kept so the level set stays the same
   → seeded shuffle, interleaved across the hue wheel: no two days in a row share a hue family,
     and no two colors in any week are near-twins (OKLab distance < 0.1)
   → LLM writes a clue ladder: a scene (free clue), an object, a plain description
@@ -47,7 +47,7 @@ xkcd survey (949 named colors)
   → web/levels.js
 ```
 
-Nothing about the answer comes from a model: colors, recipes and par are computed. Every LLM reply is written to `data/llm-cache/` (local, git-ignored) before it is parsed, so re-running the builder with the same settings makes no new calls.
+Nothing about the answer comes from a model: the colors are computed. Every LLM reply is written to `data/llm-cache/` (local, git-ignored) before it is parsed, so re-running the builder with the same settings makes no new calls.
 
 ```bash
 # local model in LM Studio
@@ -74,11 +74,11 @@ So the AI's description carries more of the color than the color's own name does
 
 ```
 web/                     the game, shipped to itch.io as-is (plain ES modules, no build step)
-  color.js               paints, mixing, OKLab distance, match %, per-axis hint, recipe search
-  state.js               game rules as pure functions (drops, undo, tests, clues, points)
-  game.js                DOM, animation, sound, storage, dialogs
-  levels.js              generated: 90 days of colors, clues, par
-  vendor/spectral.js     Kubelka–Munk paint mixing (MIT), converted to an ES module
+  color.js               HSV ↔ hex, OKLab distance, match %, per-axis hint; paint mixing for the builder
+  state.js               game rules as pure functions (pick, tests, clues, points)
+  game.js                DOM, color picker, sound, storage, dialogs
+  levels.js              generated: 90 days of colors and clues
+  vendor/spectral.js     Kubelka–Munk paint mixing (MIT), used by the level filter
 scripts/
   build-levels.mjs       level generator (above)
   colors.mjs             survey loading, vivid/reachable filter, daily order

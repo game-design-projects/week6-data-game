@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-10-19
+
+### Changed
+
+- The paint pot is now a color picker: a hue ring around a saturation/brightness square, with arrow-key control. Playtesters found it unfair that tested paint stayed in the pot, since one bad mix could leave a round unrecoverable. Now every test starts from wherever you put the picker; a color already tested can't be tested again.
+- The result shows your best pick and the answer in RGB with the per-channel miss, instead of the fewest-drops paint recipe.
+- Saved games from 0.1.0 still load: their tests carry over and the last one becomes the current pick.
+
+### Removed
+
+- Paint tubes, drops, undo and the W K C M Y keys.
+
 ## [0.1.0] - 2026-10-17
 
 ### Added
