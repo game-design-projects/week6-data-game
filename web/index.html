@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Paint by Words</title>
-<meta name="description" content="A daily color game: an AI describes a secret color, you mix it from real paint, drop by drop.">
+<meta name="description" content="A daily color game: an AI describes a secret color, you find it on a color wheel.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..600&display=swap" rel="stylesheet">
@@ -42,31 +42,22 @@
   </header>
 
   <main class="stage">
-    <section class="studio" aria-label="Mixing pot">
-      <div class="pot-wrap">
-        <svg class="ring" id="ring" viewBox="0 0 300 300" aria-hidden="true"></svg>
-        <div class="dish">
-          <div class="pot" id="pot" role="img" aria-label="Empty pot">
-            <div class="pot-empty" id="pot-empty">
-              <span>add paint</span>
-            </div>
-            <div class="reveal" id="reveal" hidden>
-              <span class="half mine"><b>your mix</b><i id="reveal-mine"></i></span>
-              <span class="half truth"><b>the color</b><i id="reveal-truth"></i></span>
-            </div>
-          </div>
+    <section class="studio" aria-label="Color picker">
+      <div class="picker" id="picker">
+        <div class="wheel" aria-hidden="true"></div>
+        <div class="sv" id="sv">
+          <div class="thumb sv-thumb" id="sv-thumb" role="slider" tabindex="0" aria-label="Saturation and brightness" title="Saturation and brightness (arrow keys)"></div>
         </div>
-        <p class="drops" id="drops">0 / 30 drops</p>
+        <div class="thumb hue-thumb" id="hue-thumb" role="slider" tabindex="0" aria-label="Hue" aria-valuemin="0" aria-valuemax="359" title="Hue (arrow keys)"></div>
       </div>
 
-      <div class="tubes" id="tubes" role="group" aria-label="Paints"></div>
+      <div class="swatch is-empty" id="swatch" role="img" aria-label="No color picked yet">
+        <span class="half mine"><b id="swatch-label">drag to pick a color</b><i id="swatch-hex"></i></span>
+        <span class="half truth" id="swatch-truth" hidden><b>the color</b><i id="truth-hex"></i></span>
+      </div>
 
       <div class="actions" id="actions">
-        <button class="ghost" id="btn-undo" title="Take back the last drop (Backspace)">
-          <svg viewBox="0 0 24 24"><path d="M9 7 4.5 11.5 9 16"/><path d="M5 11.5h9.5a5 5 0 0 1 0 10H12"/></svg>
-          Undo
-        </button>
-        <button class="primary" id="btn-test" title="Compare your pot with the color (Enter)">Test mix</button>
+        <button class="primary" id="btn-test" title="Compare your color with the secret one (Enter)">Test color</button>
         <button class="secondary" id="btn-lock" title="End the round with your best test (L)">Lock in</button>
       </div>
     </section>
@@ -87,7 +78,7 @@
           <span id="tests-count">0 of 6</span>
         </header>
         <ol class="tests" id="tests"></ol>
-        <p class="empty-note" id="tests-empty">Mix something, then press <b>Test mix</b>. You'll see how close you are and which way to go.</p>
+        <p class="empty-note" id="tests-empty">Pick a color, then press <b>Test color</b>. You'll see how close you are and which way to go.</p>
         <footer class="score-line" id="score-line"></footer>
       </article>
 
@@ -123,12 +114,12 @@
   <h2>How to play</h2>
   <ol class="steps">
     <li><span class="n">1</span><div><b>Read the clue.</b> An AI looked at today's secret color and described it in words, without naming it.</div></li>
-    <li><span class="n">2</span><div><b>Drop paint into the pot.</b> Press a paint or its key (W K C M Y). It mixes like real paint: cyan + yellow makes green, magenta + yellow makes red.</div></li>
-    <li><span class="n">3</span><div><b>Test your mix.</b> You get a match % and which way to go: lighter or darker, redder or greener, yellower or bluer. Paint you've tested stays in the pot for good.</div></li>
-    <li><span class="n">4</span><div><b>Lock in.</b> Your score is your best match, minus 3 for each test after the first and 5 for each extra clue. Up to 6 tests, 30 drops.</div></li>
+    <li><span class="n">2</span><div><b>Pick a color.</b> Drag around the ring to choose the hue, then in the square to set how vivid (left–right) and how bright (up–down) it is. Arrow keys work too.</div></li>
+    <li><span class="n">3</span><div><b>Test it.</b> You get a match % and which way to go: lighter or darker, redder or greener, yellower or bluer. Then move the picker and test again.</div></li>
+    <li><span class="n">4</span><div><b>Lock in.</b> Your score is your best match, minus 3 for each test after the first and 5 for each extra clue. Up to 6 tests.</div></li>
   </ol>
-  <p class="fine">A new color every day at midnight. Clues are written by an AI (<span id="clue-model">an LLM</span>) and only kept if a second AI, reading them cold, can get close to the color. Colors come from the <a href="https://xkcd.com/color/rgb/" target="_blank" rel="noopener">xkcd Color Survey</a> (public domain); paint mixing uses the Kubelka–Munk model via <a href="https://github.com/rvanwijnen/spectral.js" target="_blank" rel="noopener">spectral.js</a>.</p>
-  <form method="dialog"><button class="primary wide" autofocus>Start mixing</button></form>
+  <p class="fine">A new color every day at midnight. Clues are written by an AI (<span id="clue-model">an LLM</span>) and only kept if a second AI, reading them cold, can get close to the color. Colors come from the <a href="https://xkcd.com/color/rgb/" target="_blank" rel="noopener">xkcd Color Survey</a> (public domain).</p>
+  <form method="dialog"><button class="primary wide" autofocus>Start</button></form>
 </dialog>
 
 <dialog id="dlg-archive" class="sheet">

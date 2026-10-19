@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PAINTS, mixHex, accuracy, hint, score, square, oklab } from '../web/color.js';
+import { PAINTS, mixHex, accuracy, hint, score, square, oklab, hsvToHex, hexToHsv, rgb } from '../web/color.js';
 import { OKLab_to_OKLCh } from '../web/vendor/spectral.js';
 
 const idx = Object.fromEntries(PAINTS.map((p, i) => [p.id, i]));
@@ -49,3 +49,15 @@ test('score: best test minus 3 per extra test, never below 0', () => {
   assert.equal(score(Array(6).fill({ acc: 5 })), 0);
 });
 test('share squares', () => assert.deepEqual([99, 90, 75, 10].map(square), ['🟩', '🟨', '🟧', '🟥']));
+test('the picker\'s HSV maps onto sRGB and back', () => {
+  assert.equal(hsvToHex(0, 1, 1), '#FF0000');
+  assert.equal(hsvToHex(120, 1, 1), '#00FF00');
+  assert.equal(hsvToHex(240, 1, 0.5), '#000080');
+  assert.equal(hsvToHex(77, 0, 1), '#FFFFFF');
+  assert.equal(hsvToHex(300, 1, 0), '#000000');
+  for (const hex of ['#FF724C', '#D2BD0A', '#40C0A0', '#808080', '#123456']) {
+    const { h, s, v } = hexToHsv(hex);
+    assert.equal(hsvToHex(h, s, v), hex);
+  }
+  assert.deepEqual(rgb('#FF724C'), [255, 114, 76]);
+});

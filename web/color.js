@@ -1,5 +1,6 @@
-// Color core shared by the game and the build/experiment scripts: paint mixing,
-// distance, score and the per-axis hint shown after each test. No DOM in here.
+// Color core shared by the game and the build/experiment scripts: the picker's HSV conversion,
+// distance, score and the per-axis hint shown after each test, plus the paint mixing the level
+// builder still uses to pick colors and record a recipe. No DOM in here.
 import { Color, mix, deltaEOK } from './vendor/spectral.js';
 
 // Process-ink primaries plus white and black: CMY covers far more vivid colors than red-yellow-blue.
@@ -34,6 +35,22 @@ export function mixHex(counts) {
   cache.set(key, hex);
   return hex;
 }
+
+/** HSV (h in degrees, s and v 0–1) to '#RRGGBB'. This is what the in-game picker produces. */
+export function hsvToHex(h, s, v) {
+  const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+  return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+/** '#RRGGBB' to HSV; grays come back with hue 0. */
+export function hexToHsv(hex) {
+  const [r, g, b] = rgb(hex).map(x => x / 255);
+  const v = Math.max(r, g, b), c = v - Math.min(r, g, b);
+  const h = !c ? 0 : v === r ? ((g - b) / c + 6) % 6 : v === g ? (b - r) / c + 2 : (r - g) / c + 4;
+  return { h: h * 60, s: v ? c / v : 0, v };
+}
+
+export const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
 
 export const oklab = hex => new Color(hex).OKLab;
 export const distance = (a, b) => deltaEOK(oklab(a), oklab(b));
