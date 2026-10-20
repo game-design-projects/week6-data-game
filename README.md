@@ -29,7 +29,7 @@ At the end you can flip between your version and the original, see where you pla
 | **Skill expression** | Easy: drag, press Test. Hard: reading color in context (a patch looks different next to its neighbours), turning three arrows into the right move on the wheel, and knowing when another test (−3) is worth it. |
 | **External data** | The paintings and their metadata come from the Art Institute of Chicago's public API (artwork data CC0, public-domain images). Color names come from the xkcd Color Survey (CC0), in `data/xkcd-rgb.txt`. |
 | **At least 7 days of levels** | `web/levels.js` holds 80 days, 2026-10-17 to 2027-01-04. CI fails if it drops below 7. |
-| **Novel** | Daily color games (Hexcodle, Colordle, Hued, Colorfle) match a color through numeric feedback against a bare swatch. Here the target only exists in context, inside a real painting, and you see your guess in place. |
+| **Novel** | Daily color games (Hexcodle, Colordle, Hued, Colorfle) match a bare swatch. [The Daily Hue](https://thedailyhue.com/) hides its color inside an artwork, and per its FAQ you compare a swatch to the artwork by eye. Here the guess is painted into the painting: the region is stored as gray plus per-pixel offsets, so your color arrives with the original shading and brushwork and you judge it against the paint around it. The regions are picked automatically from the museum's open data. |
 | **Bonus: automated levels** | `scripts/build_paintings.py` generates every level end to end (below). |
 
 ## How levels are made
